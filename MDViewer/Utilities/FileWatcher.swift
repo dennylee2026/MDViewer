@@ -3,13 +3,8 @@ import Foundation
 final class FileWatcher {
     private var source: DispatchSourceFileSystemObject?
     private var fileDescriptor: Int32 = -1
-    private let onChange: () -> Void
 
-    init(onChange: @escaping () -> Void) {
-        self.onChange = onChange
-    }
-
-    func watch(url: URL) {
+    func watch(url: URL, onChange: @escaping () -> Void) {
         stop()
         fileDescriptor = open(url.path, O_EVTONLY)
         guard fileDescriptor != -1 else { return }
@@ -19,9 +14,7 @@ final class FileWatcher {
             eventMask: [.write, .rename, .delete],
             queue: .main
         )
-        source?.setEventHandler { [weak self] in
-            self?.onChange()
-        }
+        source?.setEventHandler(handler: onChange)
         source?.setCancelHandler { [weak self] in
             guard let self, self.fileDescriptor != -1 else { return }
             close(self.fileDescriptor)

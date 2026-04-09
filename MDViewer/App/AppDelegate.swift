@@ -5,6 +5,8 @@ class AppState: ObservableObject {
     @Published var fileURL: URL?
     @Published var markdownContent: String = ""
 
+    private let fileWatcher = FileWatcher()
+
     func openFilePicker() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.init(filenameExtension: "md")!, .init(filenameExtension: "markdown")!]
@@ -19,6 +21,9 @@ class AppState: ObservableObject {
     func open(url: URL) {
         fileURL = url
         reload()
+        fileWatcher.watch(url: url) { [weak self] in
+            self?.reload()
+        }
     }
 
     func reload() {
