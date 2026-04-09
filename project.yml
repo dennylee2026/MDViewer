@@ -1,0 +1,60 @@
+name: MDViewer
+options:
+  bundleIdPrefix: com.dennylee
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    ENABLE_HARDENED_RUNTIME: YES
+    CODE_SIGN_STYLE: Automatic
+
+targets:
+  MDViewer:
+    type: application
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: MDViewer
+        type: group
+    resources:
+      - path: MDViewer/Resources
+      - path: MDViewer/Themes
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dennylee.MDViewer
+        PRODUCT_NAME: MDViewer
+        INFOPLIST_FILE: MDViewer/Info.plist
+        SWIFT_EMIT_LOC_STRINGS: YES
+    info:
+      path: MDViewer/Info.plist
+      properties:
+        LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
+        NSPrincipalClass: NSApplication
+        NSMainStoryboardFile: ""
+        CFBundleDisplayName: MDViewer
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        NSHighResolutionCapable: YES
+        NSSupportsAutomaticGraphicsSwitching: YES
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Markdown Document
+            CFBundleTypeExtensions:
+              - md
+              - markdown
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            NSDocumentClass: NSDocument
+        UTImportedTypeDeclarations:
+          - UTTypeIdentifier: net.daringfireball.markdown
+            UTTypeDescription: Markdown Document
+            UTTypeConformsTo:
+              - public.plain-text
+            UTTypeTagSpecification:
+              public.filename-extension:
+                - md
+                - markdown

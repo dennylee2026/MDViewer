@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MDViewer</title>
+  <link rel="stylesheet" id="hljs-theme" href="hljs-light.css">
+  <link rel="stylesheet" id="md-theme" href="">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      padding: 40px 48px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    @media (max-width: 700px) {
+      body { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="content"></div>
+
+  <script src="marked.min.js"></script>
+  <script src="highlight.min.js"></script>
+  <script src="hljs-swift.min.js"></script>
+  <script>
+    // Configure marked
+    marked.setOptions({
+      breaks: true,
+      gfm: true
+    });
+
+    // Configure highlight.js
+    hljs.configure({ ignoreUnescapedHTML: true });
+
+    function renderMarkdown(md) {
+      const html = marked.parse(md);
+      document.getElementById('content').innerHTML = html;
+      document.querySelectorAll('pre code').forEach(function(block) {
+        hljs.highlightElement(block);
+      });
+      // Scroll to top
+      window.scrollTo(0, 0);
+    }
+
+    function switchTheme(theme) {
+      const mdLink = document.getElementById('md-theme');
+      const hljsLink = document.getElementById('hljs-theme');
+      if (theme === 'dark') {
+        mdLink.href = 'dark.css';
+        hljsLink.href = 'hljs-dark.css';
+        document.body.classList.remove('light');
+        document.body.classList.add('dark');
+      } else {
+        mdLink.href = 'light.css';
+        hljsLink.href = 'hljs-light.css';
+        document.body.classList.remove('dark');
+        document.body.classList.add('light');
+      }
+    }
+
+    // Initialize with light theme
+    switchTheme('light');
+  </script>
+</body>
+</html>
