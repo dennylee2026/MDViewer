@@ -13,6 +13,7 @@
 		620F934AB7F0D7ECCE2FDD4C /* light.css in Resources */ = {isa = PBXBuildFile; fileRef = 587B1182240CCC03D8834062 /* light.css */; };
 		790935193DE1F59872500A15 /* hljs-dark.css in Resources */ = {isa = PBXBuildFile; fileRef = 2507A7B6593D08C8B6CE7FB5 /* hljs-dark.css */; };
 		79EC0ED458A19CD3F6AB67A5 /* OutlineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55BE178D4FAA13A58AD57024 /* OutlineView.swift */; };
+		81F208F75E993612DE113A23 /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2ACB8F99FEFBCC86E90F9BB /* EditorView.swift */; };
 		844EC426ACFAF56E92B7DB5B /* hljs-swift.min.js in Resources */ = {isa = PBXBuildFile; fileRef = D72D90A94E912CB5BF2378E8 /* hljs-swift.min.js */; };
 		8FC766F50A8CFE2D39130D5E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA18E02CB68528189A02F10 /* AppDelegate.swift */; };
 		A4600015EA6FFDCC5A252932 /* MarkdownWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55A13F79EC692EF9080AD26A /* MarkdownWebView.swift */; };
@@ -38,6 +39,7 @@
 		B7F645B4EE1C62EA9163A352 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		B9065D8A517453BB93215E95 /* MDViewerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MDViewerApp.swift; sourceTree = "<group>"; };
 		C09A371577BF803F4ACDBAC2 /* FileWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileWatcher.swift; sourceTree = "<group>"; };
+		C2ACB8F99FEFBCC86E90F9BB /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
 		C8E72420904BAD34AB917A13 /* template.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = template.html; sourceTree = "<group>"; };
 		D3F0B0EDA70686DC0871E85E /* dark.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = dark.css; sourceTree = "<group>"; };
 		D72D90A94E912CB5BF2378E8 /* hljs-swift.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "hljs-swift.min.js"; sourceTree = "<group>"; };
@@ -65,6 +67,7 @@
 		3ECDC3D50F07F03773E8B45D /* Rendering */ = {
 			isa = PBXGroup;
 			children = (
+				C2ACB8F99FEFBCC86E90F9BB /* EditorView.swift */,
 				3752E17B1857430A855B161A /* MarkdownRenderer.swift */,
 				55A13F79EC692EF9080AD26A /* MarkdownWebView.swift */,
 			);
@@ -211,6 +214,7 @@
 			files = (
 				8FC766F50A8CFE2D39130D5E /* AppDelegate.swift in Sources */,
 				DCD5C119D82D35F369C6DABB /* ContentView.swift in Sources */,
+				81F208F75E993612DE113A23 /* EditorView.swift in Sources */,
 				A739EF050629669FD0DF7D9C /* FileWatcher.swift in Sources */,
 				184B25821E7959563EF2FEAC /* MDViewerApp.swift in Sources */,
 				504F0C9B9A921BA72A2F66DB /* MarkdownRenderer.swift in Sources */,

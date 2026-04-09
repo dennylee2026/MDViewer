@@ -4,6 +4,7 @@ import WebKit
 struct MarkdownWebView: NSViewRepresentable {
     let content: String
     let isDark: Bool
+    let zoomLevel: Double
     @Binding var webViewRef: WKWebView?
 
     func makeCoordinator() -> Coordinator {
@@ -45,6 +46,10 @@ struct MarkdownWebView: NSViewRepresentable {
             if coordinator.isLoaded {
                 coordinator.renderContent(content)
             }
+        }
+
+        if webView.pageZoom != zoomLevel {
+            webView.pageZoom = zoomLevel
         }
     }
 
