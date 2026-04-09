@@ -27,6 +27,7 @@ class AppState: ObservableObject {
     @Published var viewMode: ViewMode = .split   // 启动默认分栏
     @Published var isDirty: Bool = false
     @Published var zoomLevel: Double = 1.0
+    @Published var editorScrollFraction: Double = 0
 
     private let fileWatcher = FileWatcher()
     private var isLoadingFromDisk = false

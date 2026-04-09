@@ -44,6 +44,13 @@
       window.scrollTo(0, 0);
     }
 
+    function scrollToFraction(fraction) {
+      var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if (maxScroll > 0) {
+        window.scrollTo({ top: maxScroll * fraction, behavior: 'instant' });
+      }
+    }
+
     function scrollToHeading(index) {
       const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
       if (headings[index]) {
