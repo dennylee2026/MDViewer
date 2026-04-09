@@ -1,9 +1,17 @@
 import AppKit
 import SwiftUI
 
+struct HeadingItem: Identifiable {
+    let id = UUID()
+    let level: Int   // 1–6
+    let text: String
+    let index: Int   // DOM order for scroll targeting
+}
+
 class AppState: ObservableObject {
     @Published var fileURL: URL?
     @Published var markdownContent: String = ""
+    @Published var headings: [HeadingItem] = []
 
     private let fileWatcher = FileWatcher()
 
@@ -30,7 +38,30 @@ class AppState: ObservableObject {
         guard let url = fileURL else { return }
         if let content = try? String(contentsOf: url, encoding: .utf8) {
             markdownContent = content
+            headings = Self.parseHeadings(from: content)
         }
+    }
+
+    private static func parseHeadings(from markdown: String) -> [HeadingItem] {
+        var result: [HeadingItem] = []
+        var headingIndex = 0
+        var inFence = false
+        for line in markdown.components(separatedBy: .newlines) {
+            if line.hasPrefix("```") || line.hasPrefix("~~~") { inFence.toggle() }
+            guard !inFence, line.hasPrefix("#") else { continue }
+            let hashes = line.prefix(while: { $0 == "#" })
+            let level = hashes.count
+            guard level <= 6, line.count > level,
+                  line[line.index(line.startIndex, offsetBy: level)] == " "
+            else { continue }
+            let text = String(line.dropFirst(level + 1))
+                .trimmingCharacters(in: .whitespaces)
+            if !text.isEmpty {
+                result.append(HeadingItem(level: level, text: text, index: headingIndex))
+                headingIndex += 1
+            }
+        }
+        return result
     }
 }
 

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- 目录大纲侧栏：基于标题层级自动生成，点击跳转对应位置
+- 标题颜色与正文主题保持一致（Google 四色）
+- 侧栏支持 H1–H6 层级缩进
+
 ## [1.0.0] - 2026-04-09
 
 ### Added

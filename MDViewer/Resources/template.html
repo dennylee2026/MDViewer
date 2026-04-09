@@ -41,8 +41,14 @@
       document.querySelectorAll('pre code').forEach(function(block) {
         hljs.highlightElement(block);
       });
-      // Scroll to top
       window.scrollTo(0, 0);
+    }
+
+    function scrollToHeading(index) {
+      const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+      if (headings[index]) {
+        headings[index].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
 
     function switchTheme(theme) {

@@ -4,6 +4,7 @@ import WebKit
 struct MarkdownWebView: NSViewRepresentable {
     let content: String
     let isDark: Bool
+    @Binding var webViewRef: WKWebView?
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -20,6 +21,7 @@ struct MarkdownWebView: NSViewRepresentable {
         context.coordinator.pendingContent = content
         context.coordinator.isDark = isDark
 
+        DispatchQueue.main.async { webViewRef = webView }
         loadTemplate(in: webView)
         return webView
     }

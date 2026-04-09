@@ -1,22 +1,29 @@
 import SwiftUI
+import WebKit
 
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.colorScheme) var colorScheme
+    @State private var webViewRef: WKWebView?
 
     var body: some View {
-        Group {
+        NavigationSplitView {
+            OutlineView(webView: webViewRef)
+                .environmentObject(appState)
+                .navigationSplitViewColumnWidth(min: 160, ideal: 200, max: 280)
+        } detail: {
             if appState.fileURL != nil {
                 MarkdownWebView(
                     content: appState.markdownContent,
-                    isDark: colorScheme == .dark
+                    isDark: colorScheme == .dark,
+                    webViewRef: $webViewRef
                 )
                 .ignoresSafeArea()
             } else {
                 WelcomeView()
             }
         }
-        .frame(minWidth: 600, minHeight: 400)
+        .frame(minWidth: 680, minHeight: 400)
         .navigationTitle(appState.fileURL?.lastPathComponent ?? "MDViewer")
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
             providers.first?.loadItem(forTypeIdentifier: "public.file-url") { item, _ in
