@@ -16,14 +16,14 @@ struct ContentView: View {
             switch appState.viewMode {
             case .split:
                 HSplitView {
-                    EditorView(text: editorBinding)
+                    EditorView(text: editorBinding, onScroll: { appState.editorScrollFraction = $0 })
                         .frame(minWidth: 200)
                     previewPane
                         .frame(minWidth: 200)
                 }
 
             case .editor:
-                EditorView(text: editorBinding)
+                EditorView(text: editorBinding, onScroll: nil)
 
             case .viewer:
                 NavigationSplitView {
@@ -48,6 +48,7 @@ struct ContentView: View {
             content: appState.markdownContent,
             isDark: colorScheme == .dark,
             zoomLevel: appState.zoomLevel,
+            scrollFraction: appState.editorScrollFraction,
             webViewRef: $webViewRef
         )
         .ignoresSafeArea()

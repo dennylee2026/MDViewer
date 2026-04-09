@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-04-09
+
+### Added
+- 编辑器 Markdown 语法高亮：标题 Google 四色、粗体、斜体、行内代码、链接、删除线、引用块、代码块
+- 编辑器行号显示（LineNumberRulerView）
+- 编辑器与预览区滚动同步：滚动编辑器，预览自动跟随相同比例
+- ⌘F 查找替换（NSTextView 内建 Find Bar）
+
 ## [1.1.0] - 2026-04-09
 
 ### Added
