@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-04-09
+
 ### Added
 - 编辑器 Markdown 语法高亮：标题 Google 四色、粗体、斜体、行内代码、链接、删除线、引用块、代码块
 - 编辑器行号显示（LineNumberRulerView）
