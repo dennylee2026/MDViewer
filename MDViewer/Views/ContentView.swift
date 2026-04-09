@@ -18,6 +18,16 @@ struct ContentView: View {
         }
         .frame(minWidth: 600, minHeight: 400)
         .navigationTitle(appState.fileURL?.lastPathComponent ?? "MDViewer")
+        .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+            providers.first?.loadItem(forTypeIdentifier: "public.file-url") { item, _ in
+                guard let data = item as? Data,
+                      let url = URL(dataRepresentation: data, relativeTo: nil),
+                      url.pathExtension == "md" || url.pathExtension == "markdown"
+                else { return }
+                DispatchQueue.main.async { appState.open(url: url) }
+            }
+            return true
+        }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -61,17 +71,5 @@ struct WelcomeView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(NSColor.windowBackgroundColor))
-        .onDrop(of: [.fileURL], isTargeted: nil) { providers in
-            providers.first?.loadItem(forTypeIdentifier: "public.file-url") { item, _ in
-                guard let data = item as? Data,
-                      let url = URL(dataRepresentation: data, relativeTo: nil),
-                      url.pathExtension == "md" || url.pathExtension == "markdown"
-                else { return }
-                DispatchQueue.main.async {
-                    appState.open(url: url)
-                }
-            }
-            return true
-        }
     }
 }
