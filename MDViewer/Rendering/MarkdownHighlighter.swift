@@ -3,7 +3,8 @@ import AppKit
 /// NSTextStorageDelegate that applies Markdown syntax colors to the editor.
 final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
 
-    var baseFont: NSFont = .systemFont(ofSize: 14)   // updated by EditorView on zoom
+    var baseFont: NSFont = .systemFont(ofSize: 14)         // updated by EditorView on zoom
+    var paragraphStyle: NSParagraphStyle = .default        // updated by EditorView on zoom
     private var isWorking = false
 
     // MARK: - Delegate
@@ -26,13 +27,14 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
         let str    = storage.string
         let full   = NSRange(str.startIndex..., in: str)
 
-        // 1. Reset everything to base style
+        // 1. Reset everything to base style (include paragraphStyle so line height survives)
         storage.setAttributes([
-            .font:            baseFont,
-            .foregroundColor: NSColor.textColor,
-            .backgroundColor: NSColor.clear,
-            .obliqueness:     0,
-            .strikethroughStyle: 0
+            .font:               baseFont,
+            .foregroundColor:    NSColor.textColor,
+            .backgroundColor:    NSColor.clear,
+            .obliqueness:        0,
+            .strikethroughStyle: 0,
+            .paragraphStyle:     paragraphStyle
         ], range: full)
 
         applyFencedCodeBlocks(storage, str)
