@@ -9,12 +9,23 @@ struct EditorView: NSViewRepresentable {
 
     private var fontSize: CGFloat { CGFloat(18 * zoomLevel) }
 
-    // MARK: - Paragraph style (CJK-friendly)
+    // MARK: - Font with PingFang SC cascade for CJK
+
+    private func makeFont() -> NSFont {
+        let base = NSFont.systemFont(ofSize: fontSize)
+        let pingFangDescriptor = NSFontDescriptor(fontAttributes: [.name: "PingFangSC-Regular"])
+        let cascaded = base.fontDescriptor.addingAttributes([
+            .cascadeList: [pingFangDescriptor]
+        ])
+        return NSFont(descriptor: cascaded, size: fontSize) ?? base
+    }
+
+    // MARK: - Paragraph style
 
     private func makeParagraphStyle() -> NSParagraphStyle {
         let ps = NSMutableParagraphStyle()
-        ps.lineHeightMultiple  = 1.6          // comfortable for CJK glyphs
-        ps.paragraphSpacing    = fontSize * 0.3
+        ps.lineHeightMultiple = 1.25
+        ps.paragraphSpacing   = fontSize * 0.3
         return ps
     }
 
@@ -63,7 +74,7 @@ struct EditorView: NSViewRepresentable {
 
         // G1: Syntax highlighter
         let highlighter = MarkdownHighlighter()
-        highlighter.baseFont      = .systemFont(ofSize: fontSize)
+        highlighter.baseFont      = makeFont()
         highlighter.paragraphStyle = makeParagraphStyle()
         textView.textStorage?.delegate = highlighter
         context.coordinator.highlighter = highlighter
@@ -82,7 +93,7 @@ struct EditorView: NSViewRepresentable {
         guard let textView = scrollView.documentView as? NSTextView else { return }
 
         // Zoom: update font + paragraph style if changed
-        let newFont = NSFont.systemFont(ofSize: fontSize)
+        let newFont = makeFont()
         let newPS   = makeParagraphStyle()
         if textView.font != newFont {
             context.coordinator.highlighter?.baseFont       = newFont
@@ -110,7 +121,7 @@ struct EditorView: NSViewRepresentable {
     // MARK: - Typography helper
 
     private func applyTypography(to textView: NSTextView) {
-        let font = NSFont.systemFont(ofSize: fontSize)
+        let font = makeFont()
         let ps   = makeParagraphStyle()
         textView.font                 = font
         textView.defaultParagraphStyle = ps
