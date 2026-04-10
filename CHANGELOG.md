@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-04-10
+
+### Fixed
+- 光标落在编辑区时，预览区正确滚动到对应位置（不再强制跳回顶部）
+- 修复每次按键触发重新渲染后 `window.scrollTo(0,0)` 覆盖光标同步滚动的竞态问题
+- 改用 TreeWalker 遍历所有文本节点，粗体 / 斜体 / 行内代码内的文字也能正确匹配
+- 修复 `JSONSerialization` 对纯字符串返回 nil 导致 `scrollToEditorText` 从未被调用的问题
+
 ## [1.4.0] - 2026-04-10
 
 ### Added
