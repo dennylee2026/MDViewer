@@ -4,8 +4,7 @@ import AppKit
 struct EditorView: NSViewRepresentable {
     @Binding var text: String
     var zoomLevel: Double = 1.0
-    var headings: [HeadingItem] = []
-    var onCursorMove: ((Int) -> Void)?
+    var onCursorMove: ((Double) -> Void)?   // scroll fraction 0–1
 
     private var fontSize: CGFloat { CGFloat(14 * zoomLevel) }
 
@@ -105,7 +104,6 @@ struct EditorView: NSViewRepresentable {
             textView.selectedRanges = sel
         }
 
-        context.coordinator.headings = headings
     }
 
     // MARK: - Typography helper
@@ -128,7 +126,6 @@ struct EditorView: NSViewRepresentable {
         var parent:      EditorView
         weak var textView: NSTextView?
         var highlighter: MarkdownHighlighter?
-        var headings:    [HeadingItem] = []
 
         init(_ parent: EditorView) { self.parent = parent }
 
@@ -138,10 +135,29 @@ struct EditorView: NSViewRepresentable {
         }
 
         func textViewDidChangeSelection(_ notification: Notification) {
-            guard let tv = notification.object as? NSTextView else { return }
-            let cursor  = tv.selectedRange().location
-            let heading = headings.last(where: { $0.charOffset <= cursor })
-            parent.onCursorMove?(heading?.index ?? -1)
+            guard let tv       = notification.object as? NSTextView,
+                  let lm       = tv.layoutManager,
+                  let tc       = tv.textContainer else { return }
+
+            let cursorChar = tv.selectedRange().location
+            let nsStr      = tv.string as NSString
+            let safeChar   = min(cursorChar, nsStr.length)
+            let glyphCount = lm.numberOfGlyphs
+            guard glyphCount > 0 else { parent.onCursorMove?(0); return }
+
+            let glyphIdx = safeChar < nsStr.length
+                ? lm.glyphIndexForCharacter(at: safeChar)
+                : glyphCount - 1
+
+            let lineRect  = lm.lineFragmentRect(
+                forGlyphAt: min(glyphIdx, glyphCount - 1),
+                effectiveRange: nil)
+            let inset      = tv.textContainerInset
+            let cursorY    = lineRect.midY + inset.height
+            let totalH     = lm.usedRect(for: tc).height + inset.height * 2
+            let fraction   = totalH > 0 ? max(0, min(1, cursorY / totalH)) : 0
+
+            parent.onCursorMove?(Double(fraction))
         }
     }
 }

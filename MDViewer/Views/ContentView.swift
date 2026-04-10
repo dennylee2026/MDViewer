@@ -23,8 +23,7 @@ struct ContentView: View {
             case .editor:
                 EditorView(
                     text: editorBinding,
-                    zoomLevel: appState.zoomLevel,
-                    headings: appState.headings
+                    zoomLevel: appState.zoomLevel
                 )
 
             case .viewer:
@@ -49,11 +48,9 @@ struct ContentView: View {
         EditorView(
             text: editorBinding,
             zoomLevel: appState.zoomLevel,
-            headings: appState.headings,
-            onCursorMove: { headingIndex in
-                guard headingIndex >= 0 else { return }
+            onCursorMove: { fraction in
                 webViewRef?.evaluateJavaScript(
-                    "scrollToHeading(\(headingIndex))",
+                    "scrollToFraction(\(fraction))",
                     completionHandler: nil
                 )
             }
