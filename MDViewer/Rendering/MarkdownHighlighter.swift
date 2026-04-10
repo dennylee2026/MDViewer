@@ -3,8 +3,8 @@ import AppKit
 /// NSTextStorageDelegate that applies Markdown syntax colors to the editor.
 final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
 
-    private let baseFont   = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
-    private var isWorking  = false   // guard against re-entrancy
+    var baseFont: NSFont = .systemFont(ofSize: 14)   // updated by EditorView on zoom
+    private var isWorking = false
 
     // MARK: - Delegate
 
@@ -58,13 +58,14 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
     }
 
     private func applyHeadings(_ s: NSTextStorage, _ str: String) {
+        let base = baseFont.pointSize
         let colors: [(NSColor, CGFloat)] = [
-            (.init(hex: "#4285F4"), 20), // H1
-            (.init(hex: "#EA4335"), 18), // H2
-            (.init(hex: "#FBBC05"), 16), // H3
-            (.init(hex: "#34A853"), 15), // H4
-            (.init(hex: "#4285F4"), 14), // H5
-            (.init(hex: "#EA4335"), 14), // H6
+            (.init(hex: "#4285F4"), base + 6), // H1
+            (.init(hex: "#EA4335"), base + 4), // H2
+            (.init(hex: "#FBBC05"), base + 2), // H3
+            (.init(hex: "#34A853"), base + 1), // H4
+            (.init(hex: "#4285F4"), base),     // H5
+            (.init(hex: "#EA4335"), base),     // H6
         ]
         guard let regex = try? NSRegularExpression(
             pattern: "^(#{1,6}) .+", options: .anchorsMatchLines) else { return }
@@ -76,7 +77,7 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
             let (color, size) = colors[level - 1]
             s.addAttributes([
                 .foregroundColor: color,
-                .font: NSFont.monospacedSystemFont(ofSize: size, weight: .bold)
+                .font: NSFont.systemFont(ofSize: size, weight: .bold)
             ], range: m.range)
         }
     }
@@ -88,7 +89,7 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
 
     private func applyBold(_ s: NSTextStorage, _ str: String) {
         apply(to: s, str: str, pattern: "\\*\\*(?=\\S).+?(?<=\\S)\\*\\*|__(?=\\S).+?(?<=\\S)__",
-              attrs: [.font: NSFont.monospacedSystemFont(ofSize: 14, weight: .bold)])
+              attrs: [.font: NSFont.systemFont(ofSize: baseFont.pointSize, weight: .bold)])
     }
 
     private func applyItalic(_ s: NSTextStorage, _ str: String) {

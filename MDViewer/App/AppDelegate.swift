@@ -16,6 +16,7 @@ struct HeadingItem: Identifiable {
     let level: Int
     let text: String
     let index: Int
+    let charOffset: Int   // UTF-16 offset in the markdown string (matches NSRange)
 }
 
 // MARK: - AppState
@@ -24,13 +25,11 @@ class AppState: ObservableObject {
     @Published var fileURL: URL?
     @Published var markdownContent: String = ""
     @Published var headings: [HeadingItem] = []
-    @Published var viewMode: ViewMode = .split   // 启动默认分栏
+    @Published var viewMode: ViewMode = .split
     @Published var isDirty: Bool = false
     @Published var zoomLevel: Double = 1.0
-    @Published var editorScrollFraction: Double = 0
 
     private let fileWatcher = FileWatcher()
-    private var isLoadingFromDisk = false
 
     // MARK: File Picker
 
@@ -50,11 +49,9 @@ class AppState: ObservableObject {
 
     func open(url: URL) {
         fileURL = url
-        isLoadingFromDisk = true
         reload()
-        isLoadingFromDisk = false
         isDirty = false
-        viewMode = .viewer   // 打开文件 → 预览模式
+        viewMode = .viewer
         fileWatcher.watch(url: url) { [weak self] in self?.reloadFromDisk() }
     }
 
@@ -91,11 +88,7 @@ class AppState: ObservableObject {
     // MARK: Save
 
     func save() {
-        if let url = fileURL {
-            writeContent(to: url)
-        } else {
-            saveAs()
-        }
+        if let url = fileURL { writeContent(to: url) } else { saveAs() }
     }
 
     func saveAs() {
@@ -140,21 +133,28 @@ class AppState: ObservableObject {
 
     // MARK: Heading Parser
 
-    private static func parseHeadings(from markdown: String) -> [HeadingItem] {
+    static func parseHeadings(from markdown: String) -> [HeadingItem] {
         var result: [HeadingItem] = []
         var headingIndex = 0
         var inFence = false
-        for line in markdown.components(separatedBy: .newlines) {
+        var charOffset = 0
+
+        for line in markdown.components(separatedBy: "\n") {
+            defer { charOffset += (line as NSString).length + 1 }   // +1 for \n
+
             if line.hasPrefix("```") || line.hasPrefix("~~~") { inFence.toggle() }
             guard !inFence, line.hasPrefix("#") else { continue }
+
             let hashes = line.prefix(while: { $0 == "#" })
-            let level = hashes.count
+            let level  = hashes.count
             guard level <= 6, line.count > level,
                   line[line.index(line.startIndex, offsetBy: level)] == " "
             else { continue }
+
             let text = String(line.dropFirst(level + 1)).trimmingCharacters(in: .whitespaces)
             if !text.isEmpty {
-                result.append(HeadingItem(level: level, text: text, index: headingIndex))
+                result.append(HeadingItem(level: level, text: text,
+                                          index: headingIndex, charOffset: charOffset))
                 headingIndex += 1
             }
         }

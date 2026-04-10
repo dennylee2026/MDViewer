@@ -5,7 +5,6 @@ struct MarkdownWebView: NSViewRepresentable {
     let content: String
     let isDark: Bool
     let zoomLevel: Double
-    let scrollFraction: Double
     @Binding var webViewRef: WKWebView?
 
     func makeCoordinator() -> Coordinator {
@@ -53,12 +52,6 @@ struct MarkdownWebView: NSViewRepresentable {
             webView.pageZoom = zoomLevel
         }
 
-        if coordinator.lastScrollFraction != scrollFraction {
-            coordinator.lastScrollFraction = scrollFraction
-            if coordinator.isLoaded {
-                webView.evaluateJavaScript("scrollToFraction(\(scrollFraction))", completionHandler: nil)
-            }
-        }
     }
 
     private func loadTemplate(in webView: WKWebView) {
@@ -75,7 +68,6 @@ struct MarkdownWebView: NSViewRepresentable {
         var lastContent: String = ""
         var isDark: Bool = false
         var isLoaded: Bool = false
-        var lastScrollFraction: Double = -1
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             isLoaded = true
