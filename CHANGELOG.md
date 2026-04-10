@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-04-10
+
+### Fixed
+- 修复 MarkdownHighlighter 中 `var` 应为 `let` 的编译警告
+- 修复 AppDelegate `reloadFromDisk` 中未使用变量的编译警告
+
 ## [1.2.0] - 2026-04-09
 
 ### Added
