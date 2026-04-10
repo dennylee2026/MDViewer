@@ -7,7 +7,7 @@ struct EditorView: NSViewRepresentable {
     /// Plain text of the cursor's line (Markdown syntax stripped), used to locate the element in the preview.
     var onCursorMove: ((String) -> Void)?
 
-    private var fontSize: CGFloat { CGFloat(14 * zoomLevel) }
+    private var fontSize: CGFloat { CGFloat(18 * zoomLevel) }
 
     // MARK: - Paragraph style (CJK-friendly)
 
