@@ -44,6 +44,20 @@
       window.scrollTo(0, 0);
     }
 
+    function scrollToEditorText(text) {
+      if (!text || text.length < 2) return;
+      var content = document.getElementById('content');
+      if (!content) return;
+      // Search block-level elements for matching text content
+      var blocks = content.querySelectorAll('h1,h2,h3,h4,h5,h6,p,li,blockquote,pre,td,dt,dd');
+      for (var i = 0; i < blocks.length; i++) {
+        if (blocks[i].textContent.trim().includes(text)) {
+          blocks[i].scrollIntoView({ behavior: 'instant', block: 'start' });
+          return;
+        }
+      }
+    }
+
     function scrollToFraction(fraction) {
       var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       if (maxScroll > 0) {

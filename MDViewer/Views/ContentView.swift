@@ -48,11 +48,14 @@ struct ContentView: View {
         EditorView(
             text: editorBinding,
             zoomLevel: appState.zoomLevel,
-            onCursorMove: { fraction in
-                webViewRef?.evaluateJavaScript(
-                    "scrollToFraction(\(fraction))",
-                    completionHandler: nil
-                )
+            onCursorMove: { lineText in
+                if let jsonData = try? JSONSerialization.data(withJSONObject: lineText),
+                   let jsonStr  = String(data: jsonData, encoding: .utf8) {
+                    webViewRef?.evaluateJavaScript(
+                        "scrollToEditorText(\(jsonStr))",
+                        completionHandler: nil
+                    )
+                }
             }
         )
     }

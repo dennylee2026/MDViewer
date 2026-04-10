@@ -4,7 +4,8 @@ import AppKit
 struct EditorView: NSViewRepresentable {
     @Binding var text: String
     var zoomLevel: Double = 1.0
-    var onCursorMove: ((Double) -> Void)?   // scroll fraction 0–1
+    /// Plain text of the cursor's line (Markdown syntax stripped), used to locate the element in the preview.
+    var onCursorMove: ((String) -> Void)?
 
     private var fontSize: CGFloat { CGFloat(14 * zoomLevel) }
 
@@ -135,29 +136,27 @@ struct EditorView: NSViewRepresentable {
         }
 
         func textViewDidChangeSelection(_ notification: Notification) {
-            guard let tv       = notification.object as? NSTextView,
-                  let lm       = tv.layoutManager,
-                  let tc       = tv.textContainer else { return }
+            guard let tv = notification.object as? NSTextView else { return }
+            let cursor = tv.selectedRange().location
+            let nsStr  = tv.string as NSString
+            let safePos = min(cursor, nsStr.length)
+            let lineRange = nsStr.lineRange(for: NSRange(location: safePos, length: 0))
+            var line = nsStr.substring(with: lineRange)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
 
-            let cursorChar = tv.selectedRange().location
-            let nsStr      = tv.string as NSString
-            let safeChar   = min(cursorChar, nsStr.length)
-            let glyphCount = lm.numberOfGlyphs
-            guard glyphCount > 0 else { parent.onCursorMove?(0); return }
+            // Strip Markdown syntax to get the plain text shown in the preview
+            let opts: NSString.CompareOptions = .regularExpression
+            line = line.replacingOccurrences(of: "^#{1,6}\\s+",  with: "", options: opts)
+            line = line.replacingOccurrences(of: "^>+\\s*",       with: "", options: opts)
+            line = line.replacingOccurrences(of: "^[-*+]\\s+",    with: "", options: opts)
+            line = line.replacingOccurrences(of: "^\\d+\\.\\s+",  with: "", options: opts)
+            line = line.replacingOccurrences(of: "\\*{1,3}|_{1,3}|~~|`+", with: "", options: opts)
+            line = line.trimmingCharacters(in: .whitespacesAndNewlines)
 
-            let glyphIdx = safeChar < nsStr.length
-                ? lm.glyphIndexForCharacter(at: safeChar)
-                : glyphCount - 1
-
-            let lineRect  = lm.lineFragmentRect(
-                forGlyphAt: min(glyphIdx, glyphCount - 1),
-                effectiveRange: nil)
-            let inset      = tv.textContainerInset
-            let cursorY    = lineRect.midY + inset.height
-            let totalH     = lm.usedRect(for: tc).height + inset.height * 2
-            let fraction   = totalH > 0 ? max(0, min(1, cursorY / totalH)) : 0
-
-            parent.onCursorMove?(Double(fraction))
+            // Need ≥ 2 chars to search reliably; take first 40 to keep it unique
+            let searchText = String(line.prefix(40))
+            guard searchText.count >= 2 else { return }
+            parent.onCursorMove?(searchText)
         }
     }
 }
