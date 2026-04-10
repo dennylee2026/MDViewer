@@ -49,8 +49,7 @@ struct ContentView: View {
             text: editorBinding,
             zoomLevel: appState.zoomLevel,
             onCursorMove: { lineText in
-                if let jsonData = try? JSONSerialization.data(withJSONObject: lineText),
-                   let jsonStr  = String(data: jsonData, encoding: .utf8) {
+                if let jsonStr = try? String(data: JSONEncoder().encode(lineText), encoding: .utf8) {
                     webViewRef?.evaluateJavaScript(
                         "scrollToEditorText(\(jsonStr))",
                         completionHandler: nil

@@ -48,11 +48,16 @@
       if (!text || text.length < 2) return;
       var content = document.getElementById('content');
       if (!content) return;
-      // Search block-level elements for matching text content
-      var blocks = content.querySelectorAll('h1,h2,h3,h4,h5,h6,p,li,blockquote,pre,td,dt,dd');
-      for (var i = 0; i < blocks.length; i++) {
-        if (blocks[i].textContent.trim().includes(text)) {
-          blocks[i].scrollIntoView({ behavior: 'instant', block: 'start' });
+      var blockTags = ['H1','H2','H3','H4','H5','H6','P','LI','BLOCKQUOTE','PRE','TD','DT','DD'];
+      // Walk all text nodes so inline elements (bold, italic, code) are also searched
+      var walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT, null);
+      var node;
+      while ((node = walker.nextNode())) {
+        if (node.textContent.includes(text)) {
+          // Bubble up to the nearest block-level ancestor
+          var el = node.parentElement;
+          while (el && !blockTags.includes(el.tagName)) { el = el.parentElement; }
+          (el || node.parentElement).scrollIntoView({ behavior: 'instant', block: 'start' });
           return;
         }
       }
