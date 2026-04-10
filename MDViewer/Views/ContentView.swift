@@ -66,6 +66,7 @@ struct ContentView: View {
             content: appState.markdownContent,
             isDark: colorScheme == .dark,
             zoomLevel: appState.zoomLevel,
+            fileURL: appState.fileURL,
             webViewRef: $webViewRef
         )
         .ignoresSafeArea()
