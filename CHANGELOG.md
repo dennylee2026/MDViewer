@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-04-10
+
+### Added
+- 编辑区中文 / 日文支持：行高 1.6 倍、段落间距，阅读体验舒适
+- IME 输入法合成文字样式（下划线 + 淡色背景），候选字清晰可辨
+- `typingAttributes` 与 `defaultParagraphStyle` 保持一致，新输入文字不突变
+- 禁用语法检查，避免对中日文误报
+
+### Fixed
+- 语法高亮扫描后不再重置段落样式，行距保持稳定
+
 ## [1.3.0] - 2026-04-10
 
 ### Added
