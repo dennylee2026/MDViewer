@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-04-10
+
+### Changed
+- 编辑区与预览区正文默认字号由 14 调整为 18（缩放功能不受影响）
+
 ## [1.4.1] - 2026-04-10
 
 ### Fixed
