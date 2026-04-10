@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-04-10
+
+### Added
+- 缩放同时作用于编辑区和预览区（字号 / pageZoom 联动）
+- 光标位置同步：光标落在编辑区某段落时，预览区自动滚动到对应标题
+
+### Changed
+- 编辑区字体改为 Apple 系统字体（SF Pro）14pt，语法高亮字号随之缩放
+- 移除编辑器↔预览滚动位置联动，两侧独立滚动
+
 ## [1.2.1] - 2026-04-10
 
 ### Fixed
