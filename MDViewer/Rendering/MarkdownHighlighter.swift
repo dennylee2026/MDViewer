@@ -136,7 +136,7 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
 
 private extension NSColor {
     convenience init(hex: String) {
-        var hex = hex.trimmingCharacters(in: .init(charactersIn: "#"))
+        let hex = hex.trimmingCharacters(in: .init(charactersIn: "#"))
         var int: UInt64 = 0
         Scanner(string: hex).scanHexInt64(&int)
         self.init(

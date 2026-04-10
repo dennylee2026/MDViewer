@@ -69,7 +69,7 @@ class AppState: ObservableObject {
     }
 
     private func reloadFromDisk() {
-        guard let url = fileURL, !isDirty else { return }
+        guard fileURL != nil, !isDirty else { return }
         reload()
     }
 
