@@ -16,14 +16,16 @@ struct ContentView: View {
             switch appState.viewMode {
             case .split:
                 HSplitView {
-                    EditorView(text: editorBinding, onScroll: { appState.editorScrollFraction = $0 })
-                        .frame(minWidth: 200)
-                    previewPane
-                        .frame(minWidth: 200)
+                    editorView.frame(minWidth: 200)
+                    previewPane.frame(minWidth: 200)
                 }
 
             case .editor:
-                EditorView(text: editorBinding, onScroll: nil)
+                EditorView(
+                    text: editorBinding,
+                    zoomLevel: appState.zoomLevel,
+                    headings: appState.headings
+                )
 
             case .viewer:
                 NavigationSplitView {
@@ -41,6 +43,23 @@ struct ContentView: View {
         .toolbar { toolbarContent }
     }
 
+    // MARK: Editor (split mode — with cursor sync)
+
+    private var editorView: some View {
+        EditorView(
+            text: editorBinding,
+            zoomLevel: appState.zoomLevel,
+            headings: appState.headings,
+            onCursorMove: { headingIndex in
+                guard headingIndex >= 0 else { return }
+                webViewRef?.evaluateJavaScript(
+                    "scrollToHeading(\(headingIndex))",
+                    completionHandler: nil
+                )
+            }
+        )
+    }
+
     // MARK: Preview pane
 
     private var previewPane: some View {
@@ -48,13 +67,12 @@ struct ContentView: View {
             content: appState.markdownContent,
             isDark: colorScheme == .dark,
             zoomLevel: appState.zoomLevel,
-            scrollFraction: appState.editorScrollFraction,
             webViewRef: $webViewRef
         )
         .ignoresSafeArea()
     }
 
-    // MARK: Editor binding (routes through AppState to track isDirty & headings)
+    // MARK: Editor binding
 
     private var editorBinding: Binding<String> {
         Binding(
@@ -67,7 +85,6 @@ struct ContentView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        // 模式切换
         ToolbarItem(placement: .principal) {
             Picker("", selection: $appState.viewMode) {
                 Image(systemName: "square.and.pencil").tag(ViewMode.editor)
@@ -79,7 +96,6 @@ struct ContentView: View {
             .help("⌘1 编辑  ⌘2 分栏  ⌘3 预览")
         }
 
-        // 缩放
         ToolbarItemGroup(placement: .primaryAction) {
             Button { appState.zoomLevel = max(0.5, appState.zoomLevel - 0.1) } label: {
                 Image(systemName: "minus.magnifyingglass")
