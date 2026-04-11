@@ -81,18 +81,68 @@ struct ContentView: View {
             text: editorBinding,
             zoomLevel: appState.zoomLevel,
             fontFamily: editorFont,
-            onCursorMove: { lineText, fraction, lineFraction in
-                if lineText.isEmpty {
-                    // No searchable text — fall back to line-fraction scroll
-                    webViewRef?.evaluateJavaScript(
-                        "scrollToFraction(\(lineFraction))",
-                        completionHandler: nil
-                    )
-                } else if let jsonStr = try? String(data: JSONEncoder().encode(lineText), encoding: .utf8) {
-                    webViewRef?.evaluateJavaScript(
-                        "scrollToEditorText(\(jsonStr), \(fraction), \(lineFraction))",
-                        completionHandler: nil
-                    )
+            onCursorMove: { lineText, fraction, lineFraction, charOffset in
+                let headings = appState.headings
+
+                // If headings exist, use heading-anchored scrolling
+                if !headings.isEmpty {
+                    // Find the last heading whose charOffset <= cursor charOffset
+                    let anchorIndex = headings.lastIndex(where: { $0.charOffset <= charOffset })
+
+                    if let ai = anchorIndex {
+                        let anchor = headings[ai]
+                        let anchorCharOffset = anchor.charOffset
+
+                        // Next heading charOffset, or end of document
+                        let nextCharOffset: Int
+                        if ai + 1 < headings.count {
+                            nextCharOffset = headings[ai + 1].charOffset
+                        } else {
+                            nextCharOffset = (appState.markdownContent as NSString).length
+                        }
+
+                        // Compute section fraction (clamped 0–1)
+                        let sectionLength = nextCharOffset - anchorCharOffset
+                        let sectionFraction: CGFloat
+                        if sectionLength > 0 {
+                            sectionFraction = min(1.0, max(0.0, CGFloat(charOffset - anchorCharOffset) / CGFloat(sectionLength)))
+                        } else {
+                            sectionFraction = 0.0
+                        }
+
+                        let headingIndex = anchor.index
+                        webViewRef?.evaluateJavaScript(
+                            "scrollToHeadingWithFraction(\(headingIndex), \(sectionFraction), \(fraction))",
+                            completionHandler: nil
+                        )
+                    } else {
+                        // Cursor is before the first heading — scroll proportionally within the pre-heading area
+                        let firstHeadingCharOffset = headings[0].charOffset
+                        let sectionFraction: CGFloat
+                        if firstHeadingCharOffset > 0 {
+                            sectionFraction = min(1.0, max(0.0, CGFloat(charOffset) / CGFloat(firstHeadingCharOffset)))
+                        } else {
+                            sectionFraction = 0.0
+                        }
+                        // Use -1 to signal "before first heading" to JS
+                        webViewRef?.evaluateJavaScript(
+                            "scrollToHeadingWithFraction(-1, \(sectionFraction), \(fraction))",
+                            completionHandler: nil
+                        )
+                    }
+                } else {
+                    // No headings — fall back to existing text-match / fraction logic
+                    if lineText.isEmpty {
+                        webViewRef?.evaluateJavaScript(
+                            "scrollToFraction(\(lineFraction))",
+                            completionHandler: nil
+                        )
+                    } else if let jsonStr = try? String(data: JSONEncoder().encode(lineText), encoding: .utf8) {
+                        webViewRef?.evaluateJavaScript(
+                            "scrollToEditorText(\(jsonStr), \(fraction), \(lineFraction))",
+                            completionHandler: nil
+                        )
+                    }
                 }
             }
         )

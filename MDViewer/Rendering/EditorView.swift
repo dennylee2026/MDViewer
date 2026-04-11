@@ -6,10 +6,11 @@ struct EditorView: NSViewRepresentable {
     var zoomLevel: Double = 1.0
     var fontFamily: String = "system"
     /// Plain text of the cursor's line (Markdown syntax stripped), used to locate the element in the preview.
-    /// Parameters: (lineText, editorFraction, lineFraction)
+    /// Parameters: (lineText, editorFraction, lineFraction, charOffset)
     ///   - editorFraction: cursor's vertical fraction within the visible editor area (0.0 = top, 1.0 = bottom)
     ///   - lineFraction: cursor's line number / total line count (0.0 = first line, 1.0 = last line)
-    var onCursorMove: ((String, CGFloat, CGFloat) -> Void)?
+    ///   - charOffset: cursor's UTF-16 character offset in the full string (matches NSRange)
+    var onCursorMove: ((String, CGFloat, CGFloat, Int) -> Void)?
 
     private var fontSize: CGFloat { CGFloat(18 * zoomLevel) }
 
@@ -199,7 +200,7 @@ struct EditorView: NSViewRepresentable {
 
             // If text is too short to search, still fall back to lineFraction
             guard searchText.count >= 2 else {
-                parent.onCursorMove?("", 0.0, lineFraction)
+                parent.onCursorMove?("", 0.0, lineFraction, safePos)
                 return
             }
 
@@ -223,7 +224,7 @@ struct EditorView: NSViewRepresentable {
                 }
             }
 
-            parent.onCursorMove?(searchText, fraction, lineFraction)
+            parent.onCursorMove?(searchText, fraction, lineFraction, safePos)
         }
     }
 }
