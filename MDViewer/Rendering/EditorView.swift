@@ -25,7 +25,6 @@ struct EditorView: NSViewRepresentable {
     private func makeParagraphStyle() -> NSParagraphStyle {
         let ps = NSMutableParagraphStyle()
         ps.lineHeightMultiple = 1.25
-        ps.paragraphSpacing   = fontSize * 0.3
         return ps
     }
 
