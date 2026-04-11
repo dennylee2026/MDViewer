@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.2] - 2026-04-10
+
+### Fixed
+- 修复编辑区与中文 / 日文输入法不兼容的问题：合成期间不再触发 SwiftUI 刷新，候选字不会被打断
+- 修复每次按键都重置字体排版的问题（改用字号比较而非 NSFont 对象比较）
+
 ## [1.5.1] - 2026-04-10
 
 ### Fixed
