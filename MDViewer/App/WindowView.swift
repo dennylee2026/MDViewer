@@ -18,6 +18,8 @@ struct WindowView: View {
                 // open() is synchronous — markdownContent is ready immediately after
                 if let url = initialURL { appState.open(url: url) }
 
+                // Register before draining pending URLs so empty windows are reusable
+                WindowCoordinator.shared.registerAppState(appState)
                 WindowCoordinator.shared.register { windowID in
                     openWindow(value: windowID)
                 }

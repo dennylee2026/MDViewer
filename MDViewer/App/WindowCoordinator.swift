@@ -9,12 +9,22 @@ final class WindowCoordinator {
     private var openHandler: ((WindowID) -> Void)?
     private var pendingURLs: [URL] = []
 
+    // Weak references to all live AppState instances
+    private struct WeakRef { weak var appState: AppState? }
+    private var registeredStates: [WeakRef] = []
+
+    /// Each WindowView registers its AppState so we can reuse empty windows.
+    func registerAppState(_ appState: AppState) {
+        registeredStates.removeAll { $0.appState == nil }
+        registeredStates.append(WeakRef(appState: appState))
+    }
+
     /// Called by the first window on appear. Drains any URLs queued before a window existed.
     func register(handler: @escaping (WindowID) -> Void) {
         openHandler = handler
         let pending = pendingURLs
         pendingURLs = []
-        for url in pending { handler(.forFile(url)) }
+        for url in pending { open(url: url) }
     }
 
     func openEmpty() {
@@ -22,6 +32,15 @@ final class WindowCoordinator {
     }
 
     func open(url: URL) {
+        registeredStates.removeAll { $0.appState == nil }
+        // Reuse an empty, unedited window instead of spawning a new one
+        if let state = registeredStates.first(where: { ref in
+            guard let a = ref.appState else { return false }
+            return a.fileURL == nil && !a.isDirty && a.markdownContent.isEmpty
+        })?.appState {
+            state.open(url: url)
+            return
+        }
         if let h = openHandler { h(.forFile(url)) }
         else { pendingURLs.append(url) }
     }
