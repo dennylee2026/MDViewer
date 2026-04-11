@@ -221,7 +221,7 @@ class AppState: ObservableObject {
               <title>\(title)</title>
               <style>\(hljsCSS)</style>
               <style>\(mdCSS)</style>
-              <style>*{box-sizing:border-box;margin:0;padding:0}body{padding:40px 48px;max-width:860px;margin:0 auto}</style>
+              <style>*{box-sizing:border-box;margin:0;padding:0}body{padding:40px 48px 80px;max-width:860px;margin:0 auto}</style>
             </head>
             <body class="\(bodyClass)">
               <div id="content">\(innerHtml)</div>
