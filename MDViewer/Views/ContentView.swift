@@ -9,6 +9,7 @@ struct ContentView: View {
     @AppStorage("colorTheme") private var colorTheme: String = "auto"
     @AppStorage("editorFont")  private var editorFont:  String = "system"
     @State private var isDragTargeted = false
+    @State private var outlineVisible: NavigationSplitViewVisibility = .detailOnly
 
     var windowTitle: String {
         let name = appState.fileURL?.lastPathComponent ?? "未命名"
@@ -52,6 +53,7 @@ struct ContentView: View {
         .onChange(of: colorScheme)       { _, _   in appState.currentTheme = effectiveTheme }
         .onChange(of: colorTheme)        { _, _   in appState.currentTheme = effectiveTheme }
         .onChange(of: appState.zoomLevel){ _, val in UserDefaults.standard.set(val, forKey: "MDViewer.zoomLevel") }
+        .onChange(of: appState.fileURL)  { _, _   in outlineVisible = .detailOnly }
         .onAppear { appState.currentTheme = effectiveTheme }
         .overlay(alignment: .top) { savedBadge }
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: appState.showSavedBadge)
@@ -76,7 +78,7 @@ struct ContentView: View {
             )
 
         case .viewer:
-            NavigationSplitView {
+            NavigationSplitView(columnVisibility: $outlineVisible) {
                 OutlineView(webView: webViewRef)
                     .environmentObject(appState)
                     .navigationSplitViewColumnWidth(min: 160, ideal: 200, max: 280)

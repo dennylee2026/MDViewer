@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.6] - 2026-04-11
+
+### Added
+- 预览模式下目录大纲侧栏默认隐藏，打开新文件时自动重置为隐藏状态，用户可手动展开
+- 点击预览区内的 `.md` / `.markdown` 超链接时弹出确认对话框，确认后通过 WindowCoordinator 打开对应文件（支持相对路径解析）
+
 ## [2.1.5] - 2026-04-11
 
 ### Changed

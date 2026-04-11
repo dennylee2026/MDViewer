@@ -15,6 +15,7 @@ struct MarkdownWebView: NSViewRepresentable {
     func makeNSView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
+        config.userContentController.add(context.coordinator, name: "openMDLink")
 
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
@@ -64,7 +65,7 @@ struct MarkdownWebView: NSViewRepresentable {
         webView.loadFileURL(templateURL, allowingReadAccessTo: resourceDir)
     }
 
-    class Coordinator: NSObject, WKNavigationDelegate {
+    class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         weak var webView: WKWebView?
         var pendingContent: String = ""
         var pendingFileURL: URL? = nil
@@ -92,6 +93,37 @@ struct MarkdownWebView: NSViewRepresentable {
             webView.evaluateJavaScript("renderMarkdown(`\(escaped)`)", completionHandler: nil)
             if scrollToTop {
                 webView.evaluateJavaScript("resetScroll()", completionHandler: nil)
+            }
+        }
+
+        // MARK: WKScriptMessageHandler — MD link interception
+
+        func userContentController(_ userContentController: WKUserContentController,
+                                   didReceive message: WKScriptMessage) {
+            guard message.name == "openMDLink",
+                  let href = message.body as? String,
+                  let baseDir = lastFileURL?.deletingLastPathComponent() else { return }
+
+            // Resolve href: absolute path, file:// URL, or relative
+            let targetURL: URL
+            if href.hasPrefix("file://"), let u = URL(string: href) {
+                targetURL = u
+            } else if href.hasPrefix("/") {
+                targetURL = URL(fileURLWithPath: href)
+            } else {
+                targetURL = baseDir.appendingPathComponent(href)
+            }
+
+            let filename = targetURL.lastPathComponent
+            DispatchQueue.main.async {
+                let alert = NSAlert()
+                alert.messageText = "打开 Markdown 文件"
+                alert.informativeText = "是否打开「\(filename)」？"
+                alert.addButton(withTitle: "打开")
+                alert.addButton(withTitle: "取消")
+                if alert.runModal() == .alertFirstButtonReturn {
+                    WindowCoordinator.shared.open(url: targetURL)
+                }
             }
         }
     }

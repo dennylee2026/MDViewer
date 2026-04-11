@@ -199,6 +199,19 @@
 
     // Initialize with light theme
     switchTheme('light');
+
+    // Intercept clicks on .md / .markdown links and forward to Swift
+    document.addEventListener('click', function(e) {
+      var link = e.target.closest('a');
+      if (!link) return;
+      var href = link.getAttribute('href');
+      if (!href) return;
+      if (/\.(md|markdown)(\?.*)?$/i.test(href)) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.webkit.messageHandlers.openMDLink.postMessage(href);
+      }
+    });
   </script>
 </body>
 </html>
