@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-04-11
+
+### Fixed
+- 修复代码块后预览区滚动位置偏移的问题：改用标题锚点定位（光标 charOffset → 最近标题 + 节内比例），替代原来基于源码行数的线性映射，彻底消除代码块导致的累积偏差
+
 ## [2.0.0] - 2026-04-11
 
 ### Fixed
