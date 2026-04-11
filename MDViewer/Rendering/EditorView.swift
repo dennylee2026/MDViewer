@@ -6,8 +6,10 @@ struct EditorView: NSViewRepresentable {
     var zoomLevel: Double = 1.0
     var fontFamily: String = "system"
     /// Plain text of the cursor's line (Markdown syntax stripped), used to locate the element in the preview.
-    /// The CGFloat is the cursor's vertical fraction (0.0 = top, 1.0 = bottom) within the visible editor area.
-    var onCursorMove: ((String, CGFloat) -> Void)?
+    /// Parameters: (lineText, editorFraction, lineFraction)
+    ///   - editorFraction: cursor's vertical fraction within the visible editor area (0.0 = top, 1.0 = bottom)
+    ///   - lineFraction: cursor's line number / total line count (0.0 = first line, 1.0 = last line)
+    var onCursorMove: ((String, CGFloat, CGFloat) -> Void)?
 
     private var fontSize: CGFloat { CGFloat(18 * zoomLevel) }
 
@@ -183,7 +185,23 @@ struct EditorView: NSViewRepresentable {
 
             // Need ≥ 2 chars to search reliably; take first 40 to keep it unique
             let searchText = String(line.prefix(40))
-            guard searchText.count >= 2 else { return }
+
+            // Compute lineFraction = cursorLine / totalLines (0.0 .. 1.0)
+            var lineFraction: CGFloat = 0.0
+            let totalLines = nsStr.components(separatedBy: "\n").count
+            if totalLines > 1 {
+                // Count newlines before cursor to get zero-based line index
+                let beforeCursor = nsStr.substring(to: safePos)
+                let cursorLine = beforeCursor.components(separatedBy: "\n").count - 1
+                lineFraction = CGFloat(cursorLine) / CGFloat(totalLines - 1)
+                lineFraction = max(0.0, min(1.0, lineFraction))
+            }
+
+            // If text is too short to search, still fall back to lineFraction
+            guard searchText.count >= 2 else {
+                parent.onCursorMove?("", 0.0, lineFraction)
+                return
+            }
 
             // Compute the cursor's vertical fraction within the visible editor area
             var fraction: CGFloat = 0.0
@@ -205,7 +223,7 @@ struct EditorView: NSViewRepresentable {
                 }
             }
 
-            parent.onCursorMove?(searchText, fraction)
+            parent.onCursorMove?(searchText, fraction, lineFraction)
         }
     }
 }

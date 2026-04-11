@@ -47,31 +47,79 @@
       window.scrollTo(0, 0);
     }
 
-    function scrollToEditorText(text, editorFraction) {
-      if (!text || text.length < 2) return;
+    function scrollToEditorText(text, editorFraction, lineFraction) {
+      if (!text || text.length < 2) {
+        // No searchable text — fall back to line fraction if available
+        if (typeof lineFraction === 'number' && !isNaN(lineFraction)) {
+          scrollToFraction(lineFraction);
+        }
+        return;
+      }
       // Fall back to 0 if the fraction is missing or invalid
       if (typeof editorFraction !== 'number' || isNaN(editorFraction)) {
         editorFraction = 0;
       }
+      if (typeof lineFraction !== 'number' || isNaN(lineFraction)) {
+        lineFraction = -1;  // sentinel: not available
+      }
       var content = document.getElementById('content');
       if (!content) return;
       var blockTags = ['H1','H2','H3','H4','H5','H6','P','LI','BLOCKQUOTE','PRE','TD','DT','DD'];
-      // Walk all text nodes so inline elements (bold, italic, code) are also searched
+
+      // Collect ALL matching block-level elements
+      var matches = [];
       var walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT, null);
       var node;
+      var seen = new Set();  // avoid duplicate block elements
       while ((node = walker.nextNode())) {
         if (node.textContent.includes(text)) {
-          // Bubble up to the nearest block-level ancestor
           var el = node.parentElement;
           while (el && !blockTags.includes(el.tagName)) { el = el.parentElement; }
           var target = el || node.parentElement;
-          // Position the element at the same proportional vertical position as the cursor in the editor
-          var elementTop = target.getBoundingClientRect().top + window.scrollY;
-          var scrollTarget = Math.max(0, elementTop - editorFraction * window.innerHeight);
-          window.scrollTo({ top: scrollTarget, behavior: 'instant' });
-          return;
+          // Deduplicate: same block element may contain the text in multiple text nodes
+          if (!seen.has(target)) {
+            seen.add(target);
+            matches.push(target);
+          }
         }
       }
+
+      if (matches.length === 0) {
+        // No text match found — fall back to line fraction
+        if (lineFraction >= 0) {
+          scrollToFraction(lineFraction);
+        }
+        return;
+      }
+
+      // If only one match, use it directly
+      var target;
+      if (matches.length === 1) {
+        target = matches[0];
+      } else {
+        // Multiple matches: pick the one whose document-position fraction is closest to lineFraction
+        if (lineFraction >= 0) {
+          var docHeight = document.documentElement.scrollHeight;
+          var bestDist = Infinity;
+          target = matches[0];
+          for (var i = 0; i < matches.length; i++) {
+            var elemTop = matches[i].getBoundingClientRect().top + window.scrollY;
+            var elemFraction = docHeight > 0 ? elemTop / docHeight : 0;
+            var dist = Math.abs(elemFraction - lineFraction);
+            if (dist < bestDist) {
+              bestDist = dist;
+              target = matches[i];
+            }
+          }
+        } else {
+          target = matches[0];
+        }
+      }
+
+      // Position the element at the same proportional vertical position as the cursor in the editor
+      var elementTop = target.getBoundingClientRect().top + window.scrollY;
+      var scrollTarget = Math.max(0, elementTop - editorFraction * window.innerHeight);
+      window.scrollTo({ top: scrollTarget, behavior: 'instant' });
     }
 
     function scrollToFraction(fraction) {

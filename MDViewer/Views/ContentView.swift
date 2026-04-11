@@ -81,10 +81,16 @@ struct ContentView: View {
             text: editorBinding,
             zoomLevel: appState.zoomLevel,
             fontFamily: editorFont,
-            onCursorMove: { lineText, fraction in
-                if let jsonStr = try? String(data: JSONEncoder().encode(lineText), encoding: .utf8) {
+            onCursorMove: { lineText, fraction, lineFraction in
+                if lineText.isEmpty {
+                    // No searchable text — fall back to line-fraction scroll
                     webViewRef?.evaluateJavaScript(
-                        "scrollToEditorText(\(jsonStr), \(fraction))",
+                        "scrollToFraction(\(lineFraction))",
+                        completionHandler: nil
+                    )
+                } else if let jsonStr = try? String(data: JSONEncoder().encode(lineText), encoding: .utf8) {
+                    webViewRef?.evaluateJavaScript(
+                        "scrollToEditorText(\(jsonStr), \(fraction), \(lineFraction))",
                         completionHandler: nil
                     )
                 }
