@@ -288,9 +288,7 @@ class AppState: ObservableObject {
 // MARK: - AppDelegate
 
 class AppDelegate: NSObject, NSApplicationDelegate {
-    let appState = AppState()
-
     func application(_ application: NSApplication, open urls: [URL]) {
-        if let url = urls.first { appState.open(url: url) }
+        for url in urls { WindowCoordinator.shared.open(url: url) }
     }
 }

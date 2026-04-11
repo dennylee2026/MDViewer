@@ -156,7 +156,7 @@ struct ContentView: View {
 
             Divider()
 
-            Button { appState.openFilePicker() } label: {
+            Button { WindowCoordinator.shared.openWithPicker() } label: {
                 Label("打开", systemImage: "folder")
             }
             .help("打开文件 (⌘O)")

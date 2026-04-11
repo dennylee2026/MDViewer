@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- 多窗口支持：每个文件在独立窗口中打开，窗口间状态完全隔离
+- ⌘N 打开新空白窗口；⌘O / 工具栏"打开" / Finder 双击均在新窗口中打开文件
+- 最近文件点击也在新窗口打开
+- 使用 `@FocusedObject` 确保菜单命令始终作用于当前聚焦窗口
+
 ## [1.7.0] - 2026-04-10
 
 ### Added
