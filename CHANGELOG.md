@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.2] - 2026-04-11
+
+### Fixed
+- 修复打开文件面板默认停在上次所在文件夹本身的问题：设置 `directoryURL` 为最近文件的所在目录，面板打开后直接展示该目录内的文件
+
 ## [1.9.1] - 2026-04-11
 
 ### Fixed
