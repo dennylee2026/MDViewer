@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-04-10
+
+### Added
+- 打开文件时窗口高度自动适配内容长度（420 + 行数 × 13，限定在 500 px 至屏幕可视高度的 88%），向上展开、底边锚定，并限制在屏幕可视区内
+
 ## [1.8.1] - 2026-04-10
 
 ### Fixed
