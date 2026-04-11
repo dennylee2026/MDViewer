@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.6] - 2026-04-11
+
+### Fixed
+- 修复 `WindowFinder` 在视图更新期间直接写 `@Binding` 导致的 "Modifying state during view update" 警告：改用 `DispatchQueue.main.async` 推迟写操作至当前渲染周期结束后执行
+
 ## [1.9.5] - 2026-04-11
 
 ### Fixed
