@@ -79,6 +79,8 @@ class AppState: ObservableObject {
         fileWatcher.watch(url: url) { [weak self] in self?.reloadFromDisk() }
         NSDocumentController.shared.noteNewRecentDocumentURL(url)
         recentURLs = Array(NSDocumentController.shared.recentDocumentURLs.prefix(10))
+        // Track last opened file so the picker can open inside its directory next time
+        UserDefaults.standard.set(url.path, forKey: "MDViewer.lastOpenedFilePath")
     }
 
     // MARK: Reload

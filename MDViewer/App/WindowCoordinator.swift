@@ -31,24 +31,7 @@ final class WindowCoordinator {
         openHandler?(.empty())
     }
 
-    // MARK: Last directory (UserDefaults — reliable, immune to recentDocumentURLs quirks)
-
-    private var lastDirectoryURL: URL? {
-        get {
-            guard let path = UserDefaults.standard.string(forKey: "MDViewer.lastOpenedDirectory") else { return nil }
-            var isDir: ObjCBool = false
-            guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else { return nil }
-            // isDirectory: true is required — without it NSOpenPanel selects the folder
-            // instead of navigating into it (treats the URL as a file reference)
-            return URL(fileURLWithPath: path, isDirectory: true)
-        }
-        set { UserDefaults.standard.set(newValue?.path, forKey: "MDViewer.lastOpenedDirectory") }
-    }
-
     func open(url: URL) {
-        // Remember the directory every time we open a file
-        lastDirectoryURL = url.deletingLastPathComponent()
-
         registeredStates.removeAll { $0.appState == nil }
         // Reuse an empty, unedited window instead of spawning a new one
         if let state = registeredStates.first(where: { ref in
@@ -67,8 +50,17 @@ final class WindowCoordinator {
         panel.allowedContentTypes = [.init(filenameExtension: "md")!, .init(filenameExtension: "markdown")!]
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
-        // Navigate directly into the last-used directory so files are immediately visible
-        panel.directoryURL = lastDirectoryURL
+        // Build directory URL from the last opened file path (tracked in AppState.open).
+        // Using deletingLastPathComponent() on a file URL naturally produces a directory
+        // URL with hasDirectoryPath = true, which NSOpenPanel navigates INTO correctly.
+        if let filePath = UserDefaults.standard.string(forKey: "MDViewer.lastOpenedFilePath") {
+            let fileURL = URL(fileURLWithPath: filePath)
+            let dirURL  = fileURL.deletingLastPathComponent()
+            var isDir: ObjCBool = false
+            if FileManager.default.fileExists(atPath: dirURL.path, isDirectory: &isDir), isDir.boolValue {
+                panel.directoryURL = dirURL
+            }
+        }
         if panel.runModal() == .OK, let url = panel.url { open(url: url) }
     }
 }
