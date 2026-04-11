@@ -38,7 +38,7 @@ class AppState: ObservableObject {
     @Published var headings: [HeadingItem] = []
     @Published var viewMode: ViewMode = .split
     @Published var isDirty: Bool = false
-    @Published var zoomLevel: Double = 1.0
+    @Published var zoomLevel: Double = 1.0   // overwritten in init from UserDefaults
     @Published var recentURLs: [URL] = []
     @Published var folderURL: URL?
     @Published var folderItems: [FolderItem] = []
@@ -52,6 +52,8 @@ class AppState: ObservableObject {
     private let fileWatcher = FileWatcher()
 
     init() {
+        let saved = UserDefaults.standard.double(forKey: "MDViewer.zoomLevel")
+        if saved > 0 { zoomLevel = min(3.0, max(0.5, saved)) }
         recentURLs = Array(NSDocumentController.shared.recentDocumentURLs.prefix(10))
     }
 

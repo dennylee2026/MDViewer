@@ -37,9 +37,10 @@ struct ContentView: View {
         .navigationTitle(windowTitle)
         .onDrop(of: [.fileURL], isTargeted: nil, perform: handleDrop)
         .toolbar { toolbarContent }
-        .onChange(of: webViewRef)   { _, ref in appState.webView = ref }
-        .onChange(of: colorScheme)  { _, _   in appState.currentTheme = effectiveTheme }
-        .onChange(of: colorTheme)   { _, _   in appState.currentTheme = effectiveTheme }
+        .onChange(of: webViewRef)        { _, ref in appState.webView = ref }
+        .onChange(of: colorScheme)       { _, _   in appState.currentTheme = effectiveTheme }
+        .onChange(of: colorTheme)        { _, _   in appState.currentTheme = effectiveTheme }
+        .onChange(of: appState.zoomLevel){ _, val in UserDefaults.standard.set(val, forKey: "MDViewer.zoomLevel") }
         .onAppear { appState.currentTheme = effectiveTheme }
         .overlay(alignment: .top) { savedBadge }
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: appState.showSavedBadge)
