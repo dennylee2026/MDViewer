@@ -45,10 +45,10 @@ struct AppCommands: Commands {
                 .disabled(appState == nil)
             Divider()
             Button("导出为 HTML…") { appState?.exportHTML() }
-                .keyboardShortcut("e", modifiers: .command)
+                .keyboardShortcut("e", modifiers: [.command, .shift])
                 .disabled(appState == nil)
             Button("导出为 PDF…") { appState?.exportPDF() }
-                .keyboardShortcut("e", modifiers: [.command, .shift])
+                .keyboardShortcut("e", modifiers: .command)
                 .disabled(appState == nil)
         }
 
