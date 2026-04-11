@@ -11,7 +11,6 @@
 		184B25821E7959563EF2FEAC /* MDViewerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9065D8A517453BB93215E95 /* MDViewerApp.swift */; };
 		228DB5501B0695AC88913BBC /* WindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8CB052770A42C61F88480C5 /* WindowView.swift */; };
 		4E05D7809C2B7E49575D8CB1 /* MarkdownHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD49FC3D4A2D7D425A8D9CBC /* MarkdownHighlighter.swift */; };
-		504F0C9B9A921BA72A2F66DB /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3752E17B1857430A855B161A /* MarkdownRenderer.swift */; };
 		620F934AB7F0D7ECCE2FDD4C /* light.css in Resources */ = {isa = PBXBuildFile; fileRef = 587B1182240CCC03D8834062 /* light.css */; };
 		67B18EB11B7EC71570C67596 /* WindowCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ABD521F8BBC028C96D71FEF /* WindowCoordinator.swift */; };
 		790935193DE1F59872500A15 /* hljs-dark.css in Resources */ = {isa = PBXBuildFile; fileRef = 2507A7B6593D08C8B6CE7FB5 /* hljs-dark.css */; };
@@ -42,7 +41,6 @@
 		2D7147919507FA87DF9F604A /* LineNumberRulerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineNumberRulerView.swift; sourceTree = "<group>"; };
 		2E6B9B36BC2B9E904EFCA038 /* marked.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = marked.min.js; sourceTree = "<group>"; };
 		36545F8D4815574AFF0CC6B2 /* AppCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCommands.swift; sourceTree = "<group>"; };
-		3752E17B1857430A855B161A /* MarkdownRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRenderer.swift; sourceTree = "<group>"; };
 		39F78D3E6798FB2D559C127B /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		7F1B6A4EB91C4EA6A9E78AE1 /* HelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpView.swift; sourceTree = "<group>"; };
 		55A13F79EC692EF9080AD26A /* MarkdownWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownWebView.swift; sourceTree = "<group>"; };
@@ -94,8 +92,7 @@
 				C2ACB8F99FEFBCC86E90F9BB /* EditorView.swift */,
 				2D7147919507FA87DF9F604A /* LineNumberRulerView.swift */,
 				DD49FC3D4A2D7D425A8D9CBC /* MarkdownHighlighter.swift */,
-				3752E17B1857430A855B161A /* MarkdownRenderer.swift */,
-				55A13F79EC692EF9080AD26A /* MarkdownWebView.swift */,
+					55A13F79EC692EF9080AD26A /* MarkdownWebView.swift */,
 			);
 			path = Rendering;
 			sourceTree = "<group>";
@@ -251,8 +248,7 @@
 				EB47D6A35E816367DEDB1B52 /* LineNumberRulerView.swift in Sources */,
 				184B25821E7959563EF2FEAC /* MDViewerApp.swift in Sources */,
 				4E05D7809C2B7E49575D8CB1 /* MarkdownHighlighter.swift in Sources */,
-				504F0C9B9A921BA72A2F66DB /* MarkdownRenderer.swift in Sources */,
-				A4600015EA6FFDCC5A252932 /* MarkdownWebView.swift in Sources */,
+					A4600015EA6FFDCC5A252932 /* MarkdownWebView.swift in Sources */,
 				79EC0ED458A19CD3F6AB67A5 /* OutlineView.swift in Sources */,
 				08D29102850E461CBB58B98B /* HelpView.swift in Sources */,
 				AFADB8F661322D9AD87C6BDA /* PreferencesView.swift in Sources */,

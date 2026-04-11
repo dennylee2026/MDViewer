@@ -57,20 +57,6 @@ class AppState: ObservableObject {
         recentURLs = Array(NSDocumentController.shared.recentDocumentURLs.prefix(10))
     }
 
-    // MARK: File Picker
-
-    func openFilePicker() {
-        if isDirty { guardUnsaved { self.presentOpenPanel() } } else { presentOpenPanel() }
-    }
-
-    private func presentOpenPanel() {
-        let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.init(filenameExtension: "md")!, .init(filenameExtension: "markdown")!]
-        panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
-        if panel.runModal() == .OK, let url = panel.url { open(url: url) }
-    }
-
     // MARK: Open
 
     func open(url: URL) {
@@ -98,21 +84,6 @@ class AppState: ObservableObject {
     private func reloadFromDisk() {
         guard fileURL != nil, !isDirty else { return }
         reload()
-    }
-
-    // MARK: New File
-
-    func newFile() {
-        if isDirty { guardUnsaved { self.doNewFile() } } else { doNewFile() }
-    }
-
-    private func doNewFile() {
-        fileURL = nil
-        markdownContent = ""
-        headings = []
-        isDirty = false
-        viewMode = .split
-        fileWatcher.stop()
     }
 
     // MARK: Save
@@ -154,22 +125,6 @@ class AppState: ObservableObject {
         markdownContent = text
         headings = Self.parseHeadings(from: text)
         isDirty = true
-    }
-
-    // MARK: Unsaved guard
-
-    private func guardUnsaved(then action: @escaping () -> Void) {
-        let alert = NSAlert()
-        alert.messageText = "未保存的更改"
-        alert.informativeText = "是否在继续之前保存对 \"\(fileURL?.lastPathComponent ?? "未命名")\" 的更改？"
-        alert.addButton(withTitle: "保存")
-        alert.addButton(withTitle: "不保存")
-        alert.addButton(withTitle: "取消")
-        switch alert.runModal() {
-        case .alertFirstButtonReturn:  save(); action()
-        case .alertSecondButtonReturn: isDirty = false; action()
-        default: break
-        }
     }
 
     // MARK: Folder
