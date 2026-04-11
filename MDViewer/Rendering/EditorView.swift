@@ -73,8 +73,9 @@ struct EditorView: NSViewRepresentable {
 
         // G1: Syntax highlighter
         let highlighter = MarkdownHighlighter()
-        highlighter.baseFont      = makeFont()
+        highlighter.baseFont       = makeFont()
         highlighter.paragraphStyle = makeParagraphStyle()
+        highlighter.textView       = textView          // needed for hasMarkedText() check
         textView.textStorage?.delegate = highlighter
         context.coordinator.highlighter = highlighter
 
@@ -142,19 +143,8 @@ struct EditorView: NSViewRepresentable {
 
         func textDidChange(_ notification: Notification) {
             guard let tv = notification.object as? NSTextView else { return }
-            if tv.hasMarkedText() {
-                // IME is still composing — mark as such and wait
-                highlighter?.isComposing = true
-                return
-            }
-            // Composition just ended (or plain keystroke): re-enable highlights,
-            // run one pass to catch any deferred changes, then sync the binding.
-            if highlighter?.isComposing == true {
-                highlighter?.isComposing = false
-                if let hl = highlighter, let storage = tv.textStorage {
-                    hl.applyHighlights(to: storage)
-                }
-            }
+            // Don't propagate partial IME composition — wait for confirmed text
+            guard !tv.hasMarkedText() else { return }
             parent.text = tv.string
         }
 
