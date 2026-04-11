@@ -17,11 +17,34 @@ struct MDViewerApp: App {
                 Button("打开…") { appDelegate.appState.openFilePicker() }
                     .keyboardShortcut("o", modifiers: .command)
             }
+            CommandGroup(after: .newItem) {
+                Menu("打开最近文件") {
+                    if appDelegate.appState.recentURLs.isEmpty {
+                        Text("无最近文件")
+                    } else {
+                        ForEach(appDelegate.appState.recentURLs, id: \.self) { url in
+                            Button(url.lastPathComponent) {
+                                appDelegate.appState.open(url: url)
+                            }
+                        }
+                        Divider()
+                        Button("清除最近打开") {
+                            NSDocumentController.shared.clearRecentDocuments(nil)
+                            appDelegate.appState.recentURLs = []
+                        }
+                    }
+                }
+            }
             CommandGroup(after: .saveItem) {
                 Button("保存") { appDelegate.appState.save() }
                     .keyboardShortcut("s", modifiers: .command)
                 Button("另存为…") { appDelegate.appState.saveAs() }
                     .keyboardShortcut("s", modifiers: [.command, .shift])
+                Divider()
+                Button("导出为 HTML…") { appDelegate.appState.exportHTML() }
+                    .keyboardShortcut("e", modifiers: .command)
+                Button("导出为 PDF…") { appDelegate.appState.exportPDF() }
+                    .keyboardShortcut("e", modifiers: [.command, .shift])
             }
 
             // View mode

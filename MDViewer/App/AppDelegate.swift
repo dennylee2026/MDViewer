@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import WebKit
 
 // MARK: - View Mode
 
@@ -28,8 +29,16 @@ class AppState: ObservableObject {
     @Published var viewMode: ViewMode = .split
     @Published var isDirty: Bool = false
     @Published var zoomLevel: Double = 1.0
+    @Published var recentURLs: [URL] = []
+
+    var webView: WKWebView?
+    var isDark: Bool = false
 
     private let fileWatcher = FileWatcher()
+
+    init() {
+        recentURLs = Array(NSDocumentController.shared.recentDocumentURLs.prefix(10))
+    }
 
     // MARK: File Picker
 
@@ -53,6 +62,8 @@ class AppState: ObservableObject {
         isDirty = false
         viewMode = .viewer
         fileWatcher.watch(url: url) { [weak self] in self?.reloadFromDisk() }
+        NSDocumentController.shared.noteNewRecentDocumentURL(url)
+        recentURLs = Array(NSDocumentController.shared.recentDocumentURLs.prefix(10))
     }
 
     // MARK: Reload
@@ -128,6 +139,63 @@ class AppState: ObservableObject {
         case .alertFirstButtonReturn:  save(); action()
         case .alertSecondButtonReturn: isDirty = false; action()
         default: break
+        }
+    }
+
+    // MARK: Export
+
+    func exportHTML() {
+        guard let webView else { return }
+        webView.evaluateJavaScript("document.getElementById('content').innerHTML") { [weak self] result, _ in
+            guard let self, let innerHtml = result as? String else { return }
+            let bundle = Bundle.main
+            func readResource(_ name: String, ext: String) -> String {
+                guard let url = bundle.url(forResource: name, withExtension: ext),
+                      let text = try? String(contentsOf: url, encoding: .utf8) else { return "" }
+                return text
+            }
+            let mdCSS   = readResource(isDark ? "dark" : "light", ext: "css")
+            let hljsCSS = readResource(isDark ? "hljs-dark" : "hljs-light", ext: "css")
+            let bodyClass = isDark ? "dark" : "light"
+            let title = fileURL?.deletingPathExtension().lastPathComponent ?? "Untitled"
+            let html = """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <title>\(title)</title>
+              <style>\(hljsCSS)</style>
+              <style>\(mdCSS)</style>
+              <style>*{box-sizing:border-box;margin:0;padding:0}body{padding:40px 48px;max-width:860px;margin:0 auto}</style>
+            </head>
+            <body class="\(bodyClass)">
+              <div id="content">\(innerHtml)</div>
+            </body>
+            </html>
+            """
+            DispatchQueue.main.async {
+                let panel = NSSavePanel()
+                panel.allowedContentTypes = [.html]
+                panel.nameFieldStringValue = title + ".html"
+                if panel.runModal() == .OK, let url = panel.url {
+                    try? html.write(to: url, atomically: true, encoding: .utf8)
+                }
+            }
+        }
+    }
+
+    func exportPDF() {
+        guard let webView else { return }
+        webView.createPDF { [weak self] result in
+            guard let self, case .success(let data) = result else { return }
+            DispatchQueue.main.async {
+                let panel = NSSavePanel()
+                panel.allowedContentTypes = [.pdf]
+                panel.nameFieldStringValue = (self.fileURL?.deletingPathExtension().lastPathComponent ?? "Untitled") + ".pdf"
+                if panel.runModal() == .OK, let url = panel.url {
+                    try? data.write(to: url)
+                }
+            }
         }
     }
 

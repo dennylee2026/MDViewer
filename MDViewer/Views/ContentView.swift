@@ -40,6 +40,9 @@ struct ContentView: View {
         .navigationTitle(windowTitle)
         .onDrop(of: [.fileURL], isTargeted: nil, perform: handleDrop)
         .toolbar { toolbarContent }
+        .onChange(of: webViewRef) { _, ref in appState.webView = ref }
+        .onChange(of: colorScheme) { _, scheme in appState.isDark = (scheme == .dark) }
+        .onAppear { appState.isDark = (colorScheme == .dark) }
     }
 
     // MARK: Editor (split mode — with cursor sync)
