@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-04-10
+
 ### Added
 - 导出为 HTML：内联主题 CSS，生成独立 `.html` 文件（File > 导出为 HTML… / ⌘E）
 - 导出为 PDF：基于 WKWebView 当前渲染，输出 PDF 文件（File > 导出为 PDF… / ⌘⇧E）
