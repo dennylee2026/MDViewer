@@ -129,21 +129,21 @@ struct ContentView: View {
         }
 
         ToolbarItem(placement: .principal) {
-            VStack(spacing: 2) {
-                Picker("", selection: $appState.viewMode) {
-                    Image(systemName: "square.and.pencil").tag(ViewMode.editor)
-                    Image(systemName: "rectangle.split.2x1").tag(ViewMode.split)
-                    Image(systemName: "eye").tag(ViewMode.viewer)
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 120)
-                .help("⌘1 编辑  ⌘2 分栏  ⌘3 预览")
-
+            Picker("", selection: $appState.viewMode) {
+                Image(systemName: "square.and.pencil").tag(ViewMode.editor)
+                Image(systemName: "rectangle.split.2x1").tag(ViewMode.split)
+                Image(systemName: "eye").tag(ViewMode.viewer)
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 120)
+            .help("⌘1 编辑  ⌘2 分栏  ⌘3 预览")
+            .overlay(alignment: .bottom) {
                 Text("Unsaved")
                     .font(.caption2)
                     .foregroundStyle(.orange)
                     .opacity(appState.isDirty ? 1 : 0)
                     .animation(.easeInOut(duration: 0.2), value: appState.isDirty)
+                    .offset(y: 14)
             }
         }
 
