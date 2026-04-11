@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-04-11
+
+### Fixed
+- 修复分栏模式下编辑区光标点击后预览区不滚动的问题：新增 `lineFraction`（光标行 / 总行数）参数，文字匹配失败时直接调用 `scrollToFraction` 保证预览区始终更新
+- 修复重复文字始终定位到第一个匹配项的问题：JS 改为收集全部匹配块元素，选取文档位置比例最接近 `lineFraction` 的目标，而非盲取第一个
+- 修复预览区光标同步位置错误（始终置顶）：将 `lineFraction` 传入 JS，使目标元素出现在预览区与光标在编辑区相同的垂直比例位置
+
 ## [1.9.6] - 2026-04-11
 
 ### Fixed
