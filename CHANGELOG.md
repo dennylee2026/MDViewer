@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.2] - 2026-04-11
+
+### Changed
+- 移除无效代码：`openFilePicker`、`presentOpenPanel`、`newFile`、`doNewFile`、`guardUnsaved`（已被 WindowCoordinator 接管）及整个 `MarkdownRenderer.swift`（零引用）
+
 ## [2.1.1] - 2026-04-11
 
 ### Added
