@@ -5,6 +5,8 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
 
     var baseFont: NSFont = .systemFont(ofSize: 14)         // updated by EditorView on zoom
     var paragraphStyle: NSParagraphStyle = .default        // updated by EditorView on zoom
+    /// Set to true by the coordinator while IME is composing; highlights are deferred.
+    var isComposing: Bool = false
     private var isWorking = false
 
     /// Bold version of baseFont, preserving its cascade list (e.g. PingFang SC).
@@ -22,7 +24,10 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
         range: NSRange,
         changeInLength delta: Int
     ) {
-        guard editedMask.contains(.editedCharacters), !isWorking else { return }
+        // Skip during IME composition: setAttributes on the full range would clear
+        // the marked-text attributes that the input method writes into the storage,
+        // causing the composition to collapse and characters to be lost.
+        guard editedMask.contains(.editedCharacters), !isWorking, !isComposing else { return }
         isWorking = true
         applyHighlights(to: textStorage)
         isWorking = false
