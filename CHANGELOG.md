@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.4] - 2026-04-11
+
+### Fixed
+- 修复打开文件面板仍停在文件夹本身的问题：重建 `directoryURL` 时加入 `isDirectory: true`，NSOpenPanel 正确导航进入目录而非将其作为文件选中
+- 修复复用空白窗口打开文件后窗口高度未调整的问题：将调整触发点从 `onAppear` 改为 `onChange(of: appState.fileURL)`，无论新窗口还是复用窗口，文件加载后均会触发高度适配
+
 ## [1.9.3] - 2026-04-11
 
 ### Fixed
