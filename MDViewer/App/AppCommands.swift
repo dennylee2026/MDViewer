@@ -53,6 +53,38 @@ struct AppCommands: Commands {
                 .disabled(appState == nil)
         }
 
+        // Edit — Find (forwards to NSTextView's built-in find bar via responder chain)
+        CommandGroup(after: .textEditing) {
+            Divider()
+            Button("查找…") {
+                let item = NSMenuItem()
+                item.tag = NSTextFinder.Action.showFindInterface.rawValue
+                NSApp.sendAction(Selector(("performTextFinderAction:")), to: nil, from: item)
+            }
+            .keyboardShortcut("f", modifiers: .command)
+
+            Button("查找并替换…") {
+                let item = NSMenuItem()
+                item.tag = NSTextFinder.Action.showReplaceInterface.rawValue
+                NSApp.sendAction(Selector(("performTextFinderAction:")), to: nil, from: item)
+            }
+            .keyboardShortcut("f", modifiers: [.command, .option])
+
+            Button("查找下一个") {
+                let item = NSMenuItem()
+                item.tag = NSTextFinder.Action.nextMatch.rawValue
+                NSApp.sendAction(Selector(("performTextFinderAction:")), to: nil, from: item)
+            }
+            .keyboardShortcut("g", modifiers: .command)
+
+            Button("查找上一个") {
+                let item = NSMenuItem()
+                item.tag = NSTextFinder.Action.previousMatch.rawValue
+                NSApp.sendAction(Selector(("performTextFinderAction:")), to: nil, from: item)
+            }
+            .keyboardShortcut("g", modifiers: [.command, .shift])
+        }
+
         // Help
         CommandGroup(replacing: .help) {
             Button("MDViewer 帮助") {

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.4] - 2026-04-11
+
+### Added
+- 查找与替换：⌘F 打开查找栏，⌘⌥F 打开查找替换栏，⌘G / ⌘⇧G 跳转下一个 / 上一个匹配项，基于 NSTextView 内建 NSTextFinder 实现
+
 ## [2.1.3] - 2026-04-11
 
 ### Fixed
