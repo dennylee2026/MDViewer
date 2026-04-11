@@ -70,8 +70,9 @@ private struct WindowFinder: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView { NSView() }
 
     func updateNSView(_ view: NSView, context: Context) {
-        // Only assign once; avoids spurious re-renders on every parent update
+        // Only assign once; avoids spurious re-renders on every parent update.
+        // Defer the binding write to avoid "modifying state during view update".
         guard window == nil, let w = view.window else { return }
-        window = w
+        DispatchQueue.main.async { window = w }
     }
 }
