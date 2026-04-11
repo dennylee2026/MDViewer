@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.3] - 2026-04-10
+
+### Fixed
+- 彻底修复输入法兼容性：语法高亮器在 IME 合成期间不再调用 `setAttributes(range: full)`，避免覆盖输入法写入的内部属性，防止已确认汉字丢失及界面异常闪烁
+
 ## [1.5.2] - 2026-04-10
 
 ### Fixed
