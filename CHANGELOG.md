@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- 自定义主题：偏好设置（⌘,）中可选预览主题（跟随系统 / 始终明亮 / 始终暗色 / 复古纸张 Sepia）
+- 自定义编辑器字体：偏好设置中可选 SF Pro / Menlo / Palatino
+- 目录树侧栏：File > 打开文件夹（⌘⇧O），在左侧显示文件夹内所有 `.md` 文件，支持层级展开，工具栏按钮可随时收起
+
 ## [1.6.0] - 2026-04-10
 
 ### Added

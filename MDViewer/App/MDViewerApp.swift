@@ -18,6 +18,8 @@ struct MDViewerApp: App {
                     .keyboardShortcut("o", modifiers: .command)
             }
             CommandGroup(after: .newItem) {
+                Button("打开文件夹…") { appDelegate.appState.openFolderPicker() }
+                    .keyboardShortcut("o", modifiers: [.command, .shift])
                 Menu("打开最近文件") {
                     if appDelegate.appState.recentURLs.isEmpty {
                         Text("无最近文件")
@@ -65,6 +67,10 @@ struct MDViewerApp: App {
                 Button("实际大小") { appDelegate.appState.zoomLevel = 1.0 }
                     .keyboardShortcut("0", modifiers: .command)
             }
+        }
+
+        Settings {
+            PreferencesView()
         }
     }
 }

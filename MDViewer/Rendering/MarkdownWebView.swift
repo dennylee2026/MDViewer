@@ -3,7 +3,7 @@ import WebKit
 
 struct MarkdownWebView: NSViewRepresentable {
     let content: String
-    let isDark: Bool
+    let theme: String   // "light", "dark", "sepia"
     let zoomLevel: Double
     let fileURL: URL?
     @Binding var webViewRef: WKWebView?
@@ -22,7 +22,7 @@ struct MarkdownWebView: NSViewRepresentable {
         context.coordinator.webView = webView
         context.coordinator.pendingContent = content
         context.coordinator.pendingFileURL = fileURL
-        context.coordinator.isDark = isDark
+        context.coordinator.theme = theme
 
         DispatchQueue.main.async { webViewRef = webView }
         loadTemplate(in: webView)
@@ -32,15 +32,14 @@ struct MarkdownWebView: NSViewRepresentable {
     func updateNSView(_ webView: WKWebView, context: Context) {
         let coordinator = context.coordinator
         let contentChanged = coordinator.lastContent != content
-        let themeChanged = coordinator.isDark != isDark
-        let fileChanged = coordinator.lastFileURL != fileURL
+        let themeChanged   = coordinator.theme != theme
+        let fileChanged    = coordinator.lastFileURL != fileURL
 
-        coordinator.isDark = isDark
+        coordinator.theme = theme
         coordinator.pendingContent = content
         coordinator.pendingFileURL = fileURL
 
         if themeChanged {
-            let theme = isDark ? "dark" : "light"
             webView.evaluateJavaScript("switchTheme('\(theme)')") { _, _ in
                 if contentChanged {
                     coordinator.renderContent(content, scrollToTop: fileChanged)
@@ -71,15 +70,13 @@ struct MarkdownWebView: NSViewRepresentable {
         var pendingFileURL: URL? = nil
         var lastContent: String = ""
         var lastFileURL: URL? = nil
-        var isDark: Bool = false
+        var theme: String = "light"
         var isLoaded: Bool = false
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             isLoaded = true
-            let theme = isDark ? "dark" : "light"
             webView.evaluateJavaScript("switchTheme('\(theme)')") { [weak self] _, _ in
                 guard let self else { return }
-                // Initial load always scrolls to top
                 self.renderContent(self.pendingContent, scrollToTop: true)
             }
         }

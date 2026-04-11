@@ -10,6 +10,16 @@ enum ViewMode {
     case viewer   // 纯预览，显示大纲侧栏
 }
 
+// MARK: - Folder Model
+
+struct FolderItem: Identifiable {
+    let id = UUID()
+    let url: URL
+    let name: String
+    let isDirectory: Bool
+    var children: [FolderItem]?
+}
+
 // MARK: - Heading Model
 
 struct HeadingItem: Identifiable {
@@ -30,9 +40,12 @@ class AppState: ObservableObject {
     @Published var isDirty: Bool = false
     @Published var zoomLevel: Double = 1.0
     @Published var recentURLs: [URL] = []
+    @Published var folderURL: URL?
+    @Published var folderItems: [FolderItem] = []
+    @Published var showFolderSidebar: Bool = false
 
     var webView: WKWebView?
-    var isDark: Bool = false
+    var currentTheme: String = "light"
 
     private let fileWatcher = FileWatcher()
 
@@ -142,6 +155,48 @@ class AppState: ObservableObject {
         }
     }
 
+    // MARK: Folder
+
+    func openFolderPicker() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = "选择文件夹"
+        if panel.runModal() == .OK, let url = panel.url {
+            openFolder(url: url)
+        }
+    }
+
+    func openFolder(url: URL) {
+        folderURL = url
+        folderItems = Self.scanFolder(url)
+        showFolderSidebar = true
+    }
+
+    static func scanFolder(_ url: URL) -> [FolderItem] {
+        let fm = FileManager.default
+        guard let contents = try? fm.contentsOfDirectory(
+            at: url,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: .skipsHiddenFiles
+        ) else { return [] }
+
+        return contents
+            .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
+            .compactMap { itemURL in
+                let isDir = (try? itemURL.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
+                if isDir {
+                    let children = scanFolder(itemURL)
+                    guard !children.isEmpty else { return nil }
+                    return FolderItem(url: itemURL, name: itemURL.lastPathComponent, isDirectory: true, children: children)
+                } else if itemURL.pathExtension == "md" || itemURL.pathExtension == "markdown" {
+                    return FolderItem(url: itemURL, name: itemURL.lastPathComponent, isDirectory: false, children: nil)
+                }
+                return nil
+            }
+    }
+
     // MARK: Export
 
     func exportHTML() {
@@ -154,9 +209,9 @@ class AppState: ObservableObject {
                       let text = try? String(contentsOf: url, encoding: .utf8) else { return "" }
                 return text
             }
-            let mdCSS   = readResource(isDark ? "dark" : "light", ext: "css")
-            let hljsCSS = readResource(isDark ? "hljs-dark" : "hljs-light", ext: "css")
-            let bodyClass = isDark ? "dark" : "light"
+            let mdCSS   = readResource(currentTheme, ext: "css")
+            let hljsCSS = readResource(currentTheme == "dark" ? "hljs-dark" : "hljs-light", ext: "css")
+            let bodyClass = currentTheme
             let title = fileURL?.deletingPathExtension().lastPathComponent ?? "Untitled"
             let html = """
             <!DOCTYPE html>

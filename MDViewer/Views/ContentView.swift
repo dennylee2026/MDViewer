@@ -6,43 +6,70 @@ struct ContentView: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var webViewRef: WKWebView?
 
+    @AppStorage("colorTheme") private var colorTheme: String = "auto"
+    @AppStorage("editorFont")  private var editorFont:  String = "system"
+
     var windowTitle: String {
         let name = appState.fileURL?.lastPathComponent ?? "未命名"
         return appState.isDirty ? "\(name) •" : name
     }
 
+    private var effectiveTheme: String {
+        switch colorTheme {
+        case "light", "dark", "sepia": return colorTheme
+        default: return colorScheme == .dark ? "dark" : "light"
+        }
+    }
+
     var body: some View {
         Group {
-            switch appState.viewMode {
-            case .split:
+            if appState.showFolderSidebar {
                 HSplitView {
-                    editorView.frame(minWidth: 200)
-                    previewPane.frame(minWidth: 200)
+                    FolderTreeView()
+                        .frame(minWidth: 180, idealWidth: 220, maxWidth: 300)
+                    viewContent
                 }
-
-            case .editor:
-                EditorView(
-                    text: editorBinding,
-                    zoomLevel: appState.zoomLevel
-                )
-
-            case .viewer:
-                NavigationSplitView {
-                    OutlineView(webView: webViewRef)
-                        .environmentObject(appState)
-                        .navigationSplitViewColumnWidth(min: 160, ideal: 200, max: 280)
-                } detail: {
-                    previewPane
-                }
+            } else {
+                viewContent
             }
         }
         .frame(minWidth: 680, minHeight: 400)
         .navigationTitle(windowTitle)
         .onDrop(of: [.fileURL], isTargeted: nil, perform: handleDrop)
         .toolbar { toolbarContent }
-        .onChange(of: webViewRef) { _, ref in appState.webView = ref }
-        .onChange(of: colorScheme) { _, scheme in appState.isDark = (scheme == .dark) }
-        .onAppear { appState.isDark = (colorScheme == .dark) }
+        .onChange(of: webViewRef)   { _, ref in appState.webView = ref }
+        .onChange(of: colorScheme)  { _, _   in appState.currentTheme = effectiveTheme }
+        .onChange(of: colorTheme)   { _, _   in appState.currentTheme = effectiveTheme }
+        .onAppear { appState.currentTheme = effectiveTheme }
+    }
+
+    // MARK: View switcher
+
+    @ViewBuilder
+    private var viewContent: some View {
+        switch appState.viewMode {
+        case .split:
+            HSplitView {
+                editorView.frame(minWidth: 200)
+                previewPane.frame(minWidth: 200)
+            }
+
+        case .editor:
+            EditorView(
+                text: editorBinding,
+                zoomLevel: appState.zoomLevel,
+                fontFamily: editorFont
+            )
+
+        case .viewer:
+            NavigationSplitView {
+                OutlineView(webView: webViewRef)
+                    .environmentObject(appState)
+                    .navigationSplitViewColumnWidth(min: 160, ideal: 200, max: 280)
+            } detail: {
+                previewPane
+            }
+        }
     }
 
     // MARK: Editor (split mode — with cursor sync)
@@ -51,6 +78,7 @@ struct ContentView: View {
         EditorView(
             text: editorBinding,
             zoomLevel: appState.zoomLevel,
+            fontFamily: editorFont,
             onCursorMove: { lineText in
                 if let jsonStr = try? String(data: JSONEncoder().encode(lineText), encoding: .utf8) {
                     webViewRef?.evaluateJavaScript(
@@ -67,7 +95,7 @@ struct ContentView: View {
     private var previewPane: some View {
         MarkdownWebView(
             content: appState.markdownContent,
-            isDark: colorScheme == .dark,
+            theme: effectiveTheme,
             zoomLevel: appState.zoomLevel,
             fileURL: appState.fileURL,
             webViewRef: $webViewRef
@@ -88,6 +116,16 @@ struct ContentView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .navigation) {
+            Button {
+                appState.showFolderSidebar.toggle()
+            } label: {
+                Image(systemName: "sidebar.leading")
+            }
+            .help("文件夹侧栏")
+            .disabled(appState.folderURL == nil)
+        }
+
         ToolbarItem(placement: .principal) {
             Picker("", selection: $appState.viewMode) {
                 Image(systemName: "square.and.pencil").tag(ViewMode.editor)

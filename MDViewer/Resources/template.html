@@ -81,17 +81,20 @@
     }
 
     function switchTheme(theme) {
-      const mdLink = document.getElementById('md-theme');
+      const mdLink   = document.getElementById('md-theme');
       const hljsLink = document.getElementById('hljs-theme');
+      document.body.classList.remove('light', 'dark', 'sepia');
       if (theme === 'dark') {
-        mdLink.href = 'dark.css';
+        mdLink.href   = 'dark.css';
         hljsLink.href = 'hljs-dark.css';
-        document.body.classList.remove('light');
         document.body.classList.add('dark');
-      } else {
-        mdLink.href = 'light.css';
+      } else if (theme === 'sepia') {
+        mdLink.href   = 'sepia.css';
         hljsLink.href = 'hljs-light.css';
-        document.body.classList.remove('dark');
+        document.body.classList.add('sepia');
+      } else {
+        mdLink.href   = 'light.css';
+        hljsLink.href = 'hljs-light.css';
         document.body.classList.add('light');
       }
     }
