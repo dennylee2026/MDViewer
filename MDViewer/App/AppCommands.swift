@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AppCommands: Commands {
     @FocusedObject private var appState: AppState?
+    @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {
         // File — New / Open
@@ -50,6 +51,14 @@ struct AppCommands: Commands {
             Button("导出为 PDF…") { appState?.exportPDF() }
                 .keyboardShortcut("e", modifiers: .command)
                 .disabled(appState == nil)
+        }
+
+        // Help
+        CommandGroup(replacing: .help) {
+            Button("MDViewer 帮助") {
+                openWindow(id: "help")
+            }
+            .keyboardShortcut("?", modifiers: .command)
         }
 
         // View

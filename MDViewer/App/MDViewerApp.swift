@@ -10,6 +10,11 @@ struct MDViewerApp: App {
         }
         .commands { AppCommands() }
 
+        Window("MDViewer 帮助", id: "help") {
+            HelpView()
+        }
+        .windowResizability(.contentSize)
+
         Settings {
             PreferencesView()
         }
