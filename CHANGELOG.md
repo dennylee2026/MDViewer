@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.5] - 2026-04-11
+
+### Fixed
+- 修复工具栏模式切换图标顶部对齐的问题：将 "Unsaved" 文字从 VStack 移出，改用 `.overlay` + `.offset` 悬浮定位，Picker 作为 ToolbarItem 根视图后系统自动垂直居中
+- 修复打开文件面板导航问题：改为在 `AppState.open(url:)` 中记录最后打开的文件路径，覆盖所有打开路径（含 Finder、拖拽），面板读取时用 `deletingLastPathComponent()` 动态计算目录 URL，确保导航进入目录而非选中文件夹本身
+
 ## [1.9.4] - 2026-04-11
 
 ### Fixed
