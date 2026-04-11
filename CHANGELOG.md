@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-04-11
+
+### Added
+- 打开新窗口时继承上一次使用的缩放比例：`AppState` 初始化时从 UserDefaults 读取，每次缩放变化时自动写入
+
 ## [2.1.0] - 2026-04-11
 
 ### Added
