@@ -8,6 +8,7 @@ struct ContentView: View {
 
     @AppStorage("colorTheme") private var colorTheme: String = "auto"
     @AppStorage("editorFont")  private var editorFont:  String = "system"
+    @State private var isDragTargeted = false
 
     var windowTitle: String {
         let name = appState.fileURL?.lastPathComponent ?? "未命名"
@@ -35,7 +36,17 @@ struct ContentView: View {
         }
         .frame(minWidth: 680, minHeight: 400)
         .navigationTitle(windowTitle)
-        .onDrop(of: [.fileURL], isTargeted: nil, perform: handleDrop)
+        .onDrop(of: [.fileURL], isTargeted: $isDragTargeted, perform: handleDrop)
+        .overlay {
+            if isDragTargeted {
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(Color.accentColor, lineWidth: 2)
+                    .background(Color.accentColor.opacity(0.06)
+                        .clipShape(RoundedRectangle(cornerRadius: 8)))
+                    .allowsHitTesting(false)
+                    .padding(4)
+            }
+        }
         .toolbar { toolbarContent }
         .onChange(of: webViewRef)        { _, ref in appState.webView = ref }
         .onChange(of: colorScheme)       { _, _   in appState.currentTheme = effectiveTheme }
@@ -249,12 +260,20 @@ struct ContentView: View {
     // MARK: Drag-drop
 
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
-        providers.first?.loadItem(forTypeIdentifier: "public.file-url") { item, _ in
-            guard let data = item as? Data,
-                  let url = URL(dataRepresentation: data, relativeTo: nil),
-                  url.pathExtension == "md" || url.pathExtension == "markdown"
+        guard let provider = providers.first else { return false }
+        provider.loadItem(forTypeIdentifier: "public.file-url") { item, _ in
+            // NSItemProvider returns either Data or NSURL depending on macOS version
+            var fileURL: URL?
+            if let data = item as? Data {
+                fileURL = URL(dataRepresentation: data, relativeTo: nil)
+            } else if let nsURL = item as? NSURL {
+                fileURL = nsURL as URL
+            }
+            guard let url = fileURL,
+                  ["md", "markdown"].contains(url.pathExtension.lowercased())
             else { return }
-            DispatchQueue.main.async { appState.open(url: url) }
+            // Route through WindowCoordinator so multi-window reuse logic applies
+            DispatchQueue.main.async { WindowCoordinator.shared.open(url: url) }
         }
         return true
     }
