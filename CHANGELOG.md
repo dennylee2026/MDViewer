@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.3] - 2026-04-11
+
+### Fixed
+- 修复拖拽打开文件的兼容性：`NSItemProvider` 在不同 macOS 版本返回 `Data` 或 `NSURL`，现在两种情况均可正确解析
+- 拖拽文件改为经由 `WindowCoordinator` 打开，与 ⌘O 行为一致（空白窗口复用，否则新建窗口）
+- 拖拽悬停时显示蓝色边框与淡蓝背景作为视觉反馈
+
 ## [2.1.2] - 2026-04-11
 
 ### Changed
