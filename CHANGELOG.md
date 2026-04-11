@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.3] - 2026-04-11
+
+### Fixed
+- 修复打开文件面板默认停在上次文件夹本身的问题：改为将上次打开文件的所在目录写入 UserDefaults，面板打开时直接导航进入该目录，文件立即可见，无需再手动双击文件夹
+
 ## [1.9.2] - 2026-04-11
 
 ### Fixed
