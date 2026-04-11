@@ -31,6 +31,8 @@ final class WindowCoordinator {
         panel.allowedContentTypes = [.init(filenameExtension: "md")!, .init(filenameExtension: "markdown")!]
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
+        // Open inside the last-used directory so the panel shows files, not the folder itself
+        panel.directoryURL = NSDocumentController.shared.recentDocumentURLs.first?.deletingLastPathComponent()
         if panel.runModal() == .OK, let url = panel.url { open(url: url) }
     }
 }
