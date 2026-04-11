@@ -15,39 +15,42 @@ struct WindowView: View {
             .focusedSceneObject(appState)
             .background(WindowFinder(window: $nsWindow))
             .onAppear {
+                // open() is synchronous — markdownContent is ready immediately after
                 if let url = initialURL { appState.open(url: url) }
+
                 WindowCoordinator.shared.register { windowID in
                     openWindow(value: windowID)
                 }
-            }
-            .onChange(of: appState.fileURL) { _, url in
-                guard url != nil else { return }
-                // Brief delay so markdownContent is populated before we measure
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                    resizeWindow(for: appState.markdownContent)
+
+                // Resize only for file-based windows.
+                // 0.2 s lets the WindowFinder binding propagate through a render cycle;
+                // keyWindow fallback covers the (rare) case where nsWindow is still nil.
+                guard initialURL != nil else { return }
+                let content = appState.markdownContent
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    guard let win = nsWindow ?? NSApplication.shared.keyWindow else { return }
+                    resizeWindow(win, for: content)
                 }
             }
     }
 
-    // MARK: - Window resize
+    // MARK: - Resize
 
-    private func resizeWindow(for content: String) {
-        guard let window = nsWindow else { return }
-
-        let lineCount  = content.components(separatedBy: "\n").count
-        let screenH    = window.screen?.visibleFrame.height ?? NSScreen.main?.visibleFrame.height ?? 800
-        let rawHeight  = 420 + CGFloat(lineCount) * 13
-        let targetH    = max(500, min(rawHeight, screenH * 0.88))
+    private func resizeWindow(_ window: NSWindow, for content: String) {
+        let lines   = content.components(separatedBy: "\n").count
+        let screenH = window.screen?.visibleFrame.height
+                      ?? NSScreen.main?.visibleFrame.height
+                      ?? 800
+        let target  = max(500, min(420 + CGFloat(lines) * 13, screenH * 0.88))
 
         var frame = window.frame
-        // Grow/shrink upward — keep the bottom edge anchored
-        frame.origin.y    += frame.height - targetH
-        frame.size.height  = targetH
+        // Grow / shrink upward; keep bottom edge anchored
+        frame.origin.y   += frame.height - target
+        frame.size.height = target
 
-        // Clamp within the screen's visible area
-        if let screen = window.screen {
-            let vis = screen.visibleFrame
-            frame.origin.y = max(vis.minY, min(frame.origin.y, vis.maxY - targetH))
+        // Stay within the screen's visible area
+        if let vis = window.screen?.visibleFrame {
+            frame.origin.y = max(vis.minY, min(frame.origin.y, vis.maxY - target))
         }
 
         window.setFrame(frame, display: true, animate: true)
@@ -56,17 +59,16 @@ struct WindowView: View {
 
 // MARK: - NSWindow accessor
 
-/// Captures the NSWindow that hosts this view so we can resize it directly.
+/// Synchronously captures the hosting NSWindow via updateNSView,
+/// which SwiftUI calls on the main thread after the view is in the hierarchy.
 private struct WindowFinder: NSViewRepresentable {
     @Binding var window: NSWindow?
 
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        DispatchQueue.main.async { window = view.window }
-        return view
-    }
+    func makeNSView(context: Context) -> NSView { NSView() }
 
     func updateNSView(_ view: NSView, context: Context) {
-        DispatchQueue.main.async { window = view.window }
+        // Only assign once; avoids spurious re-renders on every parent update
+        guard window == nil, let w = view.window else { return }
+        window = w
     }
 }
