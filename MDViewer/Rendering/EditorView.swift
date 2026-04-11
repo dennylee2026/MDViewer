@@ -91,10 +91,10 @@ struct EditorView: NSViewRepresentable {
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? NSTextView else { return }
 
-        // Zoom: update font + paragraph style if changed
+        // Zoom: update font + paragraph style if changed (compare point size, not object identity)
         let newFont = makeFont()
         let newPS   = makeParagraphStyle()
-        if textView.font != newFont {
+        if textView.font?.pointSize != newFont.pointSize {
             context.coordinator.highlighter?.baseFont       = newFont
             context.coordinator.highlighter?.paragraphStyle = newPS
             applyTypography(to: textView)
@@ -104,8 +104,8 @@ struct EditorView: NSViewRepresentable {
             }
         }
 
-        // External text change
-        if textView.string != text {
+        // External text change — never interrupt an active IME composition
+        if textView.string != text && !textView.hasMarkedText() {
             let sel = textView.selectedRanges
             textView.string = text
             if let hl = context.coordinator.highlighter,
@@ -142,11 +142,15 @@ struct EditorView: NSViewRepresentable {
 
         func textDidChange(_ notification: Notification) {
             guard let tv = notification.object as? NSTextView else { return }
+            // Don't propagate partial IME composition — wait for confirmed text
+            guard !tv.hasMarkedText() else { return }
             parent.text = tv.string
         }
 
         func textViewDidChangeSelection(_ notification: Notification) {
             guard let tv = notification.object as? NSTextView else { return }
+            // Skip cursor-sync while IME is composing
+            guard !tv.hasMarkedText() else { return }
             let cursor = tv.selectedRange().location
             let nsStr  = tv.string as NSString
             let safePos = min(cursor, nsStr.length)
