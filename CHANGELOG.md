@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.1] - 2026-04-11
+
+### Fixed
+- 修复窗口高度自动适配的竞态条件：将调整逻辑从 `onChange(of: fileURL)` 移至 `onAppear`，延迟增至 0.2 s，并加入 `NSApplication.shared.keyWindow` 兜底，确保窗口引用在 SwiftUI 渲染周期完成前可靠获取
+
 ## [1.9.0] - 2026-04-10
 
 ### Added
