@@ -38,7 +38,9 @@ final class WindowCoordinator {
             guard let path = UserDefaults.standard.string(forKey: "MDViewer.lastOpenedDirectory") else { return nil }
             var isDir: ObjCBool = false
             guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else { return nil }
-            return URL(fileURLWithPath: path)
+            // isDirectory: true is required — without it NSOpenPanel selects the folder
+            // instead of navigating into it (treats the URL as a file reference)
+            return URL(fileURLWithPath: path, isDirectory: true)
         }
         set { UserDefaults.standard.set(newValue?.path, forKey: "MDViewer.lastOpenedDirectory") }
     }

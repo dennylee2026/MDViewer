@@ -23,11 +23,12 @@ struct WindowView: View {
                 WindowCoordinator.shared.register { windowID in
                     openWindow(value: windowID)
                 }
-
-                // Resize only for file-based windows.
-                // 0.2 s lets the WindowFinder binding propagate through a render cycle;
-                // keyWindow fallback covers the (rare) case where nsWindow is still nil.
-                guard initialURL != nil else { return }
+            }
+            // Resize whenever a file is loaded — covers both new windows and reused
+            // empty windows (where onAppear already ran without a file).
+            // 0.2 s lets WindowFinder propagate nsWindow through a render cycle first.
+            .onChange(of: appState.fileURL) { _, url in
+                guard url != nil else { return }
                 let content = appState.markdownContent
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                     guard let win = nsWindow ?? NSApplication.shared.keyWindow else { return }
