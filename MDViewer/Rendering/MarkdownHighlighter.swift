@@ -5,7 +5,15 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
 
     var baseFont: NSFont = .systemFont(ofSize: 14)         // updated by EditorView on zoom
     var paragraphStyle: NSParagraphStyle = .default        // updated by EditorView on zoom
+    weak var textView: NSTextView?                         // set by EditorView; used for IME check
     private var isWorking = false
+
+    /// Bold version of baseFont, preserving its cascade list (e.g. PingFang SC).
+    private func makeBoldFont(size: CGFloat? = nil) -> NSFont {
+        let sz = size ?? baseFont.pointSize
+        let descriptor = baseFont.fontDescriptor.withSymbolicTraits(.bold)
+        return NSFont(descriptor: descriptor, size: sz) ?? NSFont.boldSystemFont(ofSize: sz)
+    }
 
     // MARK: - Delegate
 
@@ -15,7 +23,15 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
         range: NSRange,
         changeInLength delta: Int
     ) {
-        guard editedMask.contains(.editedCharacters), !isWorking else { return }
+        // Skip during IME composition: setAttributes on the full range would clear
+        // the marked-text attributes that the input method writes into the storage,
+        // causing the composition to collapse and characters to be lost.
+        // textView.hasMarkedText() is checked HERE (synchronously) because
+        // textStorage(_:didProcessEditing:) fires before textDidChange — any flag
+        // set in textDidChange would arrive too late.
+        guard editedMask.contains(.editedCharacters),
+              !isWorking,
+              textView?.hasMarkedText() != true else { return }
         isWorking = true
         applyHighlights(to: textStorage)
         isWorking = false
@@ -79,7 +95,7 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
             let (color, size) = colors[level - 1]
             s.addAttributes([
                 .foregroundColor: color,
-                .font: NSFont.systemFont(ofSize: size, weight: .bold)
+                .font: makeBoldFont(size: size)
             ], range: m.range)
         }
     }
@@ -91,11 +107,14 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
 
     private func applyBold(_ s: NSTextStorage, _ str: String) {
         apply(to: s, str: str, pattern: "\\*\\*(?=\\S).+?(?<=\\S)\\*\\*|__(?=\\S).+?(?<=\\S)__",
-              attrs: [.font: NSFont.systemFont(ofSize: baseFont.pointSize, weight: .bold)])
+              attrs: [.font: makeBoldFont()])
     }
 
     private func applyItalic(_ s: NSTextStorage, _ str: String) {
-        apply(to: s, str: str, pattern: "\\*(?!\\*)(?=\\S).+?(?<=\\S)(?<!\\*)\\*|_(?!_)(?=\\S).+?(?<=\\S)(?<!_)_",
+        // Require that the * is not adjacent to another * on either side,
+        // so that ** bold markers are never mistaken for italic delimiters.
+        apply(to: s, str: str,
+              pattern: "(?<!\\*)\\*(?!\\*)(?=\\S).+?(?<=\\S)(?<!\\*)\\*(?!\\*)|(?<!_)_(?!_)(?=\\S).+?(?<=\\S)(?<!_)_(?!_)",
               attrs: [.obliqueness: 0.2])
     }
 

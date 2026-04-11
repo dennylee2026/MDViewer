@@ -23,8 +23,7 @@ struct ContentView: View {
             case .editor:
                 EditorView(
                     text: editorBinding,
-                    zoomLevel: appState.zoomLevel,
-                    headings: appState.headings
+                    zoomLevel: appState.zoomLevel
                 )
 
             case .viewer:
@@ -49,13 +48,13 @@ struct ContentView: View {
         EditorView(
             text: editorBinding,
             zoomLevel: appState.zoomLevel,
-            headings: appState.headings,
-            onCursorMove: { headingIndex in
-                guard headingIndex >= 0 else { return }
-                webViewRef?.evaluateJavaScript(
-                    "scrollToHeading(\(headingIndex))",
-                    completionHandler: nil
-                )
+            onCursorMove: { lineText in
+                if let jsonStr = try? String(data: JSONEncoder().encode(lineText), encoding: .utf8) {
+                    webViewRef?.evaluateJavaScript(
+                        "scrollToEditorText(\(jsonStr))",
+                        completionHandler: nil
+                    )
+                }
             }
         )
     }
@@ -67,6 +66,7 @@ struct ContentView: View {
             content: appState.markdownContent,
             isDark: colorScheme == .dark,
             zoomLevel: appState.zoomLevel,
+            fileURL: appState.fileURL,
             webViewRef: $webViewRef
         )
         .ignoresSafeArea()

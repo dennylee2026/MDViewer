@@ -4,17 +4,27 @@ import AppKit
 struct EditorView: NSViewRepresentable {
     @Binding var text: String
     var zoomLevel: Double = 1.0
-    var headings: [HeadingItem] = []
-    var onCursorMove: ((Int) -> Void)?
+    /// Plain text of the cursor's line (Markdown syntax stripped), used to locate the element in the preview.
+    var onCursorMove: ((String) -> Void)?
 
-    private var fontSize: CGFloat { CGFloat(14 * zoomLevel) }
+    private var fontSize: CGFloat { CGFloat(18 * zoomLevel) }
 
-    // MARK: - Paragraph style (CJK-friendly)
+    // MARK: - Font with PingFang SC cascade for CJK
+
+    private func makeFont() -> NSFont {
+        let base = NSFont.systemFont(ofSize: fontSize)
+        let pingFangDescriptor = NSFontDescriptor(fontAttributes: [.name: "PingFangSC-Regular"])
+        let cascaded = base.fontDescriptor.addingAttributes([
+            .cascadeList: [pingFangDescriptor]
+        ])
+        return NSFont(descriptor: cascaded, size: fontSize) ?? base
+    }
+
+    // MARK: - Paragraph style
 
     private func makeParagraphStyle() -> NSParagraphStyle {
         let ps = NSMutableParagraphStyle()
-        ps.lineHeightMultiple  = 1.6          // comfortable for CJK glyphs
-        ps.paragraphSpacing    = fontSize * 0.3
+        ps.lineHeightMultiple = 1.25
         return ps
     }
 
@@ -63,8 +73,9 @@ struct EditorView: NSViewRepresentable {
 
         // G1: Syntax highlighter
         let highlighter = MarkdownHighlighter()
-        highlighter.baseFont      = .systemFont(ofSize: fontSize)
+        highlighter.baseFont       = makeFont()
         highlighter.paragraphStyle = makeParagraphStyle()
+        highlighter.textView       = textView          // needed for hasMarkedText() check
         textView.textStorage?.delegate = highlighter
         context.coordinator.highlighter = highlighter
 
@@ -81,10 +92,10 @@ struct EditorView: NSViewRepresentable {
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? NSTextView else { return }
 
-        // Zoom: update font + paragraph style if changed
-        let newFont = NSFont.systemFont(ofSize: fontSize)
+        // Zoom: update font + paragraph style if changed (compare point size, not object identity)
+        let newFont = makeFont()
         let newPS   = makeParagraphStyle()
-        if textView.font != newFont {
+        if textView.font?.pointSize != newFont.pointSize {
             context.coordinator.highlighter?.baseFont       = newFont
             context.coordinator.highlighter?.paragraphStyle = newPS
             applyTypography(to: textView)
@@ -94,8 +105,8 @@ struct EditorView: NSViewRepresentable {
             }
         }
 
-        // External text change
-        if textView.string != text {
+        // External text change — never interrupt an active IME composition
+        if textView.string != text && !textView.hasMarkedText() {
             let sel = textView.selectedRanges
             textView.string = text
             if let hl = context.coordinator.highlighter,
@@ -105,13 +116,12 @@ struct EditorView: NSViewRepresentable {
             textView.selectedRanges = sel
         }
 
-        context.coordinator.headings = headings
     }
 
     // MARK: - Typography helper
 
     private func applyTypography(to textView: NSTextView) {
-        let font = NSFont.systemFont(ofSize: fontSize)
+        let font = makeFont()
         let ps   = makeParagraphStyle()
         textView.font                 = font
         textView.defaultParagraphStyle = ps
@@ -128,20 +138,40 @@ struct EditorView: NSViewRepresentable {
         var parent:      EditorView
         weak var textView: NSTextView?
         var highlighter: MarkdownHighlighter?
-        var headings:    [HeadingItem] = []
 
         init(_ parent: EditorView) { self.parent = parent }
 
         func textDidChange(_ notification: Notification) {
             guard let tv = notification.object as? NSTextView else { return }
+            // Don't propagate partial IME composition — wait for confirmed text
+            guard !tv.hasMarkedText() else { return }
             parent.text = tv.string
         }
 
         func textViewDidChangeSelection(_ notification: Notification) {
             guard let tv = notification.object as? NSTextView else { return }
-            let cursor  = tv.selectedRange().location
-            let heading = headings.last(where: { $0.charOffset <= cursor })
-            parent.onCursorMove?(heading?.index ?? -1)
+            // Skip cursor-sync while IME is composing
+            guard !tv.hasMarkedText() else { return }
+            let cursor = tv.selectedRange().location
+            let nsStr  = tv.string as NSString
+            let safePos = min(cursor, nsStr.length)
+            let lineRange = nsStr.lineRange(for: NSRange(location: safePos, length: 0))
+            var line = nsStr.substring(with: lineRange)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            // Strip Markdown syntax to get the plain text shown in the preview
+            let opts: NSString.CompareOptions = .regularExpression
+            line = line.replacingOccurrences(of: "^#{1,6}\\s+",  with: "", options: opts)
+            line = line.replacingOccurrences(of: "^>+\\s*",       with: "", options: opts)
+            line = line.replacingOccurrences(of: "^[-*+]\\s+",    with: "", options: opts)
+            line = line.replacingOccurrences(of: "^\\d+\\.\\s+",  with: "", options: opts)
+            line = line.replacingOccurrences(of: "\\*{1,3}|_{1,3}|~~|`+", with: "", options: opts)
+            line = line.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            // Need ≥ 2 chars to search reliably; take first 40 to keep it unique
+            let searchText = String(line.prefix(40))
+            guard searchText.count >= 2 else { return }
+            parent.onCursorMove?(searchText)
         }
     }
 }

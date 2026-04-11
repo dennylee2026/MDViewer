@@ -25,10 +25,11 @@
 body {
   background-color: var(--bg);
   color: var(--text);
-  font-size: 14px;
-  line-height: 1.7;
+  font-size: 18px;
+  line-height: 1.5;
   font-family: -apple-system, "SF Pro Text", "PingFang SC", "Heiti SC",
                "Helvetica Neue", Arial, sans-serif;
+  font-synthesis: none;
   word-wrap: break-word;
   -webkit-font-smoothing: antialiased;
 }

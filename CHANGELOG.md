@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.4] - 2026-04-10
+
+### Fixed
+- 彻底修复输入法兼容性：MarkdownHighlighter 直接在 `textStorage(_:didProcessEditing:)` 内同步调用 `textView.hasMarkedText()`，在正确的时机跳过高亮，不再破坏 IME 合成状态
+
+## [1.5.3] - 2026-04-10
+
+### Fixed
+- 彻底修复输入法兼容性：语法高亮器在 IME 合成期间不再调用 `setAttributes(range: full)`，避免覆盖输入法写入的内部属性，防止已确认汉字丢失及界面异常闪烁
+
+## [1.5.2] - 2026-04-10
+
+### Fixed
+- 修复编辑区与中文 / 日文输入法不兼容的问题：合成期间不再触发 SwiftUI 刷新，候选字不会被打断
+- 修复每次按键都重置字体排版的问题（改用字号比较而非 NSFont 对象比较）
+
+## [1.5.1] - 2026-04-10
+
+### Fixed
+- 预览区行间距调整为 1.5
+- 编辑区移除额外段落间距，`lineHeightMultiple = 1.25` 视觉效果准确
+- 修复编辑器中 `**加粗**` 文字被同时渲染为粗体+斜体的问题（斜体正则在 `*` 两侧加断言，不再误匹配 `**` 标记）
+- 加粗与标题字形改用继承 PingFang SC 级联的字体描述符，中文字体渲染与正文保持一致
+
+## [1.5.0] - 2026-04-10
+
+### Changed
+- 编辑区与预览区正文默认字号由 14 调整为 18（缩放功能不受影响）
+
+## [1.4.1] - 2026-04-10
+
+### Fixed
+- 光标落在编辑区时，预览区正确滚动到对应位置（不再强制跳回顶部）
+- 修复每次按键触发重新渲染后 `window.scrollTo(0,0)` 覆盖光标同步滚动的竞态问题
+- 改用 TreeWalker 遍历所有文本节点，粗体 / 斜体 / 行内代码内的文字也能正确匹配
+- 修复 `JSONSerialization` 对纯字符串返回 nil 导致 `scrollToEditorText` 从未被调用的问题
+
 ## [1.4.0] - 2026-04-10
 
 ### Added

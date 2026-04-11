@@ -5,6 +5,7 @@ struct MarkdownWebView: NSViewRepresentable {
     let content: String
     let isDark: Bool
     let zoomLevel: Double
+    let fileURL: URL?
     @Binding var webViewRef: WKWebView?
 
     func makeCoordinator() -> Coordinator {
@@ -20,6 +21,7 @@ struct MarkdownWebView: NSViewRepresentable {
         webView.setValue(false, forKey: "drawsBackground")
         context.coordinator.webView = webView
         context.coordinator.pendingContent = content
+        context.coordinator.pendingFileURL = fileURL
         context.coordinator.isDark = isDark
 
         DispatchQueue.main.async { webViewRef = webView }
@@ -31,27 +33,28 @@ struct MarkdownWebView: NSViewRepresentable {
         let coordinator = context.coordinator
         let contentChanged = coordinator.lastContent != content
         let themeChanged = coordinator.isDark != isDark
+        let fileChanged = coordinator.lastFileURL != fileURL
 
         coordinator.isDark = isDark
         coordinator.pendingContent = content
+        coordinator.pendingFileURL = fileURL
 
         if themeChanged {
             let theme = isDark ? "dark" : "light"
             webView.evaluateJavaScript("switchTheme('\(theme)')") { _, _ in
                 if contentChanged {
-                    coordinator.renderContent(content)
+                    coordinator.renderContent(content, scrollToTop: fileChanged)
                 }
             }
         } else if contentChanged {
             if coordinator.isLoaded {
-                coordinator.renderContent(content)
+                coordinator.renderContent(content, scrollToTop: fileChanged)
             }
         }
 
         if webView.pageZoom != zoomLevel {
             webView.pageZoom = zoomLevel
         }
-
     }
 
     private func loadTemplate(in webView: WKWebView) {
@@ -65,7 +68,9 @@ struct MarkdownWebView: NSViewRepresentable {
     class Coordinator: NSObject, WKNavigationDelegate {
         weak var webView: WKWebView?
         var pendingContent: String = ""
+        var pendingFileURL: URL? = nil
         var lastContent: String = ""
+        var lastFileURL: URL? = nil
         var isDark: Bool = false
         var isLoaded: Bool = false
 
@@ -74,19 +79,23 @@ struct MarkdownWebView: NSViewRepresentable {
             let theme = isDark ? "dark" : "light"
             webView.evaluateJavaScript("switchTheme('\(theme)')") { [weak self] _, _ in
                 guard let self else { return }
-                self.renderContent(self.pendingContent)
+                // Initial load always scrolls to top
+                self.renderContent(self.pendingContent, scrollToTop: true)
             }
         }
 
-        func renderContent(_ markdown: String) {
+        func renderContent(_ markdown: String, scrollToTop: Bool) {
             guard let webView else { return }
             lastContent = markdown
+            lastFileURL = pendingFileURL
             let escaped = markdown
                 .replacingOccurrences(of: "\\", with: "\\\\")
                 .replacingOccurrences(of: "`", with: "\\`")
                 .replacingOccurrences(of: "$", with: "\\$")
-            let js = "renderMarkdown(`\(escaped)`)"
-            webView.evaluateJavaScript(js, completionHandler: nil)
+            webView.evaluateJavaScript("renderMarkdown(`\(escaped)`)", completionHandler: nil)
+            if scrollToTop {
+                webView.evaluateJavaScript("resetScroll()", completionHandler: nil)
+            }
         }
     }
 }
