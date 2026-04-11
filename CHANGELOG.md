@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-04-11
+
+### Added
+- Help 菜单（⌘?）：内置使用指南，涵盖打开文件、视图模式、分栏同步、编辑与保存、文件夹侧栏、目录大纲、缩放、导出、主题与字体、多窗口共 9 个功能区块
+
+### Fixed
+- 将导出为 PDF（⌘E）与导出为 HTML（⌘⇧E）快捷键对调
+
 ## [2.0.1] - 2026-04-11
 
 ### Fixed
