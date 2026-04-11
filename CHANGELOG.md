@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-04-10
+
+### Fixed
+- 预览区行间距调整为 1.5
+- 编辑区移除额外段落间距，`lineHeightMultiple = 1.25` 视觉效果准确
+- 修复编辑器中 `**加粗**` 文字被同时渲染为粗体+斜体的问题（斜体正则在 `*` 两侧加断言，不再误匹配 `**` 标记）
+- 加粗与标题字形改用继承 PingFang SC 级联的字体描述符，中文字体渲染与正文保持一致
+
 ## [1.5.0] - 2026-04-10
 
 ### Changed
