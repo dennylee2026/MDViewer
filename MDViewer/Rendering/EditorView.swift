@@ -6,7 +6,8 @@ struct EditorView: NSViewRepresentable {
     var zoomLevel: Double = 1.0
     var fontFamily: String = "system"
     /// Plain text of the cursor's line (Markdown syntax stripped), used to locate the element in the preview.
-    var onCursorMove: ((String) -> Void)?
+    /// The CGFloat is the cursor's vertical fraction (0.0 = top, 1.0 = bottom) within the visible editor area.
+    var onCursorMove: ((String, CGFloat) -> Void)?
 
     private var fontSize: CGFloat { CGFloat(18 * zoomLevel) }
 
@@ -183,7 +184,28 @@ struct EditorView: NSViewRepresentable {
             // Need ≥ 2 chars to search reliably; take first 40 to keep it unique
             let searchText = String(line.prefix(40))
             guard searchText.count >= 2 else { return }
-            parent.onCursorMove?(searchText)
+
+            // Compute the cursor's vertical fraction within the visible editor area
+            var fraction: CGFloat = 0.0
+            if let layoutManager = tv.layoutManager,
+               let textContainer = tv.textContainer {
+                let glyphRange = layoutManager.glyphRange(
+                    forCharacterRange: NSRange(location: safePos, length: 0),
+                    actualCharacterRange: nil
+                )
+                let cursorRect = layoutManager.boundingRect(
+                    forGlyphRange: glyphRange,
+                    in: textContainer
+                )
+                let visibleRect = tv.visibleRect
+                let cursorY = cursorRect.midY - visibleRect.origin.y
+                let visibleHeight = visibleRect.height
+                if visibleHeight > 0 {
+                    fraction = max(0.0, min(1.0, cursorY / visibleHeight))
+                }
+            }
+
+            parent.onCursorMove?(searchText, fraction)
         }
     }
 }

@@ -47,8 +47,12 @@
       window.scrollTo(0, 0);
     }
 
-    function scrollToEditorText(text) {
+    function scrollToEditorText(text, editorFraction) {
       if (!text || text.length < 2) return;
+      // Fall back to 0 if the fraction is missing or invalid
+      if (typeof editorFraction !== 'number' || isNaN(editorFraction)) {
+        editorFraction = 0;
+      }
       var content = document.getElementById('content');
       if (!content) return;
       var blockTags = ['H1','H2','H3','H4','H5','H6','P','LI','BLOCKQUOTE','PRE','TD','DT','DD'];
@@ -60,7 +64,11 @@
           // Bubble up to the nearest block-level ancestor
           var el = node.parentElement;
           while (el && !blockTags.includes(el.tagName)) { el = el.parentElement; }
-          (el || node.parentElement).scrollIntoView({ behavior: 'instant', block: 'start' });
+          var target = el || node.parentElement;
+          // Position the element at the same proportional vertical position as the cursor in the editor
+          var elementTop = target.getBoundingClientRect().top + window.scrollY;
+          var scrollTarget = Math.max(0, elementTop - editorFraction * window.innerHeight);
+          window.scrollTo({ top: scrollTarget, behavior: 'instant' });
           return;
         }
       }
