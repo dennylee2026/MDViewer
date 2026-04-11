@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.5] - 2026-04-11
+
+### Changed
+- 目录大纲字号提升（H1 17pt / H2 16pt / H3 15pt / H4+ 14pt），取消加粗，主标题黑色、次级标题改为深灰（labelColor × 0.55）
+- 文件夹侧栏字号提升至 14pt，取消加粗，非活跃条目改为深灰
+
 ## [2.1.4] - 2026-04-11
 
 ### Added

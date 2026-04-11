@@ -7,8 +7,8 @@ struct FolderTreeView: View {
         VStack(spacing: 0) {
             HStack {
                 Text(appState.folderURL?.lastPathComponent ?? "文件夹")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundStyle(.primary)
                     .lineLimit(1)
                 Spacer()
             }
@@ -31,13 +31,13 @@ struct FolderTreeView: View {
                 List(appState.folderItems, children: \.children) { item in
                     HStack(spacing: 6) {
                         Image(systemName: item.isDirectory ? "folder.fill" : "doc.text")
-                            .font(.system(size: 12))
-                            .foregroundStyle(item.isDirectory ? Color.orange : Color.secondary)
+                            .font(.system(size: 14))
+                            .foregroundStyle(item.isDirectory ? Color.secondary : Color(nsColor: .tertiaryLabelColor))
                         Text(item.name)
-                            .font(.system(size: 12))
+                            .font(.system(size: 14))
                             .lineLimit(1)
-                            .foregroundStyle(appState.fileURL == item.url ? Color.accentColor : Color.primary)
-                            .fontWeight(appState.fileURL == item.url ? .semibold : .regular)
+                            .foregroundStyle(appState.fileURL == item.url ? Color.primary : Color(nsColor: .labelColor).opacity(0.55))
+                            .fontWeight(.regular)
                         Spacer(minLength: 0)
                     }
                     .contentShape(Rectangle())

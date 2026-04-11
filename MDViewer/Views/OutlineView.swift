@@ -49,20 +49,17 @@ private struct HeadingRow: View {
 
     private var labelColor: Color {
         switch heading.level {
-        case 1: return Color(hex: "#4285F4")
-        case 2: return Color(hex: "#EA4335")
-        case 3: return Color(hex: "#FBBC05")
-        case 4: return Color(hex: "#34A853")
-        case 5: return Color(hex: "#4285F4")
-        default: return Color(hex: "#EA4335")
+        case 1, 2: return Color.primary
+        default: return Color(nsColor: .labelColor).opacity(0.55)
         }
     }
 
     private var fontSize: CGFloat {
         switch heading.level {
-        case 1: return 13
-        case 2: return 12
-        default: return 11
+        case 1: return 17
+        case 2: return 16
+        case 3: return 15
+        default: return 14
         }
     }
 
@@ -70,12 +67,11 @@ private struct HeadingRow: View {
         Button(action: onTap) {
             HStack(spacing: 0) {
                 Rectangle()
-                    .fill(heading.level == 1 ? labelColor : Color.clear)
+                    .fill(heading.level == 1 ? Color(nsColor: .separatorColor) : Color.clear)
                     .frame(width: 3)
                 Text(heading.text)
-                    .font(.system(size: fontSize))
-                    .foregroundStyle(heading.level <= 2 ? labelColor : .primary)
-                    .fontWeight(heading.level == 1 ? .semibold : .regular)
+                    .font(.system(size: fontSize, weight: .regular))
+                    .foregroundStyle(labelColor)
                     .lineLimit(2)
                     .padding(.leading, indent + 10)
                     .padding(.trailing, 8)
