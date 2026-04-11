@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.4] - 2026-04-10
+
+### Fixed
+- 彻底修复输入法兼容性：MarkdownHighlighter 直接在 `textStorage(_:didProcessEditing:)` 内同步调用 `textView.hasMarkedText()`，在正确的时机跳过高亮，不再破坏 IME 合成状态
+
 ## [1.5.3] - 2026-04-10
 
 ### Fixed
