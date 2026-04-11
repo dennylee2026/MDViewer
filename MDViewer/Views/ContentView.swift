@@ -41,6 +41,8 @@ struct ContentView: View {
         .onChange(of: colorScheme)  { _, _   in appState.currentTheme = effectiveTheme }
         .onChange(of: colorTheme)   { _, _   in appState.currentTheme = effectiveTheme }
         .onAppear { appState.currentTheme = effectiveTheme }
+        .overlay(alignment: .top) { savedBadge }
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: appState.showSavedBadge)
     }
 
     // MARK: View switcher
@@ -127,14 +129,22 @@ struct ContentView: View {
         }
 
         ToolbarItem(placement: .principal) {
-            Picker("", selection: $appState.viewMode) {
-                Image(systemName: "square.and.pencil").tag(ViewMode.editor)
-                Image(systemName: "rectangle.split.2x1").tag(ViewMode.split)
-                Image(systemName: "eye").tag(ViewMode.viewer)
+            VStack(spacing: 2) {
+                Picker("", selection: $appState.viewMode) {
+                    Image(systemName: "square.and.pencil").tag(ViewMode.editor)
+                    Image(systemName: "rectangle.split.2x1").tag(ViewMode.split)
+                    Image(systemName: "eye").tag(ViewMode.viewer)
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 120)
+                .help("⌘1 编辑  ⌘2 分栏  ⌘3 预览")
+
+                Text("Unsaved")
+                    .font(.caption2)
+                    .foregroundStyle(.orange)
+                    .opacity(appState.isDirty ? 1 : 0)
+                    .animation(.easeInOut(duration: 0.2), value: appState.isDirty)
             }
-            .pickerStyle(.segmented)
-            .frame(width: 120)
-            .help("⌘1 编辑  ⌘2 分栏  ⌘3 预览")
         }
 
         ToolbarItemGroup(placement: .primaryAction) {
@@ -160,6 +170,22 @@ struct ContentView: View {
                 Label("打开", systemImage: "folder")
             }
             .help("打开文件 (⌘O)")
+        }
+    }
+
+    // MARK: Saved badge
+
+    @ViewBuilder
+    private var savedBadge: some View {
+        if appState.showSavedBadge {
+            Label("Saved", systemImage: "checkmark.circle.fill")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 5)
+                .background(.ultraThinMaterial, in: Capsule())
+                .padding(.top, 8)
+                .transition(.move(edge: .top).combined(with: .opacity))
         }
     }
 

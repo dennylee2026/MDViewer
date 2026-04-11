@@ -43,9 +43,11 @@ class AppState: ObservableObject {
     @Published var folderURL: URL?
     @Published var folderItems: [FolderItem] = []
     @Published var showFolderSidebar: Bool = false
+    @Published var showSavedBadge: Bool = false
 
     var webView: WKWebView?
     var currentTheme: String = "light"
+    private var savedBadgeTask: Task<Void, Never>?
 
     private let fileWatcher = FileWatcher()
 
@@ -129,6 +131,17 @@ class AppState: ObservableObject {
     private func writeContent(to url: URL) {
         try? markdownContent.write(to: url, atomically: true, encoding: .utf8)
         isDirty = false
+        flashSavedBadge()
+    }
+
+    private func flashSavedBadge() {
+        savedBadgeTask?.cancel()
+        showSavedBadge = true
+        savedBadgeTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(2))
+            guard !Task.isCancelled else { return }
+            self.showSavedBadge = false
+        }
     }
 
     // MARK: Content change from editor
