@@ -137,14 +137,5 @@
 "help.footer" = "遇到问题？欢迎在 GitHub 提交 Issue 反馈。";
 
 // MARK: - PreferencesView
-"prefs.previewTheme" = "预览主题";
-"prefs.theme.auto" = "跟随系统";
-"prefs.theme.light" = "始终明亮";
-"prefs.theme.dark" = "始终暗色";
-"prefs.theme.sepia" = "复古纸张（Sepia）";
-"prefs.editorFont" = "编辑器字体";
-"prefs.font.system" = "系统默认（SF Pro）";
-"prefs.font.menlo" = "等宽（Menlo）";
-"prefs.font.palatino" = "衬线（Palatino）";
 "prefs.style" = "样式";
 "prefs.style.openConfig" = "打开配置文件…";

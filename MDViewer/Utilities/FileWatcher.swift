@@ -2,7 +2,6 @@ import Foundation
 
 final class FileWatcher {
     private var source: DispatchSourceFileSystemObject?
-    private var fileDescriptor: Int32 = -1
     private var watchedURL: URL?
     private var onChange: (() -> Void)?
 
@@ -23,7 +22,6 @@ final class FileWatcher {
 
         let fd = open(url.path, O_EVTONLY)
         guard fd != -1 else { return }
-        fileDescriptor = fd
 
         let src = DispatchSource.makeFileSystemObjectSource(
             fileDescriptor: fd,
