@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		08D29102850E461CBB58B98B /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F1B6A4EB91C4EA6A9E78AE1 /* HelpView.swift */; };
 		1806ABC2B11B0080D4E4B65D /* template.html in Resources */ = {isa = PBXBuildFile; fileRef = C8E72420904BAD34AB917A13 /* template.html */; };
 		184B25821E7959563EF2FEAC /* MDViewerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9065D8A517453BB93215E95 /* MDViewerApp.swift */; };
 		228DB5501B0695AC88913BBC /* WindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8CB052770A42C61F88480C5 /* WindowView.swift */; };
@@ -21,7 +22,6 @@
 		8FC766F50A8CFE2D39130D5E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA18E02CB68528189A02F10 /* AppDelegate.swift */; };
 		A4600015EA6FFDCC5A252932 /* MarkdownWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55A13F79EC692EF9080AD26A /* MarkdownWebView.swift */; };
 		A739EF050629669FD0DF7D9C /* FileWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C09A371577BF803F4ACDBAC2 /* FileWatcher.swift */; };
-		08D29102850E461CBB58B98B /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F1B6A4EB91C4EA6A9E78AE1 /* HelpView.swift */; };
 		AFADB8F661322D9AD87C6BDA /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39F78D3E6798FB2D559C127B /* PreferencesView.swift */; };
 		B830FDF4766DA078218D48C1 /* WindowID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62D92C0DE9A8B378EE7225C1 /* WindowID.swift */; };
 		C65E89AC3B7E9E689CFCDA45 /* dark.css in Resources */ = {isa = PBXBuildFile; fileRef = D3F0B0EDA70686DC0871E85E /* dark.css */; };
@@ -42,12 +42,12 @@
 		2E6B9B36BC2B9E904EFCA038 /* marked.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = marked.min.js; sourceTree = "<group>"; };
 		36545F8D4815574AFF0CC6B2 /* AppCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCommands.swift; sourceTree = "<group>"; };
 		39F78D3E6798FB2D559C127B /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
-		7F1B6A4EB91C4EA6A9E78AE1 /* HelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpView.swift; sourceTree = "<group>"; };
 		55A13F79EC692EF9080AD26A /* MarkdownWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownWebView.swift; sourceTree = "<group>"; };
 		55BE178D4FAA13A58AD57024 /* OutlineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlineView.swift; sourceTree = "<group>"; };
 		587B1182240CCC03D8834062 /* light.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = light.css; sourceTree = "<group>"; };
 		62D92C0DE9A8B378EE7225C1 /* WindowID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowID.swift; sourceTree = "<group>"; };
 		6C18A5C355AFBAA8B992490E /* hljs-light.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = "hljs-light.css"; sourceTree = "<group>"; };
+		7F1B6A4EB91C4EA6A9E78AE1 /* HelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpView.swift; sourceTree = "<group>"; };
 		9C0A38B070AD311597A49576 /* highlight.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = highlight.min.js; sourceTree = "<group>"; };
 		B2B94D6ECFF439ABF8F84105 /* MDViewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MDViewer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B7F645B4EE1C62EA9163A352 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -92,7 +92,7 @@
 				C2ACB8F99FEFBCC86E90F9BB /* EditorView.swift */,
 				2D7147919507FA87DF9F604A /* LineNumberRulerView.swift */,
 				DD49FC3D4A2D7D425A8D9CBC /* MarkdownHighlighter.swift */,
-					55A13F79EC692EF9080AD26A /* MarkdownWebView.swift */,
+				55A13F79EC692EF9080AD26A /* MarkdownWebView.swift */,
 			);
 			path = Rendering;
 			sourceTree = "<group>";
@@ -248,7 +248,7 @@
 				EB47D6A35E816367DEDB1B52 /* LineNumberRulerView.swift in Sources */,
 				184B25821E7959563EF2FEAC /* MDViewerApp.swift in Sources */,
 				4E05D7809C2B7E49575D8CB1 /* MarkdownHighlighter.swift in Sources */,
-					A4600015EA6FFDCC5A252932 /* MarkdownWebView.swift in Sources */,
+				A4600015EA6FFDCC5A252932 /* MarkdownWebView.swift in Sources */,
 				79EC0ED458A19CD3F6AB67A5 /* OutlineView.swift in Sources */,
 				08D29102850E461CBB58B98B /* HelpView.swift in Sources */,
 				AFADB8F661322D9AD87C6BDA /* PreferencesView.swift in Sources */,
@@ -326,8 +326,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = TD5753JB97;
 				INFOPLIST_FILE = MDViewer/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -413,8 +415,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = TD5753JB97;
 				INFOPLIST_FILE = MDViewer/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

@@ -212,6 +212,55 @@
         window.webkit.messageHandlers.openMDLink.postMessage(href);
       }
     });
+
+    // Reverse sync: click in preview → scroll editor to matching position
+    document.addEventListener('click', function(e) {
+      if (e.target.closest('a')) return; // links handled separately
+
+      var clickFraction = Math.max(0, Math.min(1, e.clientY / window.innerHeight));
+      var clickY = e.clientY + window.scrollY;
+      var headings = Array.from(document.querySelectorAll(
+        '#content h1,#content h2,#content h3,#content h4,#content h5,#content h6'
+      ));
+
+      if (headings.length === 0) {
+        var docHeight = Math.max(1, document.documentElement.scrollHeight);
+        window.webkit.messageHandlers.syncToEditor.postMessage({
+          headingIndex: -1,
+          sectionFraction: Math.max(0, Math.min(1, clickY / docHeight)),
+          clickFraction: clickFraction
+        });
+        return;
+      }
+
+      // Find last heading whose top is at or above the click
+      var headingIndex = -1;
+      for (var i = 0; i < headings.length; i++) {
+        if (headings[i].getBoundingClientRect().top + window.scrollY <= clickY) {
+          headingIndex = i;
+        }
+      }
+
+      var sectionFraction = 0;
+      if (headingIndex >= 0) {
+        var sectionTop = headings[headingIndex].getBoundingClientRect().top + window.scrollY;
+        var sectionBottom = (headingIndex + 1 < headings.length)
+          ? headings[headingIndex + 1].getBoundingClientRect().top + window.scrollY
+          : document.documentElement.scrollHeight;
+        var sh = sectionBottom - sectionTop;
+        sectionFraction = sh > 0 ? Math.max(0, Math.min(1, (clickY - sectionTop) / sh)) : 0;
+      } else {
+        // Click is before the first heading
+        var firstTop = headings[0].getBoundingClientRect().top + window.scrollY;
+        sectionFraction = firstTop > 0 ? Math.max(0, Math.min(1, clickY / firstTop)) : 0;
+      }
+
+      window.webkit.messageHandlers.syncToEditor.postMessage({
+        headingIndex: headingIndex,
+        sectionFraction: sectionFraction,
+        clickFraction: clickFraction
+      });
+    });
   </script>
 </body>
 </html>

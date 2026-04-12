@@ -1,6 +1,14 @@
 import SwiftUI
 import AppKit
 
+// Identifies a scroll-to command from the preview → editor reverse sync.
+struct EditorScrollTarget: Equatable {
+    let charOffset: Int
+    let viewportFraction: CGFloat   // target line should appear at this fraction of the visible area
+    let token: UUID                 // changes each time to force a new scroll
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.token == rhs.token }
+}
+
 struct EditorView: NSViewRepresentable {
     @Binding var text: String
     var zoomLevel: Double = 1.0
@@ -11,6 +19,7 @@ struct EditorView: NSViewRepresentable {
     ///   - lineFraction: cursor's line number / total line count (0.0 = first line, 1.0 = last line)
     ///   - charOffset: cursor's UTF-16 character offset in the full string (matches NSRange)
     var onCursorMove: ((String, CGFloat, CGFloat, Int) -> Void)?
+    var scrollTarget: EditorScrollTarget? = nil
 
     private var fontSize: CGFloat { CGFloat(18 * zoomLevel) }
 
@@ -131,6 +140,67 @@ struct EditorView: NSViewRepresentable {
             textView.selectedRanges = sel
         }
 
+        // Reverse sync: scroll editor to match preview click
+        if let target = scrollTarget, target.token != context.coordinator.lastScrollToken {
+            context.coordinator.lastScrollToken = target.token
+            applyScroll(to: target.charOffset, viewportFraction: target.viewportFraction, in: textView)
+        }
+    }
+
+    private func applyScroll(to charOffset: Int, viewportFraction: CGFloat, in textView: NSTextView) {
+        let nsStr = textView.string as NSString
+        guard nsStr.length > 0 else { return }
+        let safeOffset = min(max(0, charOffset), nsStr.length)
+        // Use a range with length ≥ 1 so layout managers return a real rect
+        let rangeLen = min(1, nsStr.length - safeOffset)
+        let range = NSRange(location: safeOffset, length: rangeLen)
+
+        guard let scrollView = textView.enclosingScrollView else { return }
+
+        // Ensure glyphs/layout are generated up to this point
+        textView.scrollRangeToVisible(range)
+
+        // Compute the line rect using TextKit1 (layoutManager) or TextKit2 (textLayoutManager)
+        var lineY: CGFloat = 0
+        let inset = textView.textContainerInset.height
+        if let layoutManager = textView.layoutManager, let textContainer = textView.textContainer {
+            // TextKit1 path
+            let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
+            let lineRect   = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
+            lineY = lineRect.midY + inset
+        } else if #available(macOS 12.0, *), let tlm = textView.textLayoutManager {
+            // TextKit2 path
+            let docRange = NSTextRange(
+                location: tlm.documentRange.location,
+                end: tlm.documentRange.endLocation
+            )
+            if let docRange = docRange {
+                let off = tlm.offset(from: docRange.location, to: docRange.endLocation)
+                let _ = off  // ensure layout
+            }
+            // Convert charOffset to NSTextRange
+            if let start = tlm.location(tlm.documentRange.location, offsetBy: safeOffset),
+               let end   = tlm.location(start, offsetBy: max(1, rangeLen)),
+               let textRange = NSTextRange(location: start, end: end) {
+                tlm.ensureLayout(for: textRange)
+                var rect = CGRect.zero
+                tlm.enumerateTextSegments(in: textRange, type: .standard,
+                                          options: []) { _, segRect, _, _ in
+                    rect = segRect
+                    return false  // stop after first
+                }
+                lineY = rect.midY + inset
+            }
+        } else {
+            // Fallback: scrollRangeToVisible already did the best we can
+            return
+        }
+
+        let visibleH = scrollView.contentView.bounds.height
+        let targetY  = max(0, lineY - viewportFraction * visibleH)
+
+        scrollView.contentView.scroll(to: NSPoint(x: 0, y: targetY))
+        scrollView.reflectScrolledClipView(scrollView.contentView)
     }
 
     // MARK: - Typography helper
@@ -154,6 +224,7 @@ struct EditorView: NSViewRepresentable {
         weak var textView: NSTextView?
         var highlighter: MarkdownHighlighter?
         var currentFontFamily: String = "system"
+        var lastScrollToken: UUID? = nil
 
         init(_ parent: EditorView) { self.parent = parent }
 

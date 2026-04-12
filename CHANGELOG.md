@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.7] - 2026-04-11
+
+### Added
+- 分栏模式下点击右侧预览区，左侧编辑区同步滚动到对应位置并保持相同高度（基于标题锚点 + 节内比例反向映射）
+
+### Fixed
+- 将 `editorScrollTarget` 从 ContentView 的 `@State` 移至 AppState 的 `@Published`，解决 WKScriptMessageHandler 回调中 SwiftUI 视图未被正确失效的问题
+
 ## [2.1.6] - 2026-04-11
 
 ### Added

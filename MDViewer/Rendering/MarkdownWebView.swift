@@ -6,6 +6,7 @@ struct MarkdownWebView: NSViewRepresentable {
     let theme: String   // "light", "dark", "sepia"
     let zoomLevel: Double
     let fileURL: URL?
+    var onPreviewClick: ((Int, CGFloat, CGFloat) -> Void)? = nil   // (headingIndex, sectionFraction, clickFraction)
     @Binding var webViewRef: WKWebView?
 
     func makeCoordinator() -> Coordinator {
@@ -16,6 +17,7 @@ struct MarkdownWebView: NSViewRepresentable {
         let config = WKWebViewConfiguration()
         config.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
         config.userContentController.add(context.coordinator, name: "openMDLink")
+        config.userContentController.add(context.coordinator, name: "syncToEditor")
 
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
@@ -24,6 +26,7 @@ struct MarkdownWebView: NSViewRepresentable {
         context.coordinator.pendingContent = content
         context.coordinator.pendingFileURL = fileURL
         context.coordinator.theme = theme
+        context.coordinator.onPreviewClick = onPreviewClick
 
         DispatchQueue.main.async { webViewRef = webView }
         loadTemplate(in: webView)
@@ -39,6 +42,7 @@ struct MarkdownWebView: NSViewRepresentable {
         coordinator.theme = theme
         coordinator.pendingContent = content
         coordinator.pendingFileURL = fileURL
+        coordinator.onPreviewClick = onPreviewClick
 
         if themeChanged {
             webView.evaluateJavaScript("switchTheme('\(theme)')") { _, _ in
@@ -73,6 +77,7 @@ struct MarkdownWebView: NSViewRepresentable {
         var lastFileURL: URL? = nil
         var theme: String = "light"
         var isLoaded: Bool = false
+        var onPreviewClick: ((Int, CGFloat, CGFloat) -> Void)?
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             isLoaded = true
@@ -100,6 +105,18 @@ struct MarkdownWebView: NSViewRepresentable {
 
         func userContentController(_ userContentController: WKUserContentController,
                                    didReceive message: WKScriptMessage) {
+            if message.name == "syncToEditor",
+               let dict = message.body as? [String: Any],
+               let hiNum  = dict["headingIndex"]   as? NSNumber,
+               let sfNum  = dict["sectionFraction"] as? NSNumber,
+               let cfNum  = dict["clickFraction"]   as? NSNumber {
+                let headingIndex    = hiNum.intValue
+                let sectionFraction = CGFloat(sfNum.doubleValue)
+                let clickFraction   = CGFloat(cfNum.doubleValue)
+                onPreviewClick?(headingIndex, sectionFraction, clickFraction)
+                return
+            }
+
             guard message.name == "openMDLink",
                   let href = message.body as? String,
                   let baseDir = lastFileURL?.deletingLastPathComponent() else { return }

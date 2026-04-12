@@ -44,6 +44,7 @@ class AppState: ObservableObject {
     @Published var folderItems: [FolderItem] = []
     @Published var showFolderSidebar: Bool = false
     @Published var showSavedBadge: Bool = false
+    @Published var editorScrollTarget: EditorScrollTarget? = nil
 
     var webView: WKWebView?
     var currentTheme: String = "light"

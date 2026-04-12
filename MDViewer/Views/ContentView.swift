@@ -10,6 +10,8 @@ struct ContentView: View {
     @AppStorage("editorFont")  private var editorFont:  String = "system"
     @State private var isDragTargeted = false
     @State private var outlineVisible: NavigationSplitViewVisibility = .detailOnly
+    // editorScrollTarget is now on appState (@Published) for reliable
+    // cross-component state propagation from the WKWebView callback.
 
     var windowTitle: String {
         let name = appState.fileURL?.lastPathComponent ?? "未命名"
@@ -67,7 +69,7 @@ struct ContentView: View {
         case .split:
             HSplitView {
                 editorView.frame(minWidth: 200)
-                previewPane.frame(minWidth: 200)
+                previewPane(onPreviewClick: syncEditorToPreviewClick).frame(minWidth: 200)
             }
 
         case .editor:
@@ -83,7 +85,7 @@ struct ContentView: View {
                     .environmentObject(appState)
                     .navigationSplitViewColumnWidth(min: 160, ideal: 200, max: 280)
             } detail: {
-                previewPane
+                previewPane()
             }
         }
     }
@@ -158,21 +160,52 @@ struct ContentView: View {
                         )
                     }
                 }
-            }
+            },
+            scrollTarget: appState.editorScrollTarget
         )
     }
 
     // MARK: Preview pane
 
-    private var previewPane: some View {
+    private func previewPane(onPreviewClick: ((Int, CGFloat, CGFloat) -> Void)? = nil) -> some View {
         MarkdownWebView(
             content: appState.markdownContent,
             theme: effectiveTheme,
             zoomLevel: appState.zoomLevel,
             fileURL: appState.fileURL,
+            onPreviewClick: onPreviewClick,
             webViewRef: $webViewRef
         )
         .ignoresSafeArea()
+    }
+
+    // MARK: Reverse sync helper
+
+    private func syncEditorToPreviewClick(headingIndex: Int, sectionFraction: CGFloat, clickFraction: CGFloat) {
+        let headings = appState.headings
+        let totalLen = (appState.markdownContent as NSString).length
+        guard totalLen > 0 else { return }
+
+        let targetOffset: Int
+        if headings.isEmpty || headingIndex < 0 {
+            // No headings or before first — treat sectionFraction as doc fraction
+            targetOffset = Int(sectionFraction * CGFloat(totalLen))
+        } else if headingIndex < headings.count {
+            let heading = headings[headingIndex]
+            let nextOffset = headingIndex + 1 < headings.count
+                ? headings[headingIndex + 1].charOffset
+                : totalLen
+            let sectionLen = nextOffset - heading.charOffset
+            targetOffset = heading.charOffset + Int(sectionFraction * CGFloat(sectionLen))
+        } else {
+            return
+        }
+
+        appState.editorScrollTarget = EditorScrollTarget(
+            charOffset: min(max(0, targetOffset), totalLen),
+            viewportFraction: clickFraction,
+            token: UUID()
+        )
     }
 
     // MARK: Editor binding
