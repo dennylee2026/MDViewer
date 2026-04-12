@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - 打开文件后左上角出现重复的目录图标：`.viewer` 模式使用 `NavigationSplitView` 时，系统会自动在 `.navigation` 工具栏区域注入一个侧栏切换按钮，与自定义文件夹侧栏按钮重叠；通过 `.toolbar(removing: .sidebarToggle)` 移除系统自动注入的按钮
 
+### Performance
+- 打开长文件（如 400KB+ Markdown）显示速度大幅提升：将 `renderMarkdown()` 拆分为两阶段——先同步插入 HTML（内容立即可见），再通过 `requestAnimationFrame` 分批异步高亮代码块（每帧 5 个），彻底消除代码块多时的主线程阻塞
+- 编辑器模式新增 300ms 防抖：连续按键不再每次触发完整 re-parse，文件打开仍绕过防抖立即渲染
+
 ## [2.4.5] - 2026-04-12
 
 ### Fixed

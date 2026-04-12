@@ -88,6 +88,11 @@ struct MarkdownWebView: NSViewRepresentable {
         var isLoaded: Bool = false
         var onPreviewClick: ((Int, CGFloat, CGFloat) -> Void)?
 
+        // Debounce timer for editor-mode renders (file-open bypasses it)
+        private var renderTimer: Timer?
+
+        deinit { renderTimer?.invalidate() }
+
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             isLoaded = true
             let css = pendingCSS
@@ -104,8 +109,27 @@ struct MarkdownWebView: NSViewRepresentable {
 
         func renderContent(_ markdown: String, scrollToTop: Bool) {
             guard let webView else { return }
+            // Update tracking state immediately so updateNSView doesn't re-queue
+            // the same content on subsequent SwiftUI passes before the timer fires.
             lastContent = markdown
             lastFileURL = pendingFileURL
+
+            if scrollToTop {
+                // File open: cancel any pending debounce and render now
+                renderTimer?.invalidate()
+                renderTimer = nil
+                performRender(pendingContent, scrollToTop: true, in: webView)
+            } else {
+                // Editor typing: debounce so rapid keystrokes collapse into one render
+                renderTimer?.invalidate()
+                renderTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { [weak self] _ in
+                    guard let self, let wv = self.webView else { return }
+                    self.performRender(self.pendingContent, scrollToTop: false, in: wv)
+                }
+            }
+        }
+
+        private func performRender(_ markdown: String, scrollToTop: Bool, in webView: WKWebView) {
             let escaped = markdown
                 .replacingOccurrences(of: "\\", with: "\\\\")
                 .replacingOccurrences(of: "`", with: "\\`")

@@ -22,12 +22,33 @@
     // Configure highlight.js
     hljs.configure({ ignoreUnescapedHTML: true });
 
+    // Handle for any in-progress async highlight pass; cancelled when a new
+    // render starts so stale passes don't overwrite freshly rendered content.
+    var _hljsRafId = null;
+
     function renderMarkdown(md) {
+      // Cancel any previous async highlight pass before replacing innerHTML
+      if (_hljsRafId !== null) {
+        cancelAnimationFrame(_hljsRafId);
+        _hljsRafId = null;
+      }
+
+      // Phase 1: parse + insert HTML immediately so content is visible at once
       const html = marked.parse(md);
       document.getElementById('content').innerHTML = html;
-      document.querySelectorAll('pre code').forEach(function(block) {
-        hljs.highlightElement(block);
-      });
+
+      // Phase 2: highlight code blocks asynchronously in batches so the page
+      // is readable before all syntax colours are applied (5 blocks per frame
+      // balances throughput against UI responsiveness)
+      var blocks = Array.from(document.querySelectorAll('pre code'));
+      if (blocks.length === 0) return;
+      var i = 0;
+      function step() {
+        var end = Math.min(i + 5, blocks.length);
+        while (i < end) { hljs.highlightElement(blocks[i]); i++; }
+        _hljsRafId = (i < blocks.length) ? requestAnimationFrame(step) : null;
+      }
+      _hljsRafId = requestAnimationFrame(step);
     }
 
     function resetScroll() {
