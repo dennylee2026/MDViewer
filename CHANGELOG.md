@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.4] - 2026-04-12
+
+### Fixed
+- 手机 PDF 尾部内容被截断：
+  - 初始布局等待从 0.5s 延长至 0.8s（28px 字号在 390pt 宽度下重排耗时更长）
+  - `scrollHeight` 改用 `Math.max(body.scrollHeight, documentElement.scrollHeight)` 取最大值
+  - 设置 webView 高度后再等 0.3s 并二次查询高度，取两次测量的最大值
+  - 末尾追加 64pt 缓冲，防止最后一个元素的底部 padding/margin 被裁掉
+  - `createPDF` 前额外等待 0.2s，确保最终帧完成渲染
+
 ## [2.4.3] - 2026-04-12
 
 ### Fixed
