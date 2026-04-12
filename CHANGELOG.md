@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.9] - 2026-04-12
+
+### Fixed
+- 导出手机长图：改用分块拼接（tile-stitch）方案替代单次全高截图，彻底解决 WKWebView 分块渲染导致内容截断的问题；正确处理 Retina 分辨率，拼接完成后重置滚动位置
+- 导出手机 PDF 字号在手机端仍太小：页面宽度改为 390pt，字体从 24px 调大至 28px，标题比例随之调整
+- 导出手机 PDF 出现分页：使用 `WKPDFConfiguration.rect` 设置为文档实际高度，生成真正连续无分页的单页 PDF；并通过 CSS `page-break: avoid` 全局抑制所有分页符
+
 ## [2.3.8] - 2026-04-12
 
 ### Added
