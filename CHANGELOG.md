@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.2] - 2026-04-12
+
+### Fixed
+- 手机 PDF / 手机长图中代码块右侧被截断：对 `pre` 元素强制 `white-space: pre-wrap` + `word-break: break-all` + `overflow: visible`，使长代码行在 390pt 宽度内自动换行而非溢出截断
+
+### Changed
+- 手机导出左右边距从 16px 增大至 22px，提升手机端正文阅读舒适度
+
 ## [2.4.1] - 2026-04-12
 
 ### Fixed
