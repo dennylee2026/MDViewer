@@ -321,9 +321,12 @@ class AppState: ObservableObject {
             else { removeMobile(); done(); return }
             let mobileWidth: CGFloat = 390
 
-            // Wait for re-layout at the narrowed width before querying scroll height
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                webView.evaluateJavaScript("document.body.scrollHeight") { result, _ in
+            // Wait for re-layout at the narrowed width before querying scroll height.
+            // 0.8s gives the 28px-font / 390pt-width reflow more time than the old 0.5s.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                webView.evaluateJavaScript(
+                    "Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
+                ) { result, _ in
                     DispatchQueue.main.async {
                         let scrollHeight = max(CGFloat((result as? NSNumber)?.doubleValue ?? 800), 1)
 
@@ -336,14 +339,41 @@ class AppState: ObservableObject {
                         webView.frame = fullFrame
                         CATransaction.commit()
 
-                        let config = WKPDFConfiguration()
-                        config.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: scrollHeight)
-                        webView.createPDF(configuration: config) { pdfResult in
-                            DispatchQueue.main.async {
-                                detach.restore()
-                                removeMobile()
-                                if case .success(let data) = pdfResult { try? data.write(to: url) }
-                                done()
+                        // Re-query after the frame resize — the height change itself
+                        // can trigger additional layout reflow.
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            webView.evaluateJavaScript(
+                                "Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
+                            ) { result2, _ in
+                                DispatchQueue.main.async {
+                                    let requeriedHeight = CGFloat((result2 as? NSNumber)?.doubleValue ?? Double(scrollHeight))
+                                    let finalHeight = max(requeriedHeight, scrollHeight)
+                                    // Add bottom buffer so trailing padding / margin is never cut
+                                    let paddedHeight = finalHeight + 64
+
+                                    CATransaction.begin()
+                                    CATransaction.setDisableActions(true)
+                                    var paddedFrame = webView.frame
+                                    paddedFrame.size = CGSize(width: mobileWidth, height: paddedHeight)
+                                    webView.frame = paddedFrame
+                                    CATransaction.commit()
+
+                                    let config = WKPDFConfiguration()
+                                    config.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: paddedHeight)
+
+                                    // Short wait after final frame resize so WKWebView
+                                    // finishes any internal relayout before PDF capture.
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                        webView.createPDF(configuration: config) { pdfResult in
+                                            DispatchQueue.main.async {
+                                                detach.restore()
+                                                removeMobile()
+                                                if case .success(let data) = pdfResult { try? data.write(to: url) }
+                                                done()
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
