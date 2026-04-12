@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.6] - 2026-04-12
+
+### Changed
+- README 移除截图占位符和中间冗余的语言链接
+
 ## [2.3.5] - 2026-04-12
 
 ### Changed
