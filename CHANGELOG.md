@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-04-12
+
+### Fixed
+- 导出手机 PDF 和手机长图右侧内容被截断：根本原因是 `WKPDFConfiguration.rect` 截取的是当前 webView 的像素区域，若 webView 宽度大于 390pt 则右侧超出部分丢失；修复方式为在导出前临时将 webView 收窄至 390pt（`alphaValue=0` 隐藏过渡），导出完成后恢复原始尺寸
+- 导出手机长图：改用 PDF-to-image 方案（PDFKit），完全避免 WKWebView 分块渲染截断问题，保证全文内容完整输出
+
 ## [2.3.9] - 2026-04-12
 
 ### Fixed
