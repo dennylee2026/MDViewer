@@ -9,8 +9,11 @@
 "menu.file.openRecent.none" = "No Recent Files";
 "menu.file.save" = "Save";
 "menu.file.saveAs" = "Save As…";
-"menu.file.exportHTML" = "Export as HTML…";
 "menu.file.exportPDF" = "Export as PDF…";
+"menu.file.exportMobilePDF" = "Export to Mobile PDF…";
+"menu.file.exportMobileImage" = "Export to Mobile Image…";
+"menu.file.exportAll" = "Export All…";
+"menu.file.exportHTML" = "Export as HTML…";
 
 // MARK: - AppCommands (Edit menu)
 "menu.edit.find" = "Find…";
@@ -32,6 +35,8 @@
 
 // MARK: - AppDelegate / AppState (panels & alerts)
 "panel.openFolder.prompt" = "Choose Folder";
+"panel.exportAll.prompt" = "Export";
+"panel.exportAll.message" = "Choose a folder to save the exported files";
 "alert.openLink.title" = "Open Markdown File";
 "alert.openLink.message" = "Open \"%@\"?";
 "alert.openLink.open" = "Open";
@@ -45,6 +50,12 @@
 "toolbar.zoomIn.help" = "Zoom In (⌘=)";
 "toolbar.open.label" = "Open";
 "toolbar.open.help" = "Open File (⌘O)";
+"toolbar.export.label" = "Export";
+"toolbar.export.help" = "Export document";
+"toolbar.export.pdf" = "Export PDF";
+"toolbar.export.mobilePDF" = "Export Mobile PDF";
+"toolbar.export.mobileImage" = "Export Mobile Image";
+"toolbar.export.all" = "Export All (3 files)";
 "toolbar.unsaved" = "Unsaved";
 "badge.saved" = "Saved";
 

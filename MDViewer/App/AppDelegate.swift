@@ -45,6 +45,7 @@ class AppState: ObservableObject {
     @Published var showFolderSidebar: Bool = false
     @Published var showSavedBadge: Bool = false
     @Published var editorScrollTarget: EditorScrollTarget? = nil
+    @Published var isExporting: Bool = false
 
     var webView: WKWebView?
     private var savedBadgeTask: Task<Void, Never>?
@@ -170,7 +171,108 @@ class AppState: ObservableObject {
             }
     }
 
-    // MARK: Export
+    // MARK: Export — Mobile CSS helpers
+
+    private func mobileCSSOverrides() -> String {
+        """
+        body {
+            font-size: 18px !important;
+            max-width: 100% !important;
+            padding: 16px 20px 40px !important;
+            line-height: 1.6 !important;
+        }
+        h1 { font-size: 1.8em !important; }
+        h2 { font-size: 1.4em !important; }
+        h3 { font-size: 1.2em !important; }
+        h4 { font-size: 1.05em !important; }
+        h5 { font-size: 0.95em !important; }
+        h6 { font-size: 0.85em !important; }
+        pre, code { font-size: 0.82em !important; }
+        """
+    }
+
+    /// Injects mobile CSS overrides, waits for layout, calls action(done).
+    /// Caller must invoke the `done` closure to remove the overrides.
+    private func withMobileCSS(action: @escaping (@escaping () -> Void) -> Void) {
+        guard let webView else { return }
+        let css = mobileCSSOverrides()
+        let escaped = css
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "`", with: "\\`")
+        webView.evaluateJavaScript("applyMobileCSS(`\(escaped)`)") { _, _ in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                action {
+                    webView.evaluateJavaScript("removeMobileCSS()", completionHandler: nil)
+                }
+            }
+        }
+    }
+
+    // MARK: Export — Private write helpers (used by exportAll for chaining)
+
+    private func _writeDesktopPDF(to url: URL, done: @escaping () -> Void) {
+        guard let webView else { done(); return }
+        webView.createPDF { result in
+            DispatchQueue.main.async {
+                if case .success(let data) = result { try? data.write(to: url) }
+                done()
+            }
+        }
+    }
+
+    private func _writeMobilePDF(to url: URL, done: @escaping () -> Void) {
+        guard webView != nil else { done(); return }
+        withMobileCSS { [weak self] removeMobile in
+            guard let webView = self?.webView else { removeMobile(); done(); return }
+            webView.createPDF { result in
+                DispatchQueue.main.async {
+                    removeMobile()
+                    if case .success(let data) = result { try? data.write(to: url) }
+                    done()
+                }
+            }
+        }
+    }
+
+    private func _writeMobileImage(to url: URL, done: @escaping () -> Void) {
+        guard webView != nil else { done(); return }
+        withMobileCSS { [weak self] removeMobile in
+            guard let self, let webView = self.webView else { removeMobile(); done(); return }
+            let originalFrame = webView.frame
+            var narrowFrame = originalFrame
+            narrowFrame.size.width = 390
+            webView.frame = narrowFrame
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                webView.evaluateJavaScript("document.body.scrollHeight") { result, _ in
+                    let height = (result as? NSNumber)?.doubleValue ?? Double(originalFrame.height)
+                    var tallFrame = narrowFrame
+                    tallFrame.size.height = CGFloat(height)
+                    webView.frame = tallFrame
+
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        let config = WKSnapshotConfiguration()
+                        config.rect = CGRect(origin: .zero, size: tallFrame.size)
+                        webView.takeSnapshot(with: config) { image, _ in
+                            DispatchQueue.main.async {
+                                webView.frame = originalFrame
+                                removeMobile()
+                                if let image,
+                                   let tiff = image.tiffRepresentation,
+                                   let rep = NSBitmapImageRep(data: tiff),
+                                   let png = rep.representation(using: .png, properties: [:]) {
+                                    try? png.write(to: url)
+                                }
+                                done()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: Export — Public
 
     func exportHTML() {
         guard let webView else { return }
@@ -204,14 +306,62 @@ class AppState: ObservableObject {
 
     func exportPDF() {
         guard let webView else { return }
-        webView.createPDF { [weak self] result in
-            guard let self, case .success(let data) = result else { return }
+        let stem = fileURL?.deletingPathExtension().lastPathComponent ?? "Untitled"
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.pdf]
+        panel.nameFieldStringValue = stem + ".pdf"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        webView.createPDF { result in
             DispatchQueue.main.async {
-                let panel = NSSavePanel()
-                panel.allowedContentTypes = [.pdf]
-                panel.nameFieldStringValue = (self.fileURL?.deletingPathExtension().lastPathComponent ?? "Untitled") + ".pdf"
-                if panel.runModal() == .OK, let url = panel.url {
-                    try? data.write(to: url)
+                if case .success(let data) = result { try? data.write(to: url) }
+            }
+        }
+    }
+
+    func exportMobilePDF() {
+        guard !isExporting, webView != nil else { return }
+        let stem = fileURL?.deletingPathExtension().lastPathComponent ?? "Untitled"
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.pdf]
+        panel.nameFieldStringValue = stem + "-mobile.pdf"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        isExporting = true
+        _writeMobilePDF(to: url) { [weak self] in
+            DispatchQueue.main.async { self?.isExporting = false }
+        }
+    }
+
+    func exportMobileImage() {
+        guard !isExporting, webView != nil else { return }
+        let stem = fileURL?.deletingPathExtension().lastPathComponent ?? "Untitled"
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.png]
+        panel.nameFieldStringValue = stem + "-mobile.png"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        isExporting = true
+        _writeMobileImage(to: url) { [weak self] in
+            DispatchQueue.main.async { self?.isExporting = false }
+        }
+    }
+
+    func exportAll() {
+        guard !isExporting, let fileURL else { return }
+        let stem = fileURL.deletingPathExtension().lastPathComponent
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.canCreateDirectories = true
+        panel.prompt = String(localized: "panel.exportAll.prompt")
+        panel.message = String(localized: "panel.exportAll.message")
+        guard panel.runModal() == .OK, let dir = panel.url else { return }
+        isExporting = true
+        let pdfURL        = dir.appendingPathComponent(stem + ".pdf")
+        let mobilePDFURL  = dir.appendingPathComponent(stem + "-mobile.pdf")
+        let mobileImgURL  = dir.appendingPathComponent(stem + "-mobile.png")
+        _writeDesktopPDF(to: pdfURL) { [weak self] in
+            self?._writeMobilePDF(to: mobilePDFURL) { [weak self] in
+                self?._writeMobileImage(to: mobileImgURL) { [weak self] in
+                    DispatchQueue.main.async { self?.isExporting = false }
                 }
             }
         }

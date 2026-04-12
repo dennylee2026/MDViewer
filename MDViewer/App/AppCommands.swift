@@ -45,11 +45,20 @@ struct AppCommands: Commands {
                 .keyboardShortcut("s", modifiers: [.command, .shift])
                 .disabled(appState == nil)
             Divider()
-            Button("menu.file.exportHTML") { appState?.exportHTML() }
-                .keyboardShortcut("e", modifiers: [.command, .shift])
-                .disabled(appState == nil)
             Button("menu.file.exportPDF") { appState?.exportPDF() }
                 .keyboardShortcut("e", modifiers: .command)
+                .disabled(appState == nil)
+            Button("menu.file.exportMobilePDF") { appState?.exportMobilePDF() }
+                .keyboardShortcut("e", modifiers: [.command, .shift])
+                .disabled(appState == nil)
+            Button("menu.file.exportMobileImage") { appState?.exportMobileImage() }
+                .keyboardShortcut("e", modifiers: [.command, .option])
+                .disabled(appState == nil)
+            Divider()
+            Button("menu.file.exportAll") { appState?.exportAll() }
+                .disabled(appState == nil)
+            Divider()
+            Button("menu.file.exportHTML") { appState?.exportHTML() }
                 .disabled(appState == nil)
         }
 

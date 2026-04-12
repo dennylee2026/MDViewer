@@ -169,6 +169,21 @@
       document.getElementById('custom-style').textContent = cssText;
     }
 
+    function applyMobileCSS(cssText) {
+      var el = document.getElementById('mobile-style');
+      if (!el) {
+        el = document.createElement('style');
+        el.id = 'mobile-style';
+        document.head.appendChild(el);
+      }
+      el.textContent = cssText;
+    }
+
+    function removeMobileCSS() {
+      var el = document.getElementById('mobile-style');
+      if (el) { el.parentNode.removeChild(el); }
+    }
+
     // Intercept clicks on .md / .markdown links and forward to Swift
     document.addEventListener('click', function(e) {
       var link = e.target.closest('a');

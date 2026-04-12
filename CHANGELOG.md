@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.7] - 2026-04-12
+
+### Added
+- 工具栏新增导出下拉菜单（位于「打开文件」图标左侧），含四项：导出 PDF / 导出手机 PDF / 导出手机长图 / 全部导出
+- 导出手机 PDF：与桌面 PDF 相同的连续无分页格式，叠加 18px 正文字号及配套标题字号 CSS
+- 导出手机长图：应用与手机 PDF 相同的字号样式，以 390pt 宽截取全文高度 PNG（Retina 显示器自然输出 2× 分辨率）
+- 全部导出：选择目标文件夹后一次性生成三个文件（桌面 PDF、手机 PDF、手机长图）
+
+### Changed
+- 菜单栏导出快捷键重新分配：⌘E = PDF，⌘⇧E = 手机 PDF，⌘⌥E = 手机长图；HTML 导出保留但取消快捷键
+
 ## [2.3.6] - 2026-04-12
 
 ### Changed
