@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.2] - 2026-04-12
+
+### Changed
+- 将所有文档中对 Google 品牌颜色的直接引用替换为 GDS 四色，消除潜在侵权风险
+
 ## [2.3.1] - 2026-04-12
 
 ### Removed
