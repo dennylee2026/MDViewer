@@ -75,6 +75,7 @@ struct ContentView: View {
             } detail: {
                 previewPane()
             }
+            .toolbar(removing: .sidebarToggle)
         }
     }
 

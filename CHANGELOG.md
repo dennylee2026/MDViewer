@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- 打开文件后左上角出现重复的目录图标：`.viewer` 模式使用 `NavigationSplitView` 时，系统会自动在 `.navigation` 工具栏区域注入一个侧栏切换按钮，与自定义文件夹侧栏按钮重叠；通过 `.toolbar(removing: .sidebarToggle)` 移除系统自动注入的按钮
+
 ## [2.4.5] - 2026-04-12
 
 ### Fixed
