@@ -9,6 +9,10 @@ struct WindowView: View {
 
     let initialURL: URL?
 
+    /// Tracks whether we still need to resize for the current file.
+    /// Set `true` when `fileURL` changes; cleared after a successful resize.
+    @State private var needsResize = false
+
     var body: some View {
         ContentView()
             .environmentObject(appState)
@@ -26,15 +30,31 @@ struct WindowView: View {
             }
             // Resize whenever a file is loaded — covers both new windows and reused
             // empty windows (where onAppear already ran without a file).
-            // 0.2 s lets WindowFinder propagate nsWindow through a render cycle first.
             .onChange(of: appState.fileURL) { _, url in
                 guard url != nil else { return }
-                let content = appState.markdownContent
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                    guard let win = nsWindow ?? NSApplication.shared.keyWindow else { return }
-                    resizeWindow(win, for: content)
-                }
+                needsResize = true
+                scheduleResize()
             }
+            // When nsWindow becomes available, fire a pending resize that was waiting
+            // for the window reference.  This covers the case where fileURL was set
+            // (in onAppear) before WindowFinder could discover the hosting NSWindow.
+            .onChange(of: nsWindow) { _, win in
+                guard win != nil, needsResize else { return }
+                scheduleResize()
+            }
+    }
+
+    /// Schedules a resize attempt after a short delay.  If nsWindow is still
+    /// nil when the closure fires and no keyWindow fallback is available,
+    /// the resize is skipped — but `needsResize` stays true so the
+    /// `onChange(of: nsWindow)` observer can retry once the window is known.
+    private func scheduleResize() {
+        let content = appState.markdownContent
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            guard let win = nsWindow else { return }
+            resizeWindow(win, for: content)
+            needsResize = false
+        }
     }
 
     // MARK: - Resize
@@ -62,17 +82,33 @@ struct WindowView: View {
 
 // MARK: - NSWindow accessor
 
-/// Synchronously captures the hosting NSWindow via updateNSView,
-/// which SwiftUI calls on the main thread after the view is in the hierarchy.
+/// Captures the hosting NSWindow via updateNSView.
+/// If the NSView has not yet been added to a window at the time updateNSView
+/// is called, a short async retry loop ensures the binding is eventually set.
 private struct WindowFinder: NSViewRepresentable {
     @Binding var window: NSWindow?
 
     func makeNSView(context: Context) -> NSView { NSView() }
 
     func updateNSView(_ view: NSView, context: Context) {
-        // Only assign once; avoids spurious re-renders on every parent update.
-        // Defer the binding write to avoid "modifying state during view update".
-        guard window == nil, let w = view.window else { return }
-        DispatchQueue.main.async { window = w }
+        guard window == nil else { return }
+        if let w = view.window {
+            DispatchQueue.main.async { window = w }
+        } else {
+            // The view is not yet in a window (can happen when many windows
+            // are created in quick succession).  Poll briefly until it is.
+            pollForWindow(view, remainingAttempts: 10)
+        }
+    }
+
+    private func pollForWindow(_ view: NSView, remainingAttempts: Int) {
+        guard window == nil, remainingAttempts > 0 else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            if let w = view.window {
+                window = w
+            } else {
+                pollForWindow(view, remainingAttempts: remainingAttempts - 1)
+            }
+        }
     }
 }

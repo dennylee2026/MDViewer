@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-04-11
+
+### Fixed
+- 修复多文件同时打开时第 3、5 个窗口高度不调整的问题：WindowFinder 加入最多 10 次 × 50ms 重试轮询，确保 nsWindow 在任何时序下都能正确捕获；WindowView 增加 needsResize 标记与 onChange(of: nsWindow) 兜底，彻底移除 keyWindow 回退
+
 ## [2.1.9] - 2026-04-11
 
 ### Fixed
