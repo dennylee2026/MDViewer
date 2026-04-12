@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.3] - 2026-04-11
+
+### Fixed
+- 修复 App 图标在 Dock 中显示空白的问题：重新生成符合 iconutil 命名规范的完整图标集（10 个尺寸），修正 Assets.xcassets/AppIcon.appiconset/Contents.json 中重复文件名导致 actool 编译不完整的问题
+
+## [2.2.2] - 2026-04-11
+
+### Added
+- 国际化支持：新增 `zh-Hans.lproj/Localizable.strings` 与 `en.lproj/Localizable.strings`，覆盖所有菜单、工具栏、提示、帮助页、偏好设置等 UI 字符串
+- 系统语言自动切换：中文系统显示中文，英文系统显示英文，无需手动配置
+
 ## [2.2.1] - 2026-04-11
 
 ### Added
