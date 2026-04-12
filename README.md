@@ -1,3 +1,5 @@
+[English](README.en.md) | 中文
+
 # MDViewer
 
 **macOS 上的 Markdown 阅读与编辑，本该如此。**
