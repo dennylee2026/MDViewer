@@ -32,6 +32,7 @@
 		E964E369CA669E11D7687CD1 /* highlight.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 9C0A38B070AD311597A49576 /* highlight.min.js */; };
 		EB47D6A35E816367DEDB1B52 /* LineNumberRulerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D7147919507FA87DF9F604A /* LineNumberRulerView.swift */; };
 		FD716A136407B3A4CE6C11AB /* hljs-light.css in Resources */ = {isa = PBXBuildFile; fileRef = 6C18A5C355AFBAA8B992490E /* hljs-light.css */; };
+		F1FCA7F2A74C49E28CCBCC5A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FAE9F23E99F64EFA9DF97D5C /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -61,6 +62,7 @@
 		D8CB052770A42C61F88480C5 /* WindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowView.swift; sourceTree = "<group>"; };
 		DD49FC3D4A2D7D425A8D9CBC /* MarkdownHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownHighlighter.swift; sourceTree = "<group>"; };
 		DDBDF3DE22F9CD6A2AFF4B59 /* FolderTreeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderTreeView.swift; sourceTree = "<group>"; };
+		FAE9F23E99F64EFA9DF97D5C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FDA18E02CB68528189A02F10 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -122,6 +124,7 @@
 			isa = PBXGroup;
 			children = (
 				0156BF9B3F2C1DE237234673 /* Info.plist */,
+				FAE9F23E99F64EFA9DF97D5C /* Assets.xcassets */,
 				06F0FD60A0EBC34CA8FC8791 /* App */,
 				3ECDC3D50F07F03773E8B45D /* Rendering */,
 				4F0372BDD1E4DD42A3631314 /* Resources */,
@@ -228,6 +231,7 @@
 				620F934AB7F0D7ECCE2FDD4C /* light.css in Resources */,
 				D67ABA8DE5145C41ED99589D /* marked.min.js in Resources */,
 				C6BEEFC3F352B242E1C81E86 /* sepia.css in Resources */,
+				F1FCA7F2A74C49E28CCBCC5A /* Assets.xcassets in Resources */,
 				1806ABC2B11B0080D4E4B65D /* template.html in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

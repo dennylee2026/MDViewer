@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.1] - 2026-04-11
+
+### Added
+- 替换 App 图标：从 resource/app-icon-raw.png 生成全套 macOS 图标（16–1024px）
+
 ## [2.2.0] - 2026-04-11
 
 ### Fixed
