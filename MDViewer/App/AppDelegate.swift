@@ -1,4 +1,5 @@
 import AppKit
+import PDFKit
 import SwiftUI
 import WebKit
 
@@ -240,20 +241,39 @@ class AppState: ObservableObject {
     private func _writeMobilePDF(to url: URL, done: @escaping () -> Void) {
         guard webView != nil else { done(); return }
         withMobileCSS { [weak self] removeMobile in
-            guard let webView = self?.webView else { removeMobile(); done(); return }
-            // Query the full document scroll height so we can produce a single-page PDF
-            webView.evaluateJavaScript("document.body.scrollHeight") { result, _ in
-                DispatchQueue.main.async {
-                    let scrollHeight = CGFloat((result as? NSNumber)?.doubleValue ?? 800)
-                    // Use a phone-width page (390pt) with the full content height
-                    // so the PDF is one continuous page with no breaks.
-                    let config = WKPDFConfiguration()
-                    config.rect = CGRect(x: 0, y: 0, width: 390, height: max(scrollHeight, 1))
-                    webView.createPDF(configuration: config) { pdfResult in
-                        DispatchQueue.main.async {
-                            removeMobile()
-                            if case .success(let data) = pdfResult { try? data.write(to: url) }
-                            done()
+            guard let self, let webView = self.webView else { removeMobile(); done(); return }
+            let originalFrame = webView.frame
+            let originalAlpha = webView.alphaValue
+            let mobileWidth: CGFloat = 390
+
+            // Shrink webView to 390pt wide so WKPDFConfiguration.rect captures the full width.
+            // alphaValue = 0 hides the transition from the user.
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            webView.alphaValue = 0
+            var narrowFrame = originalFrame
+            narrowFrame.size.width = mobileWidth
+            webView.frame = narrowFrame
+            CATransaction.commit()
+
+            // Wait for re-layout at the narrowed width before querying scroll height
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                webView.evaluateJavaScript("document.body.scrollHeight") { result, _ in
+                    DispatchQueue.main.async {
+                        let scrollHeight = max(CGFloat((result as? NSNumber)?.doubleValue ?? 800), 1)
+                        let config = WKPDFConfiguration()
+                        config.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: scrollHeight)
+                        webView.createPDF(configuration: config) { pdfResult in
+                            DispatchQueue.main.async {
+                                CATransaction.begin()
+                                CATransaction.setDisableActions(true)
+                                webView.frame = originalFrame
+                                webView.alphaValue = originalAlpha
+                                CATransaction.commit()
+                                removeMobile()
+                                if case .success(let data) = pdfResult { try? data.write(to: url) }
+                                done()
+                            }
                         }
                     }
                 }
@@ -267,130 +287,67 @@ class AppState: ObservableObject {
             guard let self, let webView = self.webView else { removeMobile(); done(); return }
             let originalFrame = webView.frame
             let originalAlpha = webView.alphaValue
-            let scale = NSScreen.main?.backingScaleFactor ?? 2.0
-
-            // Use a reasonable viewport height for tile capture (clamped to 800pt max)
-            let tileHeight: CGFloat = min(originalFrame.height, 800)
-
             let mobileWidth: CGFloat = 390
 
-            // Make webView transparent during frame mutations to suppress visual flicker.
-            // alphaValue = 0 keeps the view in the hierarchy so takeSnapshot still works.
+            // Shrink webView to 390pt wide so the PDF (and thus the image) isn't truncated.
             CATransaction.begin()
             CATransaction.setDisableActions(true)
             webView.alphaValue = 0
             var narrowFrame = originalFrame
             narrowFrame.size.width = mobileWidth
-            narrowFrame.size.height = tileHeight
             webView.frame = narrowFrame
             CATransaction.commit()
 
-            // Wait for WKWebView to re-layout at the narrowed width
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 webView.evaluateJavaScript("document.body.scrollHeight") { result, _ in
-                    let totalHeight = max(CGFloat((result as? NSNumber)?.doubleValue ?? Double(tileHeight)), 1)
+                    DispatchQueue.main.async {
+                        let scrollHeight = max(CGFloat((result as? NSNumber)?.doubleValue ?? 800), 1)
+                        let config = WKPDFConfiguration()
+                        config.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: scrollHeight)
 
-                    // Create the final bitmap context at full retina resolution
-                    let pixelW = Int(mobileWidth * scale)
-                    let pixelH = Int(totalHeight * scale)
-                    guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
-                          let ctx = CGContext(
-                              data: nil,
-                              width: pixelW,
-                              height: pixelH,
-                              bitsPerComponent: 8,
-                              bytesPerRow: 0,
-                              space: colorSpace,
-                              bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-                          ) else {
-                        // Context creation failed — restore and bail
-                        CATransaction.begin()
-                        CATransaction.setDisableActions(true)
-                        webView.frame = originalFrame
-                        webView.alphaValue = originalAlpha
-                        CATransaction.commit()
-                        removeMobile()
-                        done()
-                        return
-                    }
+                        webView.createPDF(configuration: config) { pdfResult in
+                            DispatchQueue.main.async {
+                                // Always restore webView before any early return
+                                CATransaction.begin()
+                                CATransaction.setDisableActions(true)
+                                webView.frame = originalFrame
+                                webView.alphaValue = originalAlpha
+                                CATransaction.commit()
+                                removeMobile()
 
-                    // Calculate tile offsets
-                    var offsets: [CGFloat] = []
-                    var y: CGFloat = 0
-                    while y < totalHeight {
-                        offsets.append(y)
-                        y += tileHeight
-                    }
+                                guard case .success(let pdfData) = pdfResult,
+                                      let pdfDoc = PDFDocument(data: pdfData),
+                                      let page = pdfDoc.page(at: 0) else { done(); return }
 
-                    // Recursive tile capture
-                    func captureTile(at index: Int) {
-                        guard index < offsets.count else {
-                            // All tiles captured — reset scroll, restore frame, produce PNG
-                            webView.evaluateJavaScript("window.scrollTo(0, 0)") { _, _ in
-                                DispatchQueue.main.async {
-                                    CATransaction.begin()
-                                    CATransaction.setDisableActions(true)
-                                    webView.frame = originalFrame
-                                    webView.alphaValue = originalAlpha
-                                    CATransaction.commit()
-                                    removeMobile()
+                                let mediaBox = page.bounds(for: .mediaBox)
+                                let scale = NSScreen.main?.backingScaleFactor ?? 2.0
+                                let pixelW = Int(mediaBox.width * scale)
+                                let pixelH = Int(mediaBox.height * scale)
 
-                                    if let cgImage = ctx.makeImage() {
-                                        let finalImage = NSImage(cgImage: cgImage,
-                                                                 size: NSSize(width: mobileWidth, height: totalHeight))
-                                        if let tiff = finalImage.tiffRepresentation,
-                                           let rep = NSBitmapImageRep(data: tiff),
-                                           let png = rep.representation(using: .png, properties: [:]) {
-                                            try? png.write(to: url)
-                                        }
-                                    }
-                                    done()
+                                guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
+                                      let ctx = CGContext(
+                                          data: nil,
+                                          width: pixelW,
+                                          height: pixelH,
+                                          bitsPerComponent: 8,
+                                          bytesPerRow: 0,
+                                          space: colorSpace,
+                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+                                      ) else { done(); return }
+
+                                // Fill white background then render PDF page at Retina scale
+                                ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+                                ctx.fill(CGRect(x: 0, y: 0, width: pixelW, height: pixelH))
+                                ctx.scaleBy(x: scale, y: scale)
+                                page.draw(with: .mediaBox, to: ctx)
+
+                                guard let cgImage = ctx.makeImage() else { done(); return }
+                                let rep = NSBitmapImageRep(cgImage: cgImage)
+                                if let png = rep.representation(using: .png, properties: [:]) {
+                                    try? png.write(to: url)
                                 }
+                                done()
                             }
-                            return
-                        }
-
-                        let offset = offsets[index]
-                        let remaining = totalHeight - offset
-                        let currentTileH = min(tileHeight, remaining)
-
-                        // Scroll the webView content to the current tile offset
-                        webView.evaluateJavaScript("window.scrollTo(0, \(offset))") { _, _ in
-                            // Wait briefly for tiles to render after scrolling
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                                let config = WKSnapshotConfiguration()
-                                config.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: currentTileH)
-                                config.snapshotWidth = NSNumber(value: Double(mobileWidth))
-
-                                webView.takeSnapshot(with: config) { image, _ in
-                                    DispatchQueue.main.async {
-                                        if let image,
-                                           let tiff = image.tiffRepresentation,
-                                           let rep = NSBitmapImageRep(data: tiff),
-                                           let cgImage = rep.cgImage {
-                                            // Draw tile into the composite context.
-                                            // CGContext has origin at bottom-left, so flip the y coordinate.
-                                            let drawY = CGFloat(pixelH) - (offset + currentTileH) * scale
-                                            let drawRect = CGRect(
-                                                x: 0,
-                                                y: drawY,
-                                                width: CGFloat(pixelW),
-                                                height: currentTileH * scale
-                                            )
-                                            ctx.draw(cgImage, in: drawRect)
-                                        }
-                                        // Move to the next tile
-                                        captureTile(at: index + 1)
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Scroll to top first, then start tile capture
-                    webView.evaluateJavaScript("window.scrollTo(0, 0)") { _, _ in
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            captureTile(at: 0)
                         }
                     }
                 }
