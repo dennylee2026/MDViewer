@@ -59,28 +59,28 @@ struct AppCommands: Commands {
             Button("menu.edit.find") {
                 let item = NSMenuItem()
                 item.tag = NSTextFinder.Action.showFindInterface.rawValue
-                NSApp.sendAction(Selector(("performTextFinderAction:")), to: nil, from: item)
+                NSApp.sendAction(#selector(NSTextView.performTextFinderAction(_:)), to: nil, from: item)
             }
             .keyboardShortcut("f", modifiers: .command)
 
             Button("menu.edit.findReplace") {
                 let item = NSMenuItem()
                 item.tag = NSTextFinder.Action.showReplaceInterface.rawValue
-                NSApp.sendAction(Selector(("performTextFinderAction:")), to: nil, from: item)
+                NSApp.sendAction(#selector(NSTextView.performTextFinderAction(_:)), to: nil, from: item)
             }
             .keyboardShortcut("f", modifiers: [.command, .option])
 
             Button("menu.edit.findNext") {
                 let item = NSMenuItem()
                 item.tag = NSTextFinder.Action.nextMatch.rawValue
-                NSApp.sendAction(Selector(("performTextFinderAction:")), to: nil, from: item)
+                NSApp.sendAction(#selector(NSTextView.performTextFinderAction(_:)), to: nil, from: item)
             }
             .keyboardShortcut("g", modifiers: .command)
 
             Button("menu.edit.findPrevious") {
                 let item = NSMenuItem()
                 item.tag = NSTextFinder.Action.previousMatch.rawValue
-                NSApp.sendAction(Selector(("performTextFinderAction:")), to: nil, from: item)
+                NSApp.sendAction(#selector(NSTextView.performTextFinderAction(_:)), to: nil, from: item)
             }
             .keyboardShortcut("g", modifiers: [.command, .shift])
         }
