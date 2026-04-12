@@ -24,11 +24,10 @@ A native macOS Markdown reader and editor focused on beautiful typography and re
 | ⌘3 | Preview | Full-screen preview with table of contents sidebar |
 
 ### Editor
-- Markdown syntax highlighting: headings (Google colors), bold, italic, inline code, links, strikethrough, blockquotes, code blocks
+- Markdown syntax highlighting: headings, bold, italic, inline code, links, strikethrough, blockquotes, code blocks (colors defined by the active style)
 - Line numbers
 - **⌘F** Find & Replace (native Find Bar)
 - Full IME compatibility (Chinese, Japanese)
-- Configurable font in Preferences: SF Pro (default) / Menlo (monospace) / Palatino (serif)
 
 ### Split Sync
 - Clicking in the editor automatically scrolls the preview to the corresponding position
@@ -36,17 +35,24 @@ A native macOS Markdown reader and editor focused on beautiful typography and re
 - The target element appears at the same proportional vertical position in the preview as the cursor in the editor
 
 ### Preview Rendering
-- Google brand heading colors: H1 blue / H2 red / H3 yellow / H4 green
 - Code block syntax highlighting via highlight.js (Swift support built-in)
 - Images scale to fit width
-- Automatically follows system light/dark appearance
+- All typography (fonts, sizes, colors, spacing) is fully defined by the active style
 
-### Themes
-Choose a preview theme in **⌘,** Preferences:
-- Follow System (default)
-- Always Light
-- Always Dark
-- Sepia (vintage paper)
+### Styles
+Select a style in **⌘,** Preferences, or click "Open Config File" to edit `styles.json` directly:
+
+| Built-in Style | Description |
+|----------------|-------------|
+| **GDS-Style** (default) | Google brand colors: H1 blue / H2 red / H3 yellow / H4 green, white background |
+| **Dark** | Dark background with low-contrast palette |
+| **Sepia** | Warm vintage paper tone |
+
+**Config file:** `~/Library/Application Support/MDViewer/styles.json`
+
+- Each style defines an **editor** section (font, size, line height, per-element highlight colors) and a **display** section (complete CSS covering all Markdown elements)
+- The app reloads instantly when the file is saved — no restart needed
+- If the config file is corrupt, the app silently restores the built-in defaults — no `.bak` file is created
 
 ### Table of Contents
 - Preview mode (⌘3) shows an auto-generated outline supporting H1–H6 with indent levels
