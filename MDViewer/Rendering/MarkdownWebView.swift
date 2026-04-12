@@ -3,7 +3,7 @@ import WebKit
 
 struct MarkdownWebView: NSViewRepresentable {
     let content: String
-    let theme: String   // "light", "dark", "sepia"
+    let displayCSS: String
     let zoomLevel: Double
     let fileURL: URL?
     var onPreviewClick: ((Int, CGFloat, CGFloat) -> Void)? = nil   // (headingIndex, sectionFraction, clickFraction)
@@ -25,7 +25,7 @@ struct MarkdownWebView: NSViewRepresentable {
         context.coordinator.webView = webView
         context.coordinator.pendingContent = content
         context.coordinator.pendingFileURL = fileURL
-        context.coordinator.theme = theme
+        context.coordinator.pendingCSS = displayCSS
         context.coordinator.onPreviewClick = onPreviewClick
 
         DispatchQueue.main.async { webViewRef = webView }
@@ -36,16 +36,18 @@ struct MarkdownWebView: NSViewRepresentable {
     func updateNSView(_ webView: WKWebView, context: Context) {
         let coordinator = context.coordinator
         let contentChanged = coordinator.lastContent != content
-        let themeChanged   = coordinator.theme != theme
+        let cssChanged     = coordinator.lastCSS != displayCSS
         let fileChanged    = coordinator.lastFileURL != fileURL
 
-        coordinator.theme = theme
+        coordinator.pendingCSS = displayCSS
         coordinator.pendingContent = content
         coordinator.pendingFileURL = fileURL
         coordinator.onPreviewClick = onPreviewClick
 
-        if themeChanged {
-            webView.evaluateJavaScript("switchTheme('\(theme)')") { _, _ in
+        if cssChanged {
+            let escaped = escapedForJS(displayCSS)
+            webView.evaluateJavaScript("applyCustomStyle(`\(escaped)`)") { _, _ in
+                coordinator.lastCSS = self.displayCSS
                 if contentChanged {
                     coordinator.renderContent(content, scrollToTop: fileChanged)
                 }
@@ -69,20 +71,33 @@ struct MarkdownWebView: NSViewRepresentable {
         webView.loadFileURL(templateURL, allowingReadAccessTo: resourceDir)
     }
 
+    private func escapedForJS(_ css: String) -> String {
+        css.replacingOccurrences(of: "\\", with: "\\\\")
+           .replacingOccurrences(of: "`", with: "\\`")
+           .replacingOccurrences(of: "$", with: "\\$")
+    }
+
     class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         weak var webView: WKWebView?
         var pendingContent: String = ""
         var pendingFileURL: URL? = nil
+        var pendingCSS: String = ""
         var lastContent: String = ""
         var lastFileURL: URL? = nil
-        var theme: String = "light"
+        var lastCSS: String = ""
         var isLoaded: Bool = false
         var onPreviewClick: ((Int, CGFloat, CGFloat) -> Void)?
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             isLoaded = true
-            webView.evaluateJavaScript("switchTheme('\(theme)')") { [weak self] _, _ in
+            let css = pendingCSS
+            let escaped = css
+                .replacingOccurrences(of: "\\", with: "\\\\")
+                .replacingOccurrences(of: "`", with: "\\`")
+                .replacingOccurrences(of: "$", with: "\\$")
+            webView.evaluateJavaScript("applyCustomStyle(`\(escaped)`)") { [weak self] _, _ in
                 guard let self else { return }
+                self.lastCSS = css
                 self.renderContent(self.pendingContent, scrollToTop: true)
             }
         }
@@ -107,7 +122,7 @@ struct MarkdownWebView: NSViewRepresentable {
                                    didReceive message: WKScriptMessage) {
             if message.name == "syncToEditor",
                let dict = message.body as? [String: Any],
-               let hiNum  = dict["headingIndex"]   as? NSNumber,
+               let hiNum  = dict["headingIndex"]    as? NSNumber,
                let sfNum  = dict["sectionFraction"] as? NSNumber,
                let cfNum  = dict["clickFraction"]   as? NSNumber {
                 let headingIndex    = hiNum.intValue

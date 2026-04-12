@@ -6,6 +6,7 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
     var baseFont: NSFont = .systemFont(ofSize: 14)         // updated by EditorView on zoom
     var paragraphStyle: NSParagraphStyle = .default        // updated by EditorView on zoom
     weak var textView: NSTextView?                         // set by EditorView; used for IME check
+    var editorStyle: EditorStyle = StylesFile.systemDefaults.styles[0].editorStyle
     private var isWorking = false
 
     /// Bold version of baseFont, preserving its cascade list (e.g. PingFang SC).
@@ -40,8 +41,8 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
     // MARK: - Full-document highlight
 
     func applyHighlights(to storage: NSTextStorage) {
-        let str    = storage.string
-        let full   = NSRange(str.startIndex..., in: str)
+        let str  = storage.string
+        let full = NSRange(str.startIndex..., in: str)
 
         // 1. Reset everything to base style (include paragraphStyle so line height survives)
         storage.setAttributes([
@@ -66,25 +67,36 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
     // MARK: - Patterns
 
     private func applyFencedCodeBlocks(_ s: NSTextStorage, _ str: String) {
+        let cb = editorStyle.codeBlock
+        var attrs: [NSAttributedString.Key: Any] = [:]
+        if cb.useSecondaryLabelColor == true {
+            attrs[.foregroundColor] = NSColor.secondaryLabelColor
+        } else if let hex = cb.color {
+            attrs[.foregroundColor] = NSColor(hex: hex)
+        }
+        if let hex = cb.backgroundColor {
+            attrs[.backgroundColor] = NSColor(hex: hex)
+        } else {
+            attrs[.backgroundColor] = NSColor.systemGray.withAlphaComponent(0.08)
+        }
         apply(to: s, str: str,
               pattern: "^`{3}[\\s\\S]*?^`{3}",
               options: [.anchorsMatchLines],
-              attrs: [
-                .foregroundColor: NSColor.secondaryLabelColor,
-                .backgroundColor: NSColor.systemGray.withAlphaComponent(0.08)
-              ])
+              attrs: attrs)
     }
 
     private func applyHeadings(_ s: NSTextStorage, _ str: String) {
         let base = baseFont.pointSize
-        let colors: [(NSColor, CGFloat)] = [
-            (.init(hex: "#4285F4"), base + 6), // H1
-            (.init(hex: "#EA4335"), base + 4), // H2
-            (.init(hex: "#FBBC05"), base + 2), // H3
-            (.init(hex: "#34A853"), base + 1), // H4
-            (.init(hex: "#4285F4"), base),     // H5
-            (.init(hex: "#EA4335"), base),     // H6
+        let headingLevels: [EditorHeadingLevel?] = [
+            editorStyle.headings.h1,
+            editorStyle.headings.h2,
+            editorStyle.headings.h3,
+            editorStyle.headings.h4,
+            editorStyle.headings.h5,
+            editorStyle.headings.h6
         ]
+        let sharedBold = editorStyle.headings.shared?.isBold ?? true
+
         guard let regex = try? NSRegularExpression(
             pattern: "^(#{1,6}) .+", options: .anchorsMatchLines) else { return }
 
@@ -92,51 +104,97 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
             guard let m,
                   let hashRange = Range(m.range(at: 1), in: str) else { return }
             let level = min(str.distance(from: hashRange.lowerBound, to: hashRange.upperBound), 6)
-            let (color, size) = colors[level - 1]
-            s.addAttributes([
-                .foregroundColor: color,
-                .font: makeBoldFont(size: size)
-            ], range: m.range)
+            let levelData = headingLevels[level - 1]
+            let colorHex  = levelData?.color
+            let offset    = levelData?.fontSizeOffset ?? 0
+            let isBold    = levelData?.isBold ?? sharedBold
+
+            var attrs: [NSAttributedString.Key: Any] = [:]
+            if let hex = colorHex {
+                attrs[.foregroundColor] = NSColor(hex: hex)
+            }
+            let size = base + offset
+            attrs[.font] = isBold ? makeBoldFont(size: size) : NSFont(descriptor: baseFont.fontDescriptor, size: size) ?? baseFont
+            s.addAttributes(attrs, range: m.range)
         }
     }
 
     private func applyBlockquotes(_ s: NSTextStorage, _ str: String) {
-        apply(to: s, str: str, pattern: "^> .+", options: .anchorsMatchLines,
-              attrs: [.foregroundColor: NSColor.secondaryLabelColor])
+        let bq = editorStyle.blockquote
+        var attrs: [NSAttributedString.Key: Any] = [:]
+        if bq.useSecondaryLabelColor == true {
+            attrs[.foregroundColor] = NSColor.secondaryLabelColor
+        } else if let hex = bq.color {
+            attrs[.foregroundColor] = NSColor(hex: hex)
+        } else {
+            attrs[.foregroundColor] = NSColor.secondaryLabelColor
+        }
+        apply(to: s, str: str, pattern: "^> .+", options: .anchorsMatchLines, attrs: attrs)
     }
 
     private func applyBold(_ s: NSTextStorage, _ str: String) {
+        let bd = editorStyle.bold
+        var attrs: [NSAttributedString.Key: Any] = [.font: makeBoldFont()]
+        if let hex = bd.color {
+            attrs[.foregroundColor] = NSColor(hex: hex)
+        }
         apply(to: s, str: str, pattern: "\\*\\*(?=\\S).+?(?<=\\S)\\*\\*|__(?=\\S).+?(?<=\\S)__",
-              attrs: [.font: makeBoldFont()])
+              attrs: attrs)
     }
 
     private func applyItalic(_ s: NSTextStorage, _ str: String) {
+        let it = editorStyle.italic
+        var attrs: [NSAttributedString.Key: Any] = [.obliqueness: it.obliqueness ?? 0.2]
+        if let hex = it.color {
+            attrs[.foregroundColor] = NSColor(hex: hex)
+        }
         // Require that the * is not adjacent to another * on either side,
         // so that ** bold markers are never mistaken for italic delimiters.
         apply(to: s, str: str,
               pattern: "(?<!\\*)\\*(?!\\*)(?=\\S).+?(?<=\\S)(?<!\\*)\\*(?!\\*)|(?<!_)_(?!_)(?=\\S).+?(?<=\\S)(?<!_)_(?!_)",
-              attrs: [.obliqueness: 0.2])
+              attrs: attrs)
     }
 
     private func applyInlineCode(_ s: NSTextStorage, _ str: String) {
-        apply(to: s, str: str, pattern: "`[^`\\n]+`",
-              attrs: [
-                .foregroundColor: NSColor.systemRed,
-                .backgroundColor: NSColor.systemGray.withAlphaComponent(0.12)
-              ])
+        let ic = editorStyle.inlineCode
+        var attrs: [NSAttributedString.Key: Any] = [:]
+        if let hex = ic.color {
+            attrs[.foregroundColor] = NSColor(hex: hex)
+        } else {
+            attrs[.foregroundColor] = NSColor.systemRed
+        }
+        if let hex = ic.backgroundColor {
+            attrs[.backgroundColor] = NSColor(hex: hex)
+        } else {
+            attrs[.backgroundColor] = NSColor.systemGray.withAlphaComponent(0.12)
+        }
+        apply(to: s, str: str, pattern: "`[^`\\n]+`", attrs: attrs)
     }
 
     private func applyStrikethrough(_ s: NSTextStorage, _ str: String) {
-        apply(to: s, str: str, pattern: "~~(?=\\S).+?(?<=\\S)~~",
-              attrs: [
-                .strikethroughStyle: NSUnderlineStyle.single.rawValue,
-                .foregroundColor: NSColor.secondaryLabelColor
-              ])
+        let st = editorStyle.strikethrough
+        var attrs: [NSAttributedString.Key: Any] = [.strikethroughStyle: NSUnderlineStyle.single.rawValue]
+        if st.useSecondaryLabelColor == true {
+            attrs[.foregroundColor] = NSColor.secondaryLabelColor
+        } else if let hex = st.color {
+            attrs[.foregroundColor] = NSColor(hex: hex)
+        } else {
+            attrs[.foregroundColor] = NSColor.secondaryLabelColor
+        }
+        apply(to: s, str: str, pattern: "~~(?=\\S).+?(?<=\\S)~~", attrs: attrs)
     }
 
     private func applyLinks(_ s: NSTextStorage, _ str: String) {
-        apply(to: s, str: str, pattern: "\\[([^\\]]+)\\]\\([^)]+\\)",
-              attrs: [.foregroundColor: NSColor.linkColor])
+        let lk = editorStyle.link
+        var attrs: [NSAttributedString.Key: Any] = [:]
+        if lk.useLinkColor == true {
+            attrs[.foregroundColor] = NSColor.linkColor
+        } else if let hex = lk.color {
+            attrs[.foregroundColor] = NSColor(hex: hex)
+        } else {
+            attrs[.foregroundColor] = NSColor.linkColor
+        }
+        apply(to: s, str: str, pattern: "\\[([^\\]]+)\\]\\([^)]+\\)", attrs: attrs)
     }
 
     // MARK: - Helper
@@ -153,19 +211,5 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
             guard let m else { return }
             storage.addAttributes(attrs, range: m.range)
         }
-    }
-}
-
-private extension NSColor {
-    convenience init(hex: String) {
-        let hex = hex.trimmingCharacters(in: .init(charactersIn: "#"))
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        self.init(
-            red:   CGFloat((int >> 16) & 0xFF) / 255,
-            green: CGFloat((int >>  8) & 0xFF) / 255,
-            blue:  CGFloat( int        & 0xFF) / 255,
-            alpha: 1
-        )
     }
 }

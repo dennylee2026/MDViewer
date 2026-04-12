@@ -12,7 +12,7 @@ struct EditorScrollTarget: Equatable {
 struct EditorView: NSViewRepresentable {
     @Binding var text: String
     var zoomLevel: Double = 1.0
-    var fontFamily: String = "system"
+    var editorStyle: EditorStyle = StylesFile.systemDefaults.styles[0].editorStyle
     /// Plain text of the cursor's line (Markdown syntax stripped), used to locate the element in the preview.
     /// Parameters: (lineText, editorFraction, lineFraction, charOffset)
     ///   - editorFraction: cursor's vertical fraction within the visible editor area (0.0 = top, 1.0 = bottom)
@@ -21,13 +21,17 @@ struct EditorView: NSViewRepresentable {
     var onCursorMove: ((String, CGFloat, CGFloat, Int) -> Void)?
     var scrollTarget: EditorScrollTarget? = nil
 
-    private var fontSize: CGFloat { CGFloat(18 * zoomLevel) }
+    private var fontSize: CGFloat {
+        let base = editorStyle.global.fontSize ?? 18
+        return base * CGFloat(zoomLevel)
+    }
 
-    // MARK: - Font with PingFang SC cascade for CJK
+    // MARK: - Font with cascade for CJK
 
     private func makeFont() -> NSFont {
+        let family = editorStyle.global.fontFamily ?? "system"
         let base: NSFont
-        switch fontFamily {
+        switch family {
         case "menlo":
             base = NSFont(name: "Menlo", size: fontSize) ?? NSFont.systemFont(ofSize: fontSize)
         case "palatino":
@@ -35,9 +39,10 @@ struct EditorView: NSViewRepresentable {
         default:
             base = NSFont.systemFont(ofSize: fontSize)
         }
-        let pingFangDescriptor = NSFontDescriptor(fontAttributes: [.name: "PingFangSC-Regular"])
+        let cascadeNames = editorStyle.global.cascadeFonts ?? ["PingFangSC-Regular"]
+        let cascadeDescriptors = cascadeNames.map { NSFontDescriptor(fontAttributes: [.name: $0]) }
         let cascaded = base.fontDescriptor.addingAttributes([
-            .cascadeList: [pingFangDescriptor]
+            .cascadeList: cascadeDescriptors
         ])
         return NSFont(descriptor: cascaded, size: fontSize) ?? base
     }
@@ -46,7 +51,7 @@ struct EditorView: NSViewRepresentable {
 
     private func makeParagraphStyle() -> NSParagraphStyle {
         let ps = NSMutableParagraphStyle()
-        ps.lineHeightMultiple = 1.25
+        ps.lineHeightMultiple = editorStyle.global.lineHeightMultiple ?? 1.25
         return ps
     }
 
@@ -97,6 +102,7 @@ struct EditorView: NSViewRepresentable {
         let highlighter = MarkdownHighlighter()
         highlighter.baseFont       = makeFont()
         highlighter.paragraphStyle = makeParagraphStyle()
+        highlighter.editorStyle    = editorStyle
         highlighter.textView       = textView          // needed for hasMarkedText() check
         textView.textStorage?.delegate = highlighter
         context.coordinator.highlighter = highlighter
@@ -108,6 +114,7 @@ struct EditorView: NSViewRepresentable {
         scrollView.rulersVisible     = true
 
         context.coordinator.textView = textView
+        context.coordinator.currentFontFamily = editorStyle.global.fontFamily ?? "system"
         return scrollView
     }
 
@@ -117,9 +124,18 @@ struct EditorView: NSViewRepresentable {
         // Zoom or font family change: update typography
         let newFont = makeFont()
         let newPS   = makeParagraphStyle()
-        let fontFamilyChanged = context.coordinator.currentFontFamily != fontFamily
-        if fontFamilyChanged { context.coordinator.currentFontFamily = fontFamily }
-        if textView.font?.pointSize != newFont.pointSize || fontFamilyChanged {
+        let currentFamily = editorStyle.global.fontFamily ?? "system"
+        let fontFamilyChanged = context.coordinator.currentFontFamily != currentFamily
+        if fontFamilyChanged { context.coordinator.currentFontFamily = currentFamily }
+
+        // Also detect editorStyle changes (e.g. style switched)
+        let styleChanged = context.coordinator.lastEditorStyle != editorStyle
+        if styleChanged {
+            context.coordinator.lastEditorStyle = editorStyle
+            context.coordinator.highlighter?.editorStyle = editorStyle
+        }
+
+        if textView.font?.pointSize != newFont.pointSize || fontFamilyChanged || styleChanged {
             context.coordinator.highlighter?.baseFont       = newFont
             context.coordinator.highlighter?.paragraphStyle = newPS
             applyTypography(to: textView)
@@ -208,12 +224,12 @@ struct EditorView: NSViewRepresentable {
     private func applyTypography(to textView: NSTextView) {
         let font = makeFont()
         let ps   = makeParagraphStyle()
-        textView.font                 = font
+        textView.font                  = font
         textView.defaultParagraphStyle = ps
         textView.typingAttributes = [
-            .font:           font,
+            .font:            font,
             .foregroundColor: NSColor.textColor,
-            .paragraphStyle: ps
+            .paragraphStyle:  ps
         ]
     }
 
@@ -225,6 +241,7 @@ struct EditorView: NSViewRepresentable {
         var highlighter: MarkdownHighlighter?
         var currentFontFamily: String = "system"
         var lastScrollToken: UUID? = nil
+        var lastEditorStyle: EditorStyle? = nil
 
         init(_ parent: EditorView) { self.parent = parent }
 
