@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.4] - 2026-04-12
+
+### Changed
+- 重写中英文 README：新增价值主张开场、「为什么选 MDViewer」利益陈述区块，样式系统作为差异化亮点单独成节，叙述从功能列表改为用户利益导向
+
 ## [2.3.3] - 2026-04-12
 
 ### Fixed
