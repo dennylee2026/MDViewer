@@ -146,3 +146,5 @@
 "prefs.font.system" = "系统默认（SF Pro）";
 "prefs.font.menlo" = "等宽（Menlo）";
 "prefs.font.palatino" = "衬线（Palatino）";
+"prefs.style" = "样式";
+"prefs.style.openConfig" = "打开配置文件…";

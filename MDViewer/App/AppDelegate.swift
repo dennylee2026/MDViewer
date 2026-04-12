@@ -47,7 +47,6 @@ class AppState: ObservableObject {
     @Published var editorScrollTarget: EditorScrollTarget? = nil
 
     var webView: WKWebView?
-    var currentTheme: String = "light"
     private var savedBadgeTask: Task<Void, Never>?
 
     private let fileWatcher = FileWatcher()
@@ -56,6 +55,7 @@ class AppState: ObservableObject {
         let saved = UserDefaults.standard.double(forKey: "MDViewer.zoomLevel")
         if saved > 0 { zoomLevel = min(3.0, max(0.5, saved)) }
         recentURLs = Array(NSDocumentController.shared.recentDocumentURLs.prefix(10))
+        StyleManager.shared.setup()
     }
 
     // MARK: Open
@@ -176,15 +176,7 @@ class AppState: ObservableObject {
         guard let webView else { return }
         webView.evaluateJavaScript("document.getElementById('content').innerHTML") { [weak self] result, _ in
             guard let self, let innerHtml = result as? String else { return }
-            let bundle = Bundle.main
-            func readResource(_ name: String, ext: String) -> String {
-                guard let url = bundle.url(forResource: name, withExtension: ext),
-                      let text = try? String(contentsOf: url, encoding: .utf8) else { return "" }
-                return text
-            }
-            let mdCSS   = readResource(currentTheme, ext: "css")
-            let hljsCSS = readResource(currentTheme == "dark" ? "hljs-dark" : "hljs-light", ext: "css")
-            let bodyClass = currentTheme
+            let styleCSS = StyleManager.shared.activeStyle.displayStyle.toCSS()
             let title = fileURL?.deletingPathExtension().lastPathComponent ?? "Untitled"
             let html = """
             <!DOCTYPE html>
@@ -192,11 +184,9 @@ class AppState: ObservableObject {
             <head>
               <meta charset="UTF-8">
               <title>\(title)</title>
-              <style>\(hljsCSS)</style>
-              <style>\(mdCSS)</style>
-              <style>*{box-sizing:border-box;margin:0;padding:0}body{padding:40px 48px 80px;max-width:860px;margin:0 auto}</style>
+              <style>\(styleCSS)</style>
             </head>
-            <body class="\(bodyClass)">
+            <body>
               <div id="content">\(innerHtml)</div>
             </body>
             </html>

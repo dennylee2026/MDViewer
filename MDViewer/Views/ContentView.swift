@@ -3,11 +3,9 @@ import WebKit
 
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.colorScheme) var colorScheme
     @State private var webViewRef: WKWebView?
+    @ObservedObject private var styleManager = StyleManager.shared
 
-    @AppStorage("colorTheme") private var colorTheme: String = "auto"
-    @AppStorage("editorFont")  private var editorFont:  String = "system"
     @State private var isDragTargeted = false
     @State private var outlineVisible: NavigationSplitViewVisibility = .detailOnly
     // editorScrollTarget is now on appState (@Published) for reliable
@@ -16,13 +14,6 @@ struct ContentView: View {
     var windowTitle: String {
         let name = appState.fileURL?.lastPathComponent ?? String(localized: "window.untitled")
         return appState.isDirty ? "\(name) •" : name
-    }
-
-    private var effectiveTheme: String {
-        switch colorTheme {
-        case "light", "dark", "sepia": return colorTheme
-        default: return colorScheme == .dark ? "dark" : "light"
-        }
     }
 
     var body: some View {
@@ -52,11 +43,8 @@ struct ContentView: View {
         }
         .toolbar { toolbarContent }
         .onChange(of: webViewRef)        { _, ref in appState.webView = ref }
-        .onChange(of: colorScheme)       { _, _   in appState.currentTheme = effectiveTheme }
-        .onChange(of: colorTheme)        { _, _   in appState.currentTheme = effectiveTheme }
         .onChange(of: appState.zoomLevel){ _, val in UserDefaults.standard.set(val, forKey: "MDViewer.zoomLevel") }
         .onChange(of: appState.fileURL)  { _, _   in outlineVisible = .detailOnly }
-        .onAppear { appState.currentTheme = effectiveTheme }
         .overlay(alignment: .top) { savedBadge }
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: appState.showSavedBadge)
     }
@@ -76,7 +64,7 @@ struct ContentView: View {
             EditorView(
                 text: editorBinding,
                 zoomLevel: appState.zoomLevel,
-                fontFamily: editorFont
+                editorStyle: styleManager.activeStyle.editorStyle
             )
 
         case .viewer:
@@ -96,7 +84,7 @@ struct ContentView: View {
         EditorView(
             text: editorBinding,
             zoomLevel: appState.zoomLevel,
-            fontFamily: editorFont,
+            editorStyle: styleManager.activeStyle.editorStyle,
             onCursorMove: { lineText, fraction, lineFraction, charOffset in
                 let headings = appState.headings
 
@@ -170,7 +158,7 @@ struct ContentView: View {
     private func previewPane(onPreviewClick: ((Int, CGFloat, CGFloat) -> Void)? = nil) -> some View {
         MarkdownWebView(
             content: appState.markdownContent,
-            theme: effectiveTheme,
+            displayCSS: styleManager.activeStyle.displayStyle.toCSS(),
             zoomLevel: appState.zoomLevel,
             fileURL: appState.fileURL,
             onPreviewClick: onPreviewClick,
