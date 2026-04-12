@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.3] - 2026-04-12
+
+### Fixed
+- 手机 PDF / 手机长图：表格和内联代码在窄列中溢出截断
+  - `table`: 新增 `table-layout: fixed` 强制列宽按比例分配，不再按内容撑宽
+  - `td, th`: 新增 `word-break: break-word` + `max-width: 0`，单元格内容强制换行
+  - `code`（内联）: `white-space: normal` + `word-break: break-all`，内联代码可在窄列内换行
+  - `pre code`: 覆盖上条，保持代码块 `white-space: pre-wrap` 行为不变
+
 ## [2.4.2] - 2026-04-12
 
 ### Fixed
