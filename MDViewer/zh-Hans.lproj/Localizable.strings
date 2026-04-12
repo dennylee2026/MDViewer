@@ -9,8 +9,11 @@
 "menu.file.openRecent.none" = "无最近文件";
 "menu.file.save" = "保存";
 "menu.file.saveAs" = "另存为…";
-"menu.file.exportHTML" = "导出为 HTML…";
 "menu.file.exportPDF" = "导出为 PDF…";
+"menu.file.exportMobilePDF" = "导出为手机 PDF…";
+"menu.file.exportMobileImage" = "导出为手机长图…";
+"menu.file.exportAll" = "全部导出…";
+"menu.file.exportHTML" = "导出为 HTML…";
 
 // MARK: - AppCommands (Edit menu)
 "menu.edit.find" = "查找…";
@@ -32,6 +35,8 @@
 
 // MARK: - AppDelegate / AppState (panels & alerts)
 "panel.openFolder.prompt" = "选择文件夹";
+"panel.exportAll.prompt" = "导出";
+"panel.exportAll.message" = "选择保存导出文件的文件夹";
 "alert.openLink.title" = "打开 Markdown 文件";
 "alert.openLink.message" = "是否打开「%@」？";
 "alert.openLink.open" = "打开";
@@ -45,6 +50,12 @@
 "toolbar.zoomIn.help" = "放大 (⌘=)";
 "toolbar.open.label" = "打开";
 "toolbar.open.help" = "打开文件 (⌘O)";
+"toolbar.export.label" = "导出";
+"toolbar.export.help" = "导出文档";
+"toolbar.export.pdf" = "导出 PDF";
+"toolbar.export.mobilePDF" = "导出手机 PDF";
+"toolbar.export.mobileImage" = "导出手机长图";
+"toolbar.export.all" = "全部导出 (3 个文件)";
 "toolbar.unsaved" = "Unsaved";
 "badge.saved" = "Saved";
 

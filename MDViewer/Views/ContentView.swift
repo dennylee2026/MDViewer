@@ -261,6 +261,18 @@ struct ContentView: View {
                 Label("toolbar.open.label", systemImage: "folder")
             }
             .help(String(localized: "toolbar.open.help"))
+
+            Menu {
+                Button(String(localized: "toolbar.export.pdf"))         { appState.exportPDF() }
+                Button(String(localized: "toolbar.export.mobilePDF"))   { appState.exportMobilePDF() }
+                Button(String(localized: "toolbar.export.mobileImage")) { appState.exportMobileImage() }
+                Divider()
+                Button(String(localized: "toolbar.export.all"))         { appState.exportAll() }
+            } label: {
+                Label("toolbar.export.label", systemImage: "square.and.arrow.up")
+            }
+            .help(String(localized: "toolbar.export.help"))
+            .disabled(appState.fileURL == nil || appState.isExporting)
         }
     }
 
