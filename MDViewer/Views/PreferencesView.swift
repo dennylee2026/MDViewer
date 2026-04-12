@@ -6,17 +6,17 @@ struct PreferencesView: View {
 
     var body: some View {
         Form {
-            Picker("预览主题", selection: $colorTheme) {
-                Text("跟随系统").tag("auto")
-                Text("始终明亮").tag("light")
-                Text("始终暗色").tag("dark")
-                Text("复古纸张（Sepia）").tag("sepia")
+            Picker("prefs.previewTheme", selection: $colorTheme) {
+                Text("prefs.theme.auto").tag("auto")
+                Text("prefs.theme.light").tag("light")
+                Text("prefs.theme.dark").tag("dark")
+                Text("prefs.theme.sepia").tag("sepia")
             }
 
-            Picker("编辑器字体", selection: $editorFont) {
-                Text("系统默认（SF Pro）").tag("system")
-                Text("等宽（Menlo）").tag("menlo")
-                Text("衬线（Palatino）").tag("palatino")
+            Picker("prefs.editorFont", selection: $editorFont) {
+                Text("prefs.font.system").tag("system")
+                Text("prefs.font.menlo").tag("menlo")
+                Text("prefs.font.palatino").tag("palatino")
             }
         }
         .padding(24)

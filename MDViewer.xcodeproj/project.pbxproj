@@ -31,8 +31,9 @@
 		DCD5C119D82D35F369C6DABB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7F645B4EE1C62EA9163A352 /* ContentView.swift */; };
 		E964E369CA669E11D7687CD1 /* highlight.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 9C0A38B070AD311597A49576 /* highlight.min.js */; };
 		EB47D6A35E816367DEDB1B52 /* LineNumberRulerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D7147919507FA87DF9F604A /* LineNumberRulerView.swift */; };
-		FD716A136407B3A4CE6C11AB /* hljs-light.css in Resources */ = {isa = PBXBuildFile; fileRef = 6C18A5C355AFBAA8B992490E /* hljs-light.css */; };
 		F1FCA7F2A74C49E28CCBCC5A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FAE9F23E99F64EFA9DF97D5C /* Assets.xcassets */; };
+		FD716A136407B3A4CE6C11AB /* hljs-light.css in Resources */ = {isa = PBXBuildFile; fileRef = 6C18A5C355AFBAA8B992490E /* hljs-light.css */; };
+		AA001001AA001001AA001001 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA001002AA001002AA001002 /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -50,6 +51,8 @@
 		6C18A5C355AFBAA8B992490E /* hljs-light.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = "hljs-light.css"; sourceTree = "<group>"; };
 		7F1B6A4EB91C4EA6A9E78AE1 /* HelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpView.swift; sourceTree = "<group>"; };
 		9C0A38B070AD311597A49576 /* highlight.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = highlight.min.js; sourceTree = "<group>"; };
+		AA001003AA001003AA001003 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		AA001004AA001004AA001004 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		B2B94D6ECFF439ABF8F84105 /* MDViewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MDViewer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B7F645B4EE1C62EA9163A352 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		B9065D8A517453BB93215E95 /* MDViewerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MDViewerApp.swift; sourceTree = "<group>"; };
@@ -125,6 +128,7 @@
 			children = (
 				0156BF9B3F2C1DE237234673 /* Info.plist */,
 				FAE9F23E99F64EFA9DF97D5C /* Assets.xcassets */,
+				AA001002AA001002AA001002 /* Localizable.strings */,
 				06F0FD60A0EBC34CA8FC8791 /* App */,
 				3ECDC3D50F07F03773E8B45D /* Rendering */,
 				4F0372BDD1E4DD42A3631314 /* Resources */,
@@ -207,6 +211,7 @@
 			knownRegions = (
 				Base,
 				en,
+				"zh-Hans",
 			);
 			mainGroup = 948C07D6D92DE79B515C2B00;
 			minimizedProjectReferenceProxies = 1;
@@ -223,6 +228,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA001001AA001001AA001001 /* Localizable.strings in Resources */,
 				C65E89AC3B7E9E689CFCDA45 /* dark.css in Resources */,
 				E964E369CA669E11D7687CD1 /* highlight.min.js in Resources */,
 				790935193DE1F59872500A15 /* hljs-dark.css in Resources */,
@@ -263,6 +269,18 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		AA001002AA001002AA001002 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AA001003AA001003AA001003 /* zh-Hans */,
+				AA001004AA001004AA001004 /* en */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		3180EC117B385984E629525A /* Release */ = {

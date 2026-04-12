@@ -134,10 +134,10 @@ struct MarkdownWebView: NSViewRepresentable {
             let filename = targetURL.lastPathComponent
             DispatchQueue.main.async {
                 let alert = NSAlert()
-                alert.messageText = "打开 Markdown 文件"
-                alert.informativeText = "是否打开「\(filename)」？"
-                alert.addButton(withTitle: "打开")
-                alert.addButton(withTitle: "取消")
+                alert.messageText = String(localized: "alert.openLink.title")
+                alert.informativeText = String(format: String(localized: "alert.openLink.message"), filename)
+                alert.addButton(withTitle: String(localized: "alert.openLink.open"))
+                alert.addButton(withTitle: String(localized: "alert.openLink.cancel"))
                 if alert.runModal() == .alertFirstButtonReturn {
                     WindowCoordinator.shared.open(url: targetURL)
                 }

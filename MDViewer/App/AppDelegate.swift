@@ -135,7 +135,7 @@ class AppState: ObservableObject {
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
-        panel.prompt = "选择文件夹"
+        panel.prompt = String(localized: "panel.openFolder.prompt")
         if panel.runModal() == .OK, let url = panel.url {
             openFolder(url: url)
         }

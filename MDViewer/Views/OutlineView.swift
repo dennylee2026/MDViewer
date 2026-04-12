@@ -12,7 +12,7 @@ struct OutlineView: View {
                     Image(systemName: "list.bullet")
                         .font(.system(size: 28))
                         .foregroundStyle(.tertiary)
-                    Text(appState.fileURL == nil ? "No file open" : "No headings")
+                    Text(appState.fileURL == nil ? "outline.noFile" : "outline.noHeadings")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                 }

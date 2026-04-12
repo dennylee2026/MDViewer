@@ -1,0 +1,148 @@
+// MDViewer — Simplified Chinese (zh-Hans)
+
+// MARK: - AppCommands (File menu)
+"menu.file.new" = "新建";
+"menu.file.open" = "打开…";
+"menu.file.openFolder" = "打开文件夹…";
+"menu.file.openRecent" = "打开最近文件";
+"menu.file.openRecent.clear" = "清除最近打开";
+"menu.file.openRecent.none" = "无最近文件";
+"menu.file.save" = "保存";
+"menu.file.saveAs" = "另存为…";
+"menu.file.exportHTML" = "导出为 HTML…";
+"menu.file.exportPDF" = "导出为 PDF…";
+
+// MARK: - AppCommands (Edit menu)
+"menu.edit.find" = "查找…";
+"menu.edit.findReplace" = "查找并替换…";
+"menu.edit.findNext" = "查找下一个";
+"menu.edit.findPrevious" = "查找上一个";
+
+// MARK: - AppCommands (Help menu)
+"menu.help.mdviewer" = "MDViewer 帮助";
+
+// MARK: - AppCommands (View menu)
+"menu.view" = "视图";
+"menu.view.editor" = "编辑模式";
+"menu.view.split" = "分栏模式";
+"menu.view.viewer" = "预览模式";
+"menu.view.zoomIn" = "放大";
+"menu.view.zoomOut" = "缩小";
+"menu.view.actualSize" = "实际大小";
+
+// MARK: - AppDelegate / AppState (panels & alerts)
+"panel.openFolder.prompt" = "选择文件夹";
+"alert.openLink.title" = "打开 Markdown 文件";
+"alert.openLink.message" = "是否打开「%@」？";
+"alert.openLink.open" = "打开";
+"alert.openLink.cancel" = "取消";
+
+// MARK: - ContentView (toolbar)
+"toolbar.folderSidebar.help" = "文件夹侧栏";
+"toolbar.viewMode.help" = "⌘1 编辑  ⌘2 分栏  ⌘3 预览";
+"toolbar.zoomOut.help" = "缩小 (⌘-)";
+"toolbar.zoomReset.help" = "点击重置 (⌘0)";
+"toolbar.zoomIn.help" = "放大 (⌘=)";
+"toolbar.open.label" = "打开";
+"toolbar.open.help" = "打开文件 (⌘O)";
+"toolbar.unsaved" = "Unsaved";
+"badge.saved" = "Saved";
+
+// MARK: - ContentView (window title)
+"window.untitled" = "未命名";
+
+// MARK: - FolderTreeView
+"sidebar.folder.default" = "文件夹";
+"sidebar.folder.empty" = "无 Markdown 文件";
+
+// MARK: - OutlineView
+"outline.noFile" = "No file open";
+"outline.noHeadings" = "No headings";
+
+// MARK: - HelpView
+"help.title" = "MDViewer 使用指南";
+"help.subtitle" = "快速掌握 MDViewer 的全部功能";
+
+"help.section.openFile" = "打开文件";
+"help.openFile.picker" = "通过文件选择器打开 .md 文件";
+"help.openFile.new" = "新建空白窗口";
+"help.openFile.drag" = "将 .md 文件拖入窗口直接打开";
+"help.openFile.finder" = "双击 .md 文件在新窗口打开";
+"help.openFile.recent" = "File > 打开最近文件，记录最近 10 条";
+"help.openFile.shortcut.drag" = "拖拽";
+"help.openFile.shortcut.finder" = "Finder";
+"help.openFile.shortcut.recent" = "最近文件";
+
+"help.section.viewMode" = "视图模式";
+"help.viewMode.editor" = "编辑模式 — 纯编辑，无侧栏";
+"help.viewMode.split" = "分栏模式 — 左侧编辑 + 右侧实时预览";
+"help.viewMode.viewer" = "预览模式 — 纯预览 + 左侧目录大纲";
+"help.viewMode.toolbar" = "点击工具栏中央的三段式按钮快速切换";
+"help.viewMode.shortcut.toolbar" = "工具栏";
+
+"help.section.splitSync" = "分栏同步";
+"help.splitSync.cursor" = "在编辑区点击后，预览区自动滚动到对应位置";
+"help.splitSync.vertical" = "预览区保持与光标相同的垂直比例，而非强制置顶";
+"help.splitSync.anchor" = "以最近标题为锚点计算位置，代码块不会导致偏移";
+"help.splitSync.shortcut.cursor" = "点击光标";
+"help.splitSync.shortcut.vertical" = "垂直对齐";
+"help.splitSync.shortcut.anchor" = "标题锚点";
+
+"help.section.editSave" = "编辑与保存";
+"help.editSave.save" = "保存当前文件；新文件触发另存为对话框";
+"help.editSave.saveAs" = "另存为，选择新路径保存";
+"help.editSave.find" = "查找 / 替换（编辑区内建 Find Bar）";
+"help.editSave.unsaved" = "工具栏显示橙色「Unsaved」；保存后出现「Saved」提示";
+"help.editSave.shortcut.unsaved" = "未保存指示";
+
+"help.section.folderSidebar" = "文件夹侧栏";
+"help.folderSidebar.open" = "打开文件夹，在左侧显示所有 .md 文件";
+"help.folderSidebar.button" = "工具栏左侧按钮随时展开 / 收起文件夹侧栏";
+"help.folderSidebar.hierarchy" = "支持子目录递归展示，点击文件在当前窗口打开";
+"help.folderSidebar.shortcut.button" = "侧栏按钮";
+"help.folderSidebar.shortcut.hierarchy" = "层级展开";
+
+"help.section.outline" = "目录大纲";
+"help.outline.mode" = "切换至预览模式（⌘3）后左侧自动显示目录大纲";
+"help.outline.click" = "点击任意标题，预览区平滑滚动到对应位置";
+"help.outline.levels" = "支持六级标题层级缩进";
+"help.outline.shortcut.mode" = "预览模式";
+"help.outline.shortcut.click" = "点击跳转";
+
+"help.section.zoom" = "缩放";
+"help.zoom.in" = "放大（编辑区字号 + 预览区页面缩放同步）";
+"help.zoom.out" = "缩小";
+"help.zoom.reset" = "恢复 100%；也可点击工具栏百分比数字";
+"help.zoom.range" = "50% – 300%";
+"help.zoom.shortcut.range" = "范围";
+
+"help.section.export" = "导出";
+"help.export.pdf" = "导出为 PDF — 基于当前渲染输出高保真 PDF";
+"help.export.html" = "导出为 HTML — 内联主题 CSS，生成独立 .html 文件";
+
+"help.section.theme" = "主题与字体";
+"help.theme.prefs" = "打开偏好设置";
+"help.theme.preview" = "跟随系统 / 始终明亮 / 始终暗色 / 复古纸张（Sepia）";
+"help.theme.editor" = "SF Pro（默认）/ Menlo（等宽）/ Palatino（衬线）";
+"help.theme.shortcut.preview" = "预览主题";
+"help.theme.shortcut.editor" = "编辑器字体";
+
+"help.section.multiWindow" = "多窗口";
+"help.multiWindow.new" = "新建空白窗口";
+"help.multiWindow.open" = "每个文件在独立窗口中打开，状态完全隔离";
+"help.multiWindow.reuse" = "若当前窗口为空白未编辑，打开文件时直接复用该窗口";
+"help.multiWindow.shortcut.open" = "打开文件";
+"help.multiWindow.shortcut.reuse" = "空窗口复用";
+
+"help.footer" = "遇到问题？欢迎在 GitHub 提交 Issue 反馈。";
+
+// MARK: - PreferencesView
+"prefs.previewTheme" = "预览主题";
+"prefs.theme.auto" = "跟随系统";
+"prefs.theme.light" = "始终明亮";
+"prefs.theme.dark" = "始终暗色";
+"prefs.theme.sepia" = "复古纸张（Sepia）";
+"prefs.editorFont" = "编辑器字体";
+"prefs.font.system" = "系统默认（SF Pro）";
+"prefs.font.menlo" = "等宽（Menlo）";
+"prefs.font.palatino" = "衬线（Palatino）";

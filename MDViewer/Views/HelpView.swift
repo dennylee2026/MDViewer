@@ -6,9 +6,9 @@ struct HelpView: View {
             VStack(alignment: .leading, spacing: 28) {
                 // Header
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("MDViewer 使用指南")
+                    Text("help.title")
                         .font(.largeTitle).bold()
-                    Text("快速掌握 MDViewer 的全部功能")
+                    Text("help.subtitle")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -16,73 +16,73 @@ struct HelpView: View {
 
                 Divider()
 
-                HelpSection(icon: "doc.badge.plus", title: "打开文件") {
-                    HelpRow(shortcut: "⌘O",        desc: "通过文件选择器打开 .md 文件")
-                    HelpRow(shortcut: "⌘N",        desc: "新建空白窗口")
-                    HelpRow(shortcut: "拖拽",       desc: "将 .md 文件拖入窗口直接打开")
-                    HelpRow(shortcut: "Finder",    desc: "双击 .md 文件在新窗口打开")
-                    HelpRow(shortcut: "最近文件",   desc: "File > 打开最近文件，记录最近 10 条")
+                HelpSection(icon: "doc.badge.plus", title: String(localized: "help.section.openFile")) {
+                    HelpRow(shortcut: "⌘O",        desc: String(localized: "help.openFile.picker"))
+                    HelpRow(shortcut: "⌘N",        desc: String(localized: "help.openFile.new"))
+                    HelpRow(shortcut: String(localized: "help.openFile.shortcut.drag"),   desc: String(localized: "help.openFile.drag"))
+                    HelpRow(shortcut: String(localized: "help.openFile.shortcut.finder"), desc: String(localized: "help.openFile.finder"))
+                    HelpRow(shortcut: String(localized: "help.openFile.shortcut.recent"), desc: String(localized: "help.openFile.recent"))
                 }
 
-                HelpSection(icon: "rectangle.split.2x1", title: "视图模式") {
-                    HelpRow(shortcut: "⌘1",  desc: "编辑模式 — 纯编辑，无侧栏")
-                    HelpRow(shortcut: "⌘2",  desc: "分栏模式 — 左侧编辑 + 右侧实时预览")
-                    HelpRow(shortcut: "⌘3",  desc: "预览模式 — 纯预览 + 左侧目录大纲")
-                    HelpRow(shortcut: "工具栏", desc: "点击工具栏中央的三段式按钮快速切换")
+                HelpSection(icon: "rectangle.split.2x1", title: String(localized: "help.section.viewMode")) {
+                    HelpRow(shortcut: "⌘1",  desc: String(localized: "help.viewMode.editor"))
+                    HelpRow(shortcut: "⌘2",  desc: String(localized: "help.viewMode.split"))
+                    HelpRow(shortcut: "⌘3",  desc: String(localized: "help.viewMode.viewer"))
+                    HelpRow(shortcut: String(localized: "help.viewMode.shortcut.toolbar"), desc: String(localized: "help.viewMode.toolbar"))
                 }
 
-                HelpSection(icon: "arrow.left.arrow.right", title: "分栏同步") {
-                    HelpRow(shortcut: "点击光标",  desc: "在编辑区点击后，预览区自动滚动到对应位置")
-                    HelpRow(shortcut: "垂直对齐",  desc: "预览区保持与光标相同的垂直比例，而非强制置顶")
-                    HelpRow(shortcut: "标题锚点",  desc: "以最近标题为锚点计算位置，代码块不会导致偏移")
+                HelpSection(icon: "arrow.left.arrow.right", title: String(localized: "help.section.splitSync")) {
+                    HelpRow(shortcut: String(localized: "help.splitSync.shortcut.cursor"),   desc: String(localized: "help.splitSync.cursor"))
+                    HelpRow(shortcut: String(localized: "help.splitSync.shortcut.vertical"), desc: String(localized: "help.splitSync.vertical"))
+                    HelpRow(shortcut: String(localized: "help.splitSync.shortcut.anchor"),   desc: String(localized: "help.splitSync.anchor"))
                 }
 
-                HelpSection(icon: "square.and.pencil", title: "编辑与保存") {
-                    HelpRow(shortcut: "⌘S",   desc: "保存当前文件；新文件触发另存为对话框")
-                    HelpRow(shortcut: "⌘⇧S", desc: "另存为，选择新路径保存")
-                    HelpRow(shortcut: "⌘F",   desc: "查找 / 替换（编辑区内建 Find Bar）")
-                    HelpRow(shortcut: "未保存指示", desc: "工具栏显示橙色「Unsaved」；保存后出现「Saved ✓」提示")
+                HelpSection(icon: "square.and.pencil", title: String(localized: "help.section.editSave")) {
+                    HelpRow(shortcut: "⌘S",   desc: String(localized: "help.editSave.save"))
+                    HelpRow(shortcut: "⌘⇧S", desc: String(localized: "help.editSave.saveAs"))
+                    HelpRow(shortcut: "⌘F",   desc: String(localized: "help.editSave.find"))
+                    HelpRow(shortcut: String(localized: "help.editSave.shortcut.unsaved"), desc: String(localized: "help.editSave.unsaved"))
                 }
 
-                HelpSection(icon: "folder", title: "文件夹侧栏") {
-                    HelpRow(shortcut: "⌘⇧O",  desc: "打开文件夹，在左侧显示所有 .md 文件")
-                    HelpRow(shortcut: "侧栏按钮", desc: "工具栏左侧按钮随时展开 / 收起文件夹侧栏")
-                    HelpRow(shortcut: "层级展开",  desc: "支持子目录递归展示，点击文件在当前窗口打开")
+                HelpSection(icon: "folder", title: String(localized: "help.section.folderSidebar")) {
+                    HelpRow(shortcut: "⌘⇧O",  desc: String(localized: "help.folderSidebar.open"))
+                    HelpRow(shortcut: String(localized: "help.folderSidebar.shortcut.button"),     desc: String(localized: "help.folderSidebar.button"))
+                    HelpRow(shortcut: String(localized: "help.folderSidebar.shortcut.hierarchy"), desc: String(localized: "help.folderSidebar.hierarchy"))
                 }
 
-                HelpSection(icon: "list.bullet.indent", title: "目录大纲") {
-                    HelpRow(shortcut: "预览模式", desc: "切换至预览模式（⌘3）后左侧自动显示目录大纲")
-                    HelpRow(shortcut: "点击跳转", desc: "点击任意标题，预览区平滑滚动到对应位置")
-                    HelpRow(shortcut: "H1–H6",   desc: "支持六级标题层级缩进")
+                HelpSection(icon: "list.bullet.indent", title: String(localized: "help.section.outline")) {
+                    HelpRow(shortcut: String(localized: "help.outline.shortcut.mode"),  desc: String(localized: "help.outline.mode"))
+                    HelpRow(shortcut: String(localized: "help.outline.shortcut.click"), desc: String(localized: "help.outline.click"))
+                    HelpRow(shortcut: "H1–H6",   desc: String(localized: "help.outline.levels"))
                 }
 
-                HelpSection(icon: "magnifyingglass", title: "缩放") {
-                    HelpRow(shortcut: "⌘=",  desc: "放大（编辑区字号 + 预览区页面缩放同步）")
-                    HelpRow(shortcut: "⌘-",  desc: "缩小")
-                    HelpRow(shortcut: "⌘0",  desc: "恢复 100%；也可点击工具栏百分比数字")
-                    HelpRow(shortcut: "范围",  desc: "50% – 300%")
+                HelpSection(icon: "magnifyingglass", title: String(localized: "help.section.zoom")) {
+                    HelpRow(shortcut: "⌘=",  desc: String(localized: "help.zoom.in"))
+                    HelpRow(shortcut: "⌘-",  desc: String(localized: "help.zoom.out"))
+                    HelpRow(shortcut: "⌘0",  desc: String(localized: "help.zoom.reset"))
+                    HelpRow(shortcut: String(localized: "help.zoom.shortcut.range"), desc: String(localized: "help.zoom.range"))
                 }
 
-                HelpSection(icon: "arrow.down.doc", title: "导出") {
-                    HelpRow(shortcut: "⌘E",   desc: "导出为 PDF — 基于当前渲染输出高保真 PDF")
-                    HelpRow(shortcut: "⌘⇧E",  desc: "导出为 HTML — 内联主题 CSS，生成独立 .html 文件")
+                HelpSection(icon: "arrow.down.doc", title: String(localized: "help.section.export")) {
+                    HelpRow(shortcut: "⌘E",   desc: String(localized: "help.export.pdf"))
+                    HelpRow(shortcut: "⌘⇧E",  desc: String(localized: "help.export.html"))
                 }
 
-                HelpSection(icon: "paintpalette", title: "主题与字体") {
-                    HelpRow(shortcut: "⌘,",     desc: "打开偏好设置")
-                    HelpRow(shortcut: "预览主题", desc: "跟随系统 / 始终明亮 / 始终暗色 / 复古纸张（Sepia）")
-                    HelpRow(shortcut: "编辑器字体", desc: "SF Pro（默认）/ Menlo（等宽）/ Palatino（衬线）")
+                HelpSection(icon: "paintpalette", title: String(localized: "help.section.theme")) {
+                    HelpRow(shortcut: "⌘,",     desc: String(localized: "help.theme.prefs"))
+                    HelpRow(shortcut: String(localized: "help.theme.shortcut.preview"), desc: String(localized: "help.theme.preview"))
+                    HelpRow(shortcut: String(localized: "help.theme.shortcut.editor"),  desc: String(localized: "help.theme.editor"))
                 }
 
-                HelpSection(icon: "macwindow.on.rectangle", title: "多窗口") {
-                    HelpRow(shortcut: "⌘N",  desc: "新建空白窗口")
-                    HelpRow(shortcut: "打开文件", desc: "每个文件在独立窗口中打开，状态完全隔离")
-                    HelpRow(shortcut: "空窗口复用", desc: "若当前窗口为空白未编辑，打开文件时直接复用该窗口")
+                HelpSection(icon: "macwindow.on.rectangle", title: String(localized: "help.section.multiWindow")) {
+                    HelpRow(shortcut: "⌘N",  desc: String(localized: "help.multiWindow.new"))
+                    HelpRow(shortcut: String(localized: "help.multiWindow.shortcut.open"),  desc: String(localized: "help.multiWindow.open"))
+                    HelpRow(shortcut: String(localized: "help.multiWindow.shortcut.reuse"), desc: String(localized: "help.multiWindow.reuse"))
                 }
 
                 Divider()
 
-                Text("遇到问题？欢迎在 GitHub 提交 Issue 反馈。")
+                Text("help.footer")
                     .font(.footnote)
                     .foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity, alignment: .center)

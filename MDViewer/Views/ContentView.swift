@@ -14,7 +14,7 @@ struct ContentView: View {
     // cross-component state propagation from the WKWebView callback.
 
     var windowTitle: String {
-        let name = appState.fileURL?.lastPathComponent ?? "未命名"
+        let name = appState.fileURL?.lastPathComponent ?? String(localized: "window.untitled")
         return appState.isDirty ? "\(name) •" : name
     }
 
@@ -227,7 +227,7 @@ struct ContentView: View {
             } label: {
                 Image(systemName: "sidebar.leading")
             }
-            .help("文件夹侧栏")
+            .help(String(localized: "toolbar.folderSidebar.help"))
             .disabled(appState.folderURL == nil)
         }
 
@@ -239,9 +239,9 @@ struct ContentView: View {
             }
             .pickerStyle(.segmented)
             .frame(width: 120)
-            .help("⌘1 编辑  ⌘2 分栏  ⌘3 预览")
+            .help(String(localized: "toolbar.viewMode.help"))
             .overlay(alignment: .bottom) {
-                Text("Unsaved")
+                Text("toolbar.unsaved")
                     .font(.caption2)
                     .foregroundStyle(.orange)
                     .opacity(appState.isDirty ? 1 : 0)
@@ -254,25 +254,25 @@ struct ContentView: View {
             Button { appState.zoomLevel = max(0.5, appState.zoomLevel - 0.1) } label: {
                 Image(systemName: "minus.magnifyingglass")
             }
-            .help("缩小 (⌘-)")
+            .help(String(localized: "toolbar.zoomOut.help"))
 
             Text(String(format: "%.0f%%", appState.zoomLevel * 100))
                 .monospacedDigit()
                 .frame(width: 44)
                 .onTapGesture { appState.zoomLevel = 1.0 }
-                .help("点击重置 (⌘0)")
+                .help(String(localized: "toolbar.zoomReset.help"))
 
             Button { appState.zoomLevel = min(3.0, appState.zoomLevel + 0.1) } label: {
                 Image(systemName: "plus.magnifyingglass")
             }
-            .help("放大 (⌘=)")
+            .help(String(localized: "toolbar.zoomIn.help"))
 
             Divider()
 
             Button { WindowCoordinator.shared.openWithPicker() } label: {
-                Label("打开", systemImage: "folder")
+                Label("toolbar.open.label", systemImage: "folder")
             }
-            .help("打开文件 (⌘O)")
+            .help(String(localized: "toolbar.open.help"))
         }
     }
 
@@ -281,7 +281,7 @@ struct ContentView: View {
     @ViewBuilder
     private var savedBadge: some View {
         if appState.showSavedBadge {
-            Label("Saved", systemImage: "checkmark.circle.fill")
+            Label("badge.saved", systemImage: "checkmark.circle.fill")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 12)

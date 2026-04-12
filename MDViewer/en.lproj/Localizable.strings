@@ -1,0 +1,148 @@
+// MDViewer — English (en)
+
+// MARK: - AppCommands (File menu)
+"menu.file.new" = "New";
+"menu.file.open" = "Open…";
+"menu.file.openFolder" = "Open Folder…";
+"menu.file.openRecent" = "Open Recent";
+"menu.file.openRecent.clear" = "Clear Recent";
+"menu.file.openRecent.none" = "No Recent Files";
+"menu.file.save" = "Save";
+"menu.file.saveAs" = "Save As…";
+"menu.file.exportHTML" = "Export as HTML…";
+"menu.file.exportPDF" = "Export as PDF…";
+
+// MARK: - AppCommands (Edit menu)
+"menu.edit.find" = "Find…";
+"menu.edit.findReplace" = "Find and Replace…";
+"menu.edit.findNext" = "Find Next";
+"menu.edit.findPrevious" = "Find Previous";
+
+// MARK: - AppCommands (Help menu)
+"menu.help.mdviewer" = "MDViewer Help";
+
+// MARK: - AppCommands (View menu)
+"menu.view" = "View";
+"menu.view.editor" = "Editor";
+"menu.view.split" = "Split";
+"menu.view.viewer" = "Preview";
+"menu.view.zoomIn" = "Zoom In";
+"menu.view.zoomOut" = "Zoom Out";
+"menu.view.actualSize" = "Actual Size";
+
+// MARK: - AppDelegate / AppState (panels & alerts)
+"panel.openFolder.prompt" = "Choose Folder";
+"alert.openLink.title" = "Open Markdown File";
+"alert.openLink.message" = "Open \"%@\"?";
+"alert.openLink.open" = "Open";
+"alert.openLink.cancel" = "Cancel";
+
+// MARK: - ContentView (toolbar)
+"toolbar.folderSidebar.help" = "Folder Sidebar";
+"toolbar.viewMode.help" = "⌘1 Editor  ⌘2 Split  ⌘3 Preview";
+"toolbar.zoomOut.help" = "Zoom Out (⌘-)";
+"toolbar.zoomReset.help" = "Click to Reset (⌘0)";
+"toolbar.zoomIn.help" = "Zoom In (⌘=)";
+"toolbar.open.label" = "Open";
+"toolbar.open.help" = "Open File (⌘O)";
+"toolbar.unsaved" = "Unsaved";
+"badge.saved" = "Saved";
+
+// MARK: - ContentView (window title)
+"window.untitled" = "Untitled";
+
+// MARK: - FolderTreeView
+"sidebar.folder.default" = "Folder";
+"sidebar.folder.empty" = "No Markdown Files";
+
+// MARK: - OutlineView
+"outline.noFile" = "No file open";
+"outline.noHeadings" = "No headings";
+
+// MARK: - HelpView
+"help.title" = "MDViewer User Guide";
+"help.subtitle" = "Master all features of MDViewer";
+
+"help.section.openFile" = "Opening Files";
+"help.openFile.picker" = "Open a .md file via the file picker";
+"help.openFile.new" = "Open a new empty window";
+"help.openFile.drag" = "Drag a .md file into the window to open it";
+"help.openFile.finder" = "Double-click a .md file to open it in a new window";
+"help.openFile.recent" = "File > Open Recent — remembers up to 10 recent files";
+"help.openFile.shortcut.drag" = "Drag & Drop";
+"help.openFile.shortcut.finder" = "Finder";
+"help.openFile.shortcut.recent" = "Recent Files";
+
+"help.section.viewMode" = "View Modes";
+"help.viewMode.editor" = "Editor — edit only, no sidebar";
+"help.viewMode.split" = "Split — editor on left, live preview on right";
+"help.viewMode.viewer" = "Preview — preview only with outline sidebar";
+"help.viewMode.toolbar" = "Click the segmented control in the toolbar to switch";
+"help.viewMode.shortcut.toolbar" = "Toolbar";
+
+"help.section.splitSync" = "Split Sync";
+"help.splitSync.cursor" = "Click in the editor to auto-scroll the preview to the matching position";
+"help.splitSync.vertical" = "The preview maintains the same vertical proportion as the cursor";
+"help.splitSync.anchor" = "Uses headings as anchors — code blocks won't cause drift";
+"help.splitSync.shortcut.cursor" = "Cursor Click";
+"help.splitSync.shortcut.vertical" = "Vertical Align";
+"help.splitSync.shortcut.anchor" = "Heading Anchor";
+
+"help.section.editSave" = "Editing & Saving";
+"help.editSave.save" = "Save the current file; new files trigger a Save As dialog";
+"help.editSave.saveAs" = "Save As — choose a new path";
+"help.editSave.find" = "Find / Replace (built-in Find Bar in the editor)";
+"help.editSave.unsaved" = "Orange \"Unsaved\" shown in toolbar; \"Saved\" appears after saving";
+"help.editSave.shortcut.unsaved" = "Unsaved Indicator";
+
+"help.section.folderSidebar" = "Folder Sidebar";
+"help.folderSidebar.open" = "Open a folder to show all .md files in the sidebar";
+"help.folderSidebar.button" = "Toolbar button toggles the folder sidebar at any time";
+"help.folderSidebar.hierarchy" = "Recursive subdirectory display; click a file to open it";
+"help.folderSidebar.shortcut.button" = "Sidebar Button";
+"help.folderSidebar.shortcut.hierarchy" = "Expand Tree";
+
+"help.section.outline" = "Document Outline";
+"help.outline.mode" = "Switch to Preview mode (⌘3) to show the outline on the left";
+"help.outline.click" = "Click any heading to smoothly scroll the preview to that position";
+"help.outline.levels" = "Supports six heading levels with indentation";
+"help.outline.shortcut.mode" = "Preview Mode";
+"help.outline.shortcut.click" = "Click to Jump";
+
+"help.section.zoom" = "Zoom";
+"help.zoom.in" = "Zoom in (editor font size + preview page zoom stay in sync)";
+"help.zoom.out" = "Zoom out";
+"help.zoom.reset" = "Reset to 100%; also click the percentage in the toolbar";
+"help.zoom.range" = "50% – 300%";
+"help.zoom.shortcut.range" = "Range";
+
+"help.section.export" = "Export";
+"help.export.pdf" = "Export as PDF — high-fidelity PDF from the current render";
+"help.export.html" = "Export as HTML — self-contained .html file with inlined CSS";
+
+"help.section.theme" = "Themes & Fonts";
+"help.theme.prefs" = "Open Preferences";
+"help.theme.preview" = "Follow System / Always Light / Always Dark / Sepia";
+"help.theme.editor" = "SF Pro (default) / Menlo (monospace) / Palatino (serif)";
+"help.theme.shortcut.preview" = "Preview Theme";
+"help.theme.shortcut.editor" = "Editor Font";
+
+"help.section.multiWindow" = "Multiple Windows";
+"help.multiWindow.new" = "Open a new empty window";
+"help.multiWindow.open" = "Each file opens in its own window with isolated state";
+"help.multiWindow.reuse" = "An empty unedited window is reused when opening a file";
+"help.multiWindow.shortcut.open" = "Open File";
+"help.multiWindow.shortcut.reuse" = "Empty Window Reuse";
+
+"help.footer" = "Found a bug? Feel free to open an issue on GitHub.";
+
+// MARK: - PreferencesView
+"prefs.previewTheme" = "Preview Theme";
+"prefs.theme.auto" = "Follow System";
+"prefs.theme.light" = "Always Light";
+"prefs.theme.dark" = "Always Dark";
+"prefs.theme.sepia" = "Sepia";
+"prefs.editorFont" = "Editor Font";
+"prefs.font.system" = "System (SF Pro)";
+"prefs.font.menlo" = "Monospace (Menlo)";
+"prefs.font.palatino" = "Serif (Palatino)";

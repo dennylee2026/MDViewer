@@ -6,7 +6,7 @@ struct FolderTreeView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text(appState.folderURL?.lastPathComponent ?? "文件夹")
+                Text(appState.folderURL?.lastPathComponent ?? String(localized: "sidebar.folder.default"))
                     .font(.system(size: 14, weight: .regular))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
@@ -22,7 +22,7 @@ struct FolderTreeView: View {
                     Image(systemName: "folder")
                         .font(.system(size: 28))
                         .foregroundStyle(.tertiary)
-                    Text("无 Markdown 文件")
+                    Text("sidebar.folder.empty")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                 }
