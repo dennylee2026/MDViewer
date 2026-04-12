@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.3] - 2026-04-12
+
+### Fixed
+- 修复 Xcode 警告：AppCommands 中 4 处 Selector 字符串字面量替换为类型安全的 #selector(NSTextView.performTextFinderAction(_:))
+- 新增 LSApplicationCategoryType（productivity）消除 App Category 缺失警告
+
 ## [2.3.2] - 2026-04-12
 
 ### Changed
