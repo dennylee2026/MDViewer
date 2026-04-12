@@ -48,7 +48,7 @@ final class WindowCoordinator {
     func openWithPicker() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.init(filenameExtension: "md")!, .init(filenameExtension: "markdown")!]
-        panel.allowsMultipleSelection = false
+        panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
         // Build directory URL from the last opened file path (tracked in AppState.open).
         // Using deletingLastPathComponent() on a file URL naturally produces a directory
@@ -61,6 +61,8 @@ final class WindowCoordinator {
                 panel.directoryURL = dirURL
             }
         }
-        if panel.runModal() == .OK, let url = panel.url { open(url: url) }
+        if panel.runModal() == .OK {
+            for url in panel.urls { open(url: url) }
+        }
     }
 }

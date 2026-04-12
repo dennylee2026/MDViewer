@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.8] - 2026-04-11
+
+### Changed
+- 打开文件选择器（⌘O）支持多选：可同时选择多个 `.md` 文件，每个文件在独立窗口中打开
+
 ## [2.1.7] - 2026-04-11
 
 ### Added
