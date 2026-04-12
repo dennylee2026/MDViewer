@@ -44,7 +44,7 @@ Select a style in **⌘,** Preferences, or click "Open Config File" to edit `sty
 
 | Built-in Style | Description |
 |----------------|-------------|
-| **GDS-Style** (default) | Google brand colors: H1 blue / H2 red / H3 yellow / H4 green, white background |
+| **GDS-Style** (default) | GDS colors: H1 blue / H2 red / H3 yellow / H4 green, white background |
 | **Dark** | Dark background with low-contrast palette |
 | **Sepia** | Warm vintage paper tone |
 

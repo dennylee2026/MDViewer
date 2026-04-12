@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - 样式选择系统：单一 `styles.json` 配置文件（位于 `~/Library/Application Support/MDViewer/`）定义多套样式，首次启动自动生成
-- 内置三套样式：GDS-Style（Google 品牌配色，默认）、Dark（深色）、Sepia（复古纸张）
+- 内置三套样式：GDS-Style（GDS 四色配色，默认）、Dark（深色）、Sepia（复古纸张）
 - 每套样式分别控制编辑区（`editorStyle`：字体/字号/行高/各元素高亮色）和显示区（`displayStyle`：完整 CSS，覆盖 H1–H6、段落、粗体、斜体、代码、引用、表格、链接等所有 Markdown 要素）
 - 偏好设置新增样式选择器和「打开配置文件」按钮，支持文本编辑修改样式
 - FileWatcher 实时监听 `styles.json` 变动，保存后立即生效，无需重启
@@ -255,7 +255,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - 2026-04-09
 
 ### Added
-- 编辑器 Markdown 语法高亮：标题 Google 四色、粗体、斜体、行内代码、链接、删除线、引用块、代码块
+- 编辑器 Markdown 语法高亮：标题 GDS 四色、粗体、斜体、行内代码、链接、删除线、引用块、代码块
 - 编辑器行号显示（LineNumberRulerView）
 - 编辑器与预览区滚动同步：滚动编辑器，预览自动跟随相同比例
 - ⌘F 查找替换（NSTextView 内建 Find Bar）
@@ -264,7 +264,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - 目录大纲侧栏：基于标题层级自动生成，点击跳转对应位置
-- 标题颜色与正文主题保持一致（Google 四色）
+- 标题颜色与正文主题保持一致（GDS 四色）
 - 侧栏支持 H1–H6 层级缩进
 - 内置 Markdown 编辑器（NSTextView，等宽字体，软换行）
 - 三种视图模式：编辑（⌘1）/ 分栏（⌘2）/ 预览（⌘3）
@@ -279,7 +279,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - 打开并渲染单个 `.md` 文件，排版美观可读
 - 明亮 / 暗色主题，跟随系统外观自动切换
-- 标题 Google 品牌四色循环（H1 蓝 / H2 红 / H3 黄 / H4 绿）
+- 标题 GDS 四色循环（H1 蓝 / H2 红 / H3 黄 / H4 绿）
 - 代码块语法高亮（highlight.js）
 - 图片自适应宽度
 - 拖拽 `.md` 文件到窗口打开（欢迎页 & 已打开文件时均支持）
