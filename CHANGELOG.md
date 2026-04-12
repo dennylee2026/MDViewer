@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.8] - 2026-04-12
+
+### Added
+- 所有导出文件名末尾追加时间戳（格式：`yyyyMMddTHHmm`，如 `doc_20260412T0314.pdf`）
+
+### Fixed
+- 导出手机长图时窗体内容出现明显大小缩放：通过 `CATransaction.setDisableActions(true)` 抑制帧变化动画，同时将 webView `alphaValue` 置 0 使缩放过程不可见
+- 导出手机长图偶发失败：将 webView 布局等待时间从 0.15s/0.1s 延长至 0.5s/0.5s，确保内容在较窄宽度下完成重排后再截图
+- 全部导出中的手机长图现可正常生成
+
 ## [2.3.7] - 2026-04-12
 
 ### Added

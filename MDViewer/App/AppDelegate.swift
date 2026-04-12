@@ -171,12 +171,20 @@ class AppState: ObservableObject {
             }
     }
 
+    // MARK: Export — Helpers
+
+    private func exportTimestamp() -> String {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyyMMdd'T'HHmm"
+        return fmt.string(from: Date())
+    }
+
     // MARK: Export — Mobile CSS helpers
 
     private func mobileCSSOverrides() -> String {
         """
         body {
-            font-size: 18px !important;
+            font-size: 24px !important;
             max-width: 100% !important;
             padding: 16px 20px 40px !important;
             line-height: 1.6 !important;
@@ -239,23 +247,44 @@ class AppState: ObservableObject {
         withMobileCSS { [weak self] removeMobile in
             guard let self, let webView = self.webView else { removeMobile(); done(); return }
             let originalFrame = webView.frame
+            let originalAlpha = webView.alphaValue
+
+            // Make webView transparent during frame mutations to suppress visual flicker.
+            // alphaValue = 0 keeps the view in the hierarchy so takeSnapshot still works.
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            webView.alphaValue = 0
             var narrowFrame = originalFrame
             narrowFrame.size.width = 390
             webView.frame = narrowFrame
+            CATransaction.commit()
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            // Wait for WKWebView to re-layout at the narrowed width
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 webView.evaluateJavaScript("document.body.scrollHeight") { result, _ in
                     let height = (result as? NSNumber)?.doubleValue ?? Double(originalFrame.height)
                     var tallFrame = narrowFrame
-                    tallFrame.size.height = CGFloat(height)
-                    webView.frame = tallFrame
+                    tallFrame.size.height = max(CGFloat(height), 1)
 
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    CATransaction.begin()
+                    CATransaction.setDisableActions(true)
+                    webView.frame = tallFrame
+                    CATransaction.commit()
+
+                    // Wait for the tall frame layout to settle before snapshot
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         let config = WKSnapshotConfiguration()
-                        config.rect = CGRect(origin: .zero, size: tallFrame.size)
+                        config.rect = CGRect(origin: .zero,
+                                             size: CGSize(width: tallFrame.size.width,
+                                                          height: tallFrame.size.height))
                         webView.takeSnapshot(with: config) { image, _ in
                             DispatchQueue.main.async {
+                                CATransaction.begin()
+                                CATransaction.setDisableActions(true)
                                 webView.frame = originalFrame
+                                webView.alphaValue = originalAlpha
+                                CATransaction.commit()
+
                                 removeMobile()
                                 if let image,
                                    let tiff = image.tiffRepresentation,
@@ -307,9 +336,10 @@ class AppState: ObservableObject {
     func exportPDF() {
         guard let webView else { return }
         let stem = fileURL?.deletingPathExtension().lastPathComponent ?? "Untitled"
+        let ts = exportTimestamp()
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.pdf]
-        panel.nameFieldStringValue = stem + ".pdf"
+        panel.nameFieldStringValue = "\(stem)_\(ts).pdf"
         guard panel.runModal() == .OK, let url = panel.url else { return }
         webView.createPDF { result in
             DispatchQueue.main.async {
@@ -321,9 +351,10 @@ class AppState: ObservableObject {
     func exportMobilePDF() {
         guard !isExporting, webView != nil else { return }
         let stem = fileURL?.deletingPathExtension().lastPathComponent ?? "Untitled"
+        let ts = exportTimestamp()
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.pdf]
-        panel.nameFieldStringValue = stem + "-mobile.pdf"
+        panel.nameFieldStringValue = "\(stem)_\(ts)-mobile.pdf"
         guard panel.runModal() == .OK, let url = panel.url else { return }
         isExporting = true
         _writeMobilePDF(to: url) { [weak self] in
@@ -334,9 +365,10 @@ class AppState: ObservableObject {
     func exportMobileImage() {
         guard !isExporting, webView != nil else { return }
         let stem = fileURL?.deletingPathExtension().lastPathComponent ?? "Untitled"
+        let ts = exportTimestamp()
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.png]
-        panel.nameFieldStringValue = stem + "-mobile.png"
+        panel.nameFieldStringValue = "\(stem)_\(ts)-mobile.png"
         guard panel.runModal() == .OK, let url = panel.url else { return }
         isExporting = true
         _writeMobileImage(to: url) { [weak self] in
@@ -347,6 +379,7 @@ class AppState: ObservableObject {
     func exportAll() {
         guard !isExporting, let fileURL else { return }
         let stem = fileURL.deletingPathExtension().lastPathComponent
+        let ts = exportTimestamp()
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
@@ -355,9 +388,9 @@ class AppState: ObservableObject {
         panel.message = String(localized: "panel.exportAll.message")
         guard panel.runModal() == .OK, let dir = panel.url else { return }
         isExporting = true
-        let pdfURL        = dir.appendingPathComponent(stem + ".pdf")
-        let mobilePDFURL  = dir.appendingPathComponent(stem + "-mobile.pdf")
-        let mobileImgURL  = dir.appendingPathComponent(stem + "-mobile.png")
+        let pdfURL       = dir.appendingPathComponent("\(stem)_\(ts).pdf")
+        let mobilePDFURL = dir.appendingPathComponent("\(stem)_\(ts)-mobile.pdf")
+        let mobileImgURL = dir.appendingPathComponent("\(stem)_\(ts)-mobile.png")
         _writeDesktopPDF(to: pdfURL) { [weak self] in
             self?._writeMobilePDF(to: mobilePDFURL) { [weak self] in
                 self?._writeMobileImage(to: mobileImgURL) { [weak self] in
