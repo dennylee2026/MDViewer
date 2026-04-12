@@ -238,38 +238,82 @@ class AppState: ObservableObject {
         }
     }
 
+    /// Temporarily detach the webView from SwiftUI's AutoLayout so that manual
+    /// frame changes are not reverted by the layout engine. Returns a restore
+    /// closure that re-enables AutoLayout and restores the original frame/alpha/zoom.
+    private func detachWebViewForExport(mobileWidth: CGFloat)
+        -> (originalFrame: CGRect, savedConstraints: [NSLayoutConstraint], restore: () -> Void)?
+    {
+        guard let webView else { return nil }
+        let originalFrame = webView.frame
+        let originalAlpha = webView.alphaValue
+        let originalZoom  = webView.pageZoom
+        let originalTAMIC = webView.translatesAutoresizingMaskIntoConstraints
+
+        // Gather all constraints in the superview that reference this webView.
+        let savedConstraints: [NSLayoutConstraint] = webView.superview?
+            .constraints.filter { $0.firstItem === webView || $0.secondItem === webView } ?? []
+        NSLayoutConstraint.deactivate(savedConstraints)
+
+        // Also deactivate constraints owned by the webView itself (width/height).
+        let ownConstraints = webView.constraints.filter { $0.firstItem === webView || $0.secondItem === webView }
+        NSLayoutConstraint.deactivate(ownConstraints)
+
+        webView.translatesAutoresizingMaskIntoConstraints = true
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        webView.alphaValue = 0
+        webView.pageZoom = 1.0
+        var narrowFrame = originalFrame
+        narrowFrame.size.width = mobileWidth
+        webView.frame = narrowFrame
+        CATransaction.commit()
+
+        let restore: () -> Void = {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            webView.translatesAutoresizingMaskIntoConstraints = originalTAMIC
+            NSLayoutConstraint.activate(savedConstraints)
+            NSLayoutConstraint.activate(ownConstraints)
+            webView.frame = originalFrame
+            webView.alphaValue = originalAlpha
+            webView.pageZoom = originalZoom
+            CATransaction.commit()
+            // Force layout pass so SwiftUI reclaims correct geometry immediately.
+            webView.superview?.needsLayout = true
+        }
+        return (originalFrame, savedConstraints, restore)
+    }
+
     private func _writeMobilePDF(to url: URL, done: @escaping () -> Void) {
         guard webView != nil else { done(); return }
         withMobileCSS { [weak self] removeMobile in
-            guard let self, let webView = self.webView else { removeMobile(); done(); return }
-            let originalFrame = webView.frame
-            let originalAlpha = webView.alphaValue
+            guard let self, let webView = self.webView,
+                  let detach = self.detachWebViewForExport(mobileWidth: 390)
+            else { removeMobile(); done(); return }
             let mobileWidth: CGFloat = 390
-
-            // Shrink webView to 390pt wide so WKPDFConfiguration.rect captures the full width.
-            // alphaValue = 0 hides the transition from the user.
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
-            webView.alphaValue = 0
-            var narrowFrame = originalFrame
-            narrowFrame.size.width = mobileWidth
-            webView.frame = narrowFrame
-            CATransaction.commit()
 
             // Wait for re-layout at the narrowed width before querying scroll height
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 webView.evaluateJavaScript("document.body.scrollHeight") { result, _ in
                     DispatchQueue.main.async {
                         let scrollHeight = max(CGFloat((result as? NSNumber)?.doubleValue ?? 800), 1)
+
+                        // Resize the webView to match the full content so
+                        // WKPDFConfiguration.rect is never clamped by bounds.
+                        CATransaction.begin()
+                        CATransaction.setDisableActions(true)
+                        var fullFrame = webView.frame
+                        fullFrame.size = CGSize(width: mobileWidth, height: scrollHeight)
+                        webView.frame = fullFrame
+                        CATransaction.commit()
+
                         let config = WKPDFConfiguration()
                         config.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: scrollHeight)
                         webView.createPDF(configuration: config) { pdfResult in
                             DispatchQueue.main.async {
-                                CATransaction.begin()
-                                CATransaction.setDisableActions(true)
-                                webView.frame = originalFrame
-                                webView.alphaValue = originalAlpha
-                                CATransaction.commit()
+                                detach.restore()
                                 removeMobile()
                                 if case .success(let data) = pdfResult { try? data.write(to: url) }
                                 done()
@@ -284,35 +328,32 @@ class AppState: ObservableObject {
     private func _writeMobileImage(to url: URL, done: @escaping () -> Void) {
         guard webView != nil else { done(); return }
         withMobileCSS { [weak self] removeMobile in
-            guard let self, let webView = self.webView else { removeMobile(); done(); return }
-            let originalFrame = webView.frame
-            let originalAlpha = webView.alphaValue
+            guard let self, let webView = self.webView,
+                  let detach = self.detachWebViewForExport(mobileWidth: 390)
+            else { removeMobile(); done(); return }
             let mobileWidth: CGFloat = 390
-
-            // Shrink webView to 390pt wide so the PDF (and thus the image) isn't truncated.
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
-            webView.alphaValue = 0
-            var narrowFrame = originalFrame
-            narrowFrame.size.width = mobileWidth
-            webView.frame = narrowFrame
-            CATransaction.commit()
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 webView.evaluateJavaScript("document.body.scrollHeight") { result, _ in
                     DispatchQueue.main.async {
                         let scrollHeight = max(CGFloat((result as? NSNumber)?.doubleValue ?? 800), 1)
+
+                        // Resize the webView to match the full content so
+                        // WKPDFConfiguration.rect is never clamped by bounds.
+                        CATransaction.begin()
+                        CATransaction.setDisableActions(true)
+                        var fullFrame = webView.frame
+                        fullFrame.size = CGSize(width: mobileWidth, height: scrollHeight)
+                        webView.frame = fullFrame
+                        CATransaction.commit()
+
                         let config = WKPDFConfiguration()
                         config.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: scrollHeight)
 
                         webView.createPDF(configuration: config) { pdfResult in
                             DispatchQueue.main.async {
                                 // Always restore webView before any early return
-                                CATransaction.begin()
-                                CATransaction.setDisableActions(true)
-                                webView.frame = originalFrame
-                                webView.alphaValue = originalAlpha
-                                CATransaction.commit()
+                                detach.restore()
                                 removeMobile()
 
                                 guard case .success(let pdfData) = pdfResult,

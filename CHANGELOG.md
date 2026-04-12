@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.1] - 2026-04-12
+
+### Fixed
+- 导出手机 PDF / 手机长图右侧仍被截断：根本原因是 WKWebView 由 SwiftUI AutoLayout 管理，直接设置 `frame` 会在下一次布局传递时被约束系统还原，导致 `createPDF` 执行时 webView 宽度已恢复为原始值，`config.rect.width=390` 仅截取了宽页面的左侧部分；修复方案：导出前先收集并停用所有约束、设置 `translatesAutoresizingMaskIntoConstraints = true`，确保 webView 在 390pt 宽度下正确重排，导出后完整恢复约束
+
 ## [2.4.0] - 2026-04-12
 
 ### Fixed
