@@ -197,6 +197,14 @@ class AppState: ObservableObject {
             line-height: 1.7 !important;
             margin: 0 !important;
         }
+        #content {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
         h1 { font-size: 1.6em !important; }
         h2 { font-size: 1.35em !important; }
         h3 { font-size: 1.15em !important; }
