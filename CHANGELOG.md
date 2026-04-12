@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.9] - 2026-04-11
+
+### Fixed
+- 多文件同时打开时，窗口高度调整改为顺序执行：每个文件间隔 0.45s 打开，确保前一个窗口的 resize 动画完成后再开始下一个
+
 ## [2.1.8] - 2026-04-11
 
 ### Changed

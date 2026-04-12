@@ -62,7 +62,13 @@ final class WindowCoordinator {
             }
         }
         if panel.runModal() == .OK {
-            for url in panel.urls { open(url: url) }
+            // Stagger opens by 0.45 s so each window finishes its resize animation
+            // before the next one begins (resize fires at +0.2 s, animation ~0.25 s).
+            for (index, url) in panel.urls.enumerated() {
+                DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.45) {
+                    self.open(url: url)
+                }
+            }
         }
     }
 }
