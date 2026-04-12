@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.5] - 2026-04-12
+
+### Fixed
+- 手机 PDF / 手机长图右侧大面积空白：`#content` 容器继承了桌面样式的 `max-width: 860px`，导致内容区窄于 390pt 页面宽度；新增 `#content { max-width: 100%; width: 100%; margin/padding: 0 }` 覆盖，内容区填满全宽，左右留白完全对称
+
 ## [2.4.4] - 2026-04-12
 
 ### Fixed
