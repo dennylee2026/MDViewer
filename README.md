@@ -6,10 +6,6 @@
 
 MDViewer 是一款纯原生 macOS Markdown 阅读器与编辑器，用 SwiftUI + AppKit 构建，无 Electron，无 Web 套壳。它只做一件事：让你在 Mac 上写 Markdown、读 Markdown，体验像系统自带一样顺滑。编辑器与预览之间的双向同步精确到标题级别，一套 JSON 配置文件掌控所有排版细节，保存即生效。
 
-> 截图待添加
-
-[English README](README.en.md)
-
 ---
 
 ## 为什么选 MDViewer
