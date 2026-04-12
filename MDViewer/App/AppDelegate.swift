@@ -211,7 +211,28 @@ class AppState: ObservableObject {
         }
         pre, code { font-size: 0.78em !important; }
         img { max-width: 100% !important; height: auto !important; }
-        table { width: 100% !important; font-size: 0.85em !important; }
+        table {
+            width: 100% !important;
+            max-width: 100% !important;
+            table-layout: fixed !important;
+            font-size: 0.85em !important;
+            border-collapse: collapse !important;
+            overflow: hidden !important;
+        }
+        td, th {
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+            max-width: 0 !important;
+            overflow: hidden !important;
+        }
+        code {
+            white-space: normal !important;
+            word-break: break-all !important;
+            overflow-wrap: break-word !important;
+        }
+        pre code {
+            white-space: pre-wrap !important;
+        }
         """
     }
 
