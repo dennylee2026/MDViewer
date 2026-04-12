@@ -71,8 +71,6 @@ struct DisplayStyle: Codable, Equatable {
 struct DisplayGlobal: Codable, Equatable {
     var backgroundColor: String?
     var textColor: String?
-    var textSecondaryColor: String?
-    var borderColor: String?
     var fontFamily: String?
     var fontSize: String?
     var lineHeight: String?
@@ -194,7 +192,6 @@ struct DisplayTable: Codable, Equatable {
 
 struct DisplayStrikethrough: Codable, Equatable {
     var color: String?
-    var lineStyle: String?
 }
 
 struct DisplayImage: Codable, Equatable {
@@ -222,8 +219,6 @@ struct EditorStyle: Codable, Equatable {
 }
 
 struct EditorGlobal: Codable, Equatable {
-    var backgroundColor: String?      // hex; null = system textBackgroundColor
-    var textColor: String?            // hex; null = system textColor
     var fontFamily: String?           // "system", "menlo", "palatino"
     var fontSize: CGFloat?            // points; null = 18
     var lineHeightMultiple: CGFloat?  // NSParagraphStyle.lineHeightMultiple; null = 1.25
@@ -251,7 +246,6 @@ struct EditorHeadingLevel: Codable, Equatable {
 }
 
 struct EditorBold: Codable, Equatable {
-    var isBold: Bool?
     var color: String?
 }
 
@@ -263,14 +257,12 @@ struct EditorItalic: Codable, Equatable {
 struct EditorInlineCode: Codable, Equatable {
     var color: String?
     var backgroundColor: String?  // hex with optional alpha (#RRGGBBAA)
-    var fontFamily: String?
 }
 
 struct EditorCodeBlock: Codable, Equatable {
     var color: String?
     var backgroundColor: String?
     var useSecondaryLabelColor: Bool?
-    var fontFamily: String?
 }
 
 struct EditorBlockquote: Codable, Equatable {
@@ -281,7 +273,6 @@ struct EditorBlockquote: Codable, Equatable {
 struct EditorStrikethrough: Codable, Equatable {
     var color: String?
     var useSecondaryLabelColor: Bool?
-    var lineStyle: String?   // "single", "double", "thick"
 }
 
 struct EditorLink: Codable, Equatable {
@@ -525,8 +516,6 @@ extension StylesFile {
                     global: DisplayGlobal(
                         backgroundColor: "#FFFFFF",
                         textColor: "#1A1A1A",
-                        textSecondaryColor: "#555555",
-                        borderColor: "#E1E4E8",
                         fontFamily: #"-apple-system, "SF Pro Text", "PingFang SC", "Heiti SC", "Helvetica Neue", Arial, sans-serif"#,
                         fontSize: "18px",
                         lineHeight: "1.5",
@@ -553,13 +542,13 @@ extension StylesFile {
                     link:       DisplayLink(color: "#0969DA", hoverColor: nil, underline: false, hoverUnderline: true),
                     list:       DisplayList(marginTop: "0.75em", marginBottom: "0.75em", paddingLeft: "1.75em", itemSpacing: "0.3em", nestedSpacing: "0.2em"),
                     table:      DisplayTable(fontSize: "0.95em", headerBackgroundColor: "#F6F8FA", headerFontWeight: "600", alternateRowColor: "#F9FAFB", borderColor: "#E1E4E8", cellPadding: "0.5em 0.75em", margin: "1em 0"),
-                    strikethrough: DisplayStrikethrough(color: nil, lineStyle: "solid"),
+                    strikethrough: DisplayStrikethrough(color: nil),
                     image:      DisplayImage(maxWidth: "100%", borderRadius: "6px", margin: "0.75em 0"),
                     taskList:   DisplayTaskList(checkboxMarginRight: "0.4em"),
                     customCSS:  nil
                 ),
                 editorStyle: EditorStyle(
-                    global: EditorGlobal(backgroundColor: nil, textColor: nil, fontFamily: "system", fontSize: 18, lineHeightMultiple: 1.25, cascadeFonts: ["PingFangSC-Regular"]),
+                    global: EditorGlobal(fontFamily: "system", fontSize: 18, lineHeightMultiple: 1.25, cascadeFonts: ["PingFangSC-Regular"]),
                     headings: EditorHeadings(
                         shared: EditorHeadingShared(isBold: true),
                         h1: EditorHeadingLevel(color: "#4285F4", fontSizeOffset: 6, isBold: true),
@@ -569,12 +558,12 @@ extension StylesFile {
                         h5: EditorHeadingLevel(color: "#4285F4", fontSizeOffset: 0, isBold: true),
                         h6: EditorHeadingLevel(color: "#EA4335", fontSizeOffset: 0, isBold: true)
                     ),
-                    bold:          EditorBold(isBold: true, color: nil),
+                    bold:          EditorBold(color: nil),
                     italic:        EditorItalic(obliqueness: 0.2, color: nil),
-                    inlineCode:    EditorInlineCode(color: "#FF3B30", backgroundColor: "#8E8E9326", fontFamily: nil),
-                    codeBlock:     EditorCodeBlock(color: nil, backgroundColor: "#8E8E9314", useSecondaryLabelColor: true, fontFamily: nil),
+                    inlineCode:    EditorInlineCode(color: "#FF3B30", backgroundColor: "#8E8E9326"),
+                    codeBlock:     EditorCodeBlock(color: nil, backgroundColor: "#8E8E9314", useSecondaryLabelColor: true),
                     blockquote:    EditorBlockquote(color: nil, useSecondaryLabelColor: true),
-                    strikethrough: EditorStrikethrough(color: nil, useSecondaryLabelColor: true, lineStyle: "single"),
+                    strikethrough: EditorStrikethrough(color: nil, useSecondaryLabelColor: true),
                     link:          EditorLink(color: nil, useLinkColor: true)
                 )
             ),
@@ -584,7 +573,6 @@ extension StylesFile {
                 displayStyle: DisplayStyle(
                     global: DisplayGlobal(
                         backgroundColor: "#0D1117", textColor: "#E6EDF3",
-                        textSecondaryColor: "#8B949E", borderColor: "#30363D",
                         fontFamily: #"-apple-system, "SF Pro Text", "PingFang SC", "Heiti SC", "Helvetica Neue", Arial, sans-serif"#,
                         fontSize: "18px", lineHeight: "1.5", maxWidth: "860px",
                         padding: "40px 48px 80px", codeHighlightTheme: "github-dark"
@@ -608,13 +596,13 @@ extension StylesFile {
                     link:       DisplayLink(color: "#4493F8", hoverColor: nil, underline: false, hoverUnderline: true),
                     list:       DisplayList(marginTop: "0.75em", marginBottom: "0.75em", paddingLeft: "1.75em", itemSpacing: "0.3em", nestedSpacing: "0.2em"),
                     table:      DisplayTable(fontSize: "0.95em", headerBackgroundColor: "#161B22", headerFontWeight: "600", alternateRowColor: "#0D1117", borderColor: "#30363D", cellPadding: "0.5em 0.75em", margin: "1em 0"),
-                    strikethrough: DisplayStrikethrough(color: nil, lineStyle: "solid"),
+                    strikethrough: DisplayStrikethrough(color: nil),
                     image:      DisplayImage(maxWidth: "100%", borderRadius: "6px", margin: "0.75em 0"),
                     taskList:   DisplayTaskList(checkboxMarginRight: "0.4em"),
                     customCSS:  nil
                 ),
                 editorStyle: EditorStyle(
-                    global: EditorGlobal(backgroundColor: nil, textColor: nil, fontFamily: "system", fontSize: 18, lineHeightMultiple: 1.25, cascadeFonts: ["PingFangSC-Regular"]),
+                    global: EditorGlobal(fontFamily: "system", fontSize: 18, lineHeightMultiple: 1.25, cascadeFonts: ["PingFangSC-Regular"]),
                     headings: EditorHeadings(
                         shared: EditorHeadingShared(isBold: true),
                         h1: EditorHeadingLevel(color: "#6AA9F8", fontSizeOffset: 6, isBold: true),
@@ -624,12 +612,12 @@ extension StylesFile {
                         h5: EditorHeadingLevel(color: "#6AA9F8", fontSizeOffset: 0, isBold: true),
                         h6: EditorHeadingLevel(color: "#F28B82", fontSizeOffset: 0, isBold: true)
                     ),
-                    bold:          EditorBold(isBold: true, color: nil),
+                    bold:          EditorBold(color: nil),
                     italic:        EditorItalic(obliqueness: 0.2, color: nil),
-                    inlineCode:    EditorInlineCode(color: "#FF7B72", backgroundColor: "#8E8E9326", fontFamily: nil),
-                    codeBlock:     EditorCodeBlock(color: nil, backgroundColor: "#8E8E9314", useSecondaryLabelColor: true, fontFamily: nil),
+                    inlineCode:    EditorInlineCode(color: "#FF7B72", backgroundColor: "#8E8E9326"),
+                    codeBlock:     EditorCodeBlock(color: nil, backgroundColor: "#8E8E9314", useSecondaryLabelColor: true),
                     blockquote:    EditorBlockquote(color: nil, useSecondaryLabelColor: true),
-                    strikethrough: EditorStrikethrough(color: nil, useSecondaryLabelColor: true, lineStyle: "single"),
+                    strikethrough: EditorStrikethrough(color: nil, useSecondaryLabelColor: true),
                     link:          EditorLink(color: nil, useLinkColor: true)
                 )
             ),
@@ -639,7 +627,6 @@ extension StylesFile {
                 displayStyle: DisplayStyle(
                     global: DisplayGlobal(
                         backgroundColor: "#F8F2E4", textColor: "#3B2F2F",
-                        textSecondaryColor: "#7A6652", borderColor: "#D4C4A8",
                         fontFamily: #"-apple-system, "SF Pro Text", "PingFang SC", "Heiti SC", "Helvetica Neue", Arial, sans-serif"#,
                         fontSize: "18px", lineHeight: "1.5", maxWidth: "860px",
                         padding: "40px 48px 80px", codeHighlightTheme: "github-light"
@@ -663,13 +650,13 @@ extension StylesFile {
                     link:       DisplayLink(color: "#8B4513", hoverColor: nil, underline: false, hoverUnderline: true),
                     list:       DisplayList(marginTop: "0.75em", marginBottom: "0.75em", paddingLeft: "1.75em", itemSpacing: "0.3em", nestedSpacing: "0.2em"),
                     table:      DisplayTable(fontSize: "0.95em", headerBackgroundColor: "#EDE7D9", headerFontWeight: "600", alternateRowColor: "#F2EBE0", borderColor: "#D4C4A8", cellPadding: "0.5em 0.75em", margin: "1em 0"),
-                    strikethrough: DisplayStrikethrough(color: nil, lineStyle: "solid"),
+                    strikethrough: DisplayStrikethrough(color: nil),
                     image:      DisplayImage(maxWidth: "100%", borderRadius: "6px", margin: "0.75em 0"),
                     taskList:   DisplayTaskList(checkboxMarginRight: "0.4em"),
                     customCSS:  nil
                 ),
                 editorStyle: EditorStyle(
-                    global: EditorGlobal(backgroundColor: nil, textColor: nil, fontFamily: "system", fontSize: 18, lineHeightMultiple: 1.25, cascadeFonts: ["PingFangSC-Regular"]),
+                    global: EditorGlobal(fontFamily: "system", fontSize: 18, lineHeightMultiple: 1.25, cascadeFonts: ["PingFangSC-Regular"]),
                     headings: EditorHeadings(
                         shared: EditorHeadingShared(isBold: true),
                         h1: EditorHeadingLevel(color: "#5C7A9E", fontSizeOffset: 6, isBold: true),
@@ -679,12 +666,12 @@ extension StylesFile {
                         h5: EditorHeadingLevel(color: "#5C7A9E", fontSizeOffset: 0, isBold: true),
                         h6: EditorHeadingLevel(color: "#9E3D3D", fontSizeOffset: 0, isBold: true)
                     ),
-                    bold:          EditorBold(isBold: true, color: nil),
+                    bold:          EditorBold(color: nil),
                     italic:        EditorItalic(obliqueness: 0.2, color: nil),
-                    inlineCode:    EditorInlineCode(color: "#7C3D2F", backgroundColor: "#8E8E9326", fontFamily: nil),
-                    codeBlock:     EditorCodeBlock(color: nil, backgroundColor: "#8E8E9314", useSecondaryLabelColor: true, fontFamily: nil),
+                    inlineCode:    EditorInlineCode(color: "#7C3D2F", backgroundColor: "#8E8E9326"),
+                    codeBlock:     EditorCodeBlock(color: nil, backgroundColor: "#8E8E9314", useSecondaryLabelColor: true),
                     blockquote:    EditorBlockquote(color: nil, useSecondaryLabelColor: true),
-                    strikethrough: EditorStrikethrough(color: nil, useSecondaryLabelColor: true, lineStyle: "single"),
+                    strikethrough: EditorStrikethrough(color: nil, useSecondaryLabelColor: true),
                     link:          EditorLink(color: nil, useLinkColor: true)
                 )
             )

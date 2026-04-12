@@ -186,14 +186,6 @@ struct EditorView: NSViewRepresentable {
             lineY = lineRect.midY + inset
         } else if #available(macOS 12.0, *), let tlm = textView.textLayoutManager {
             // TextKit2 path
-            let docRange = NSTextRange(
-                location: tlm.documentRange.location,
-                end: tlm.documentRange.endLocation
-            )
-            if let docRange = docRange {
-                let off = tlm.offset(from: docRange.location, to: docRange.endLocation)
-                let _ = off  // ensure layout
-            }
             // Convert charOffset to NSTextRange
             if let start = tlm.location(tlm.documentRange.location, offsetBy: safeOffset),
                let end   = tlm.location(start, offsetBy: max(1, rangeLen)),

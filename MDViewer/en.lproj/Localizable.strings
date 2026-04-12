@@ -137,14 +137,5 @@
 "help.footer" = "Found a bug? Feel free to open an issue on GitHub.";
 
 // MARK: - PreferencesView
-"prefs.previewTheme" = "Preview Theme";
-"prefs.theme.auto" = "Follow System";
-"prefs.theme.light" = "Always Light";
-"prefs.theme.dark" = "Always Dark";
-"prefs.theme.sepia" = "Sepia";
-"prefs.editorFont" = "Editor Font";
-"prefs.font.system" = "System (SF Pro)";
-"prefs.font.menlo" = "Monospace (Menlo)";
-"prefs.font.palatino" = "Serif (Palatino)";
 "prefs.style" = "Style";
 "prefs.style.openConfig" = "Open Config File…";
