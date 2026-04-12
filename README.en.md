@@ -1,3 +1,5 @@
+English | [中文](README.md)
+
 # MDViewer
 
 **Markdown on macOS, the way it should feel.**
