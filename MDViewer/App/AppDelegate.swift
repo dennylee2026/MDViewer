@@ -193,7 +193,7 @@ class AppState: ObservableObject {
         body {
             font-size: 28px !important;
             max-width: 100% !important;
-            padding: 12px 16px 32px !important;
+            padding: 12px 22px 32px !important;
             line-height: 1.7 !important;
             margin: 0 !important;
         }
@@ -203,6 +203,12 @@ class AppState: ObservableObject {
         h4 { font-size: 1.05em !important; }
         h5 { font-size: 0.95em !important; }
         h6 { font-size: 0.85em !important; }
+        pre {
+            white-space: pre-wrap !important;
+            word-break: break-all !important;
+            overflow: visible !important;
+            overflow-x: visible !important;
+        }
         pre, code { font-size: 0.78em !important; }
         img { max-width: 100% !important; height: auto !important; }
         table { width: 100% !important; font-size: 0.85em !important; }
