@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.1] - 2026-04-12
+
+### Removed
+- 移除 21 处垃圾代码：StyleTypes 中 9 个从未被读取的结构体字段、OutlineView 中孤立的 Color(hex:) 扩展、FileWatcher 中只写不读的 fileDescriptor 属性、EditorView 中无效的 no-op 计算块、两份 Localizable.strings 中旧主题系统遗留的 9 个 prefs.theme.*/prefs.font.* key
+
 ## [2.3.0] - 2026-04-12
 
 ### Added
