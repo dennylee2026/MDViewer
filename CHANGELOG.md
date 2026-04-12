@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-04-12
+
+### Added
+- 样式选择系统：单一 `styles.json` 配置文件（位于 `~/Library/Application Support/MDViewer/`）定义多套样式，首次启动自动生成
+- 内置三套样式：GDS-Style（Google 品牌配色，默认）、Dark（深色）、Sepia（复古纸张）
+- 每套样式分别控制编辑区（`editorStyle`：字体/字号/行高/各元素高亮色）和显示区（`displayStyle`：完整 CSS，覆盖 H1–H6、段落、粗体、斜体、代码、引用、表格、链接等所有 Markdown 要素）
+- 偏好设置新增样式选择器和「打开配置文件」按钮，支持文本编辑修改样式
+- FileWatcher 实时监听 `styles.json` 变动，保存后立即生效，无需重启
+- 配置文件损坏时自动从 app 内置 systemDefaults 写回恢复，无 .bak 文件
+
+### Removed
+- 移除旧版静态 CSS 文件（light.css、dark.css、sepia.css、hljs-light.css、hljs-dark.css）
+- 移除 `switchTheme()` 旧主题切换逻辑，全部由 `applyCustomStyle()` 动态注入替代
+
 ## [2.2.3] - 2026-04-11
 
 ### Fixed
