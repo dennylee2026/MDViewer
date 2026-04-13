@@ -49,6 +49,7 @@ class AppState: ObservableObject {
 
     var webView: WKWebView?
     private var savedBadgeTask: Task<Void, Never>?
+    private var activeMobileImageExporter: MobileImageExporter?
 
     private let fileWatcher = FileWatcher()
 
@@ -421,74 +422,18 @@ class AppState: ObservableObject {
     }
 
     private func _writeMobileImage(to url: URL, done: @escaping () -> Void) {
-        guard webView != nil else { done(); return }
-        withMobileCSS { [weak self] removeMobile in
-            guard let self, let webView = self.webView,
-                  let detach = self.detachWebViewForExport(mobileWidth: 390)
-            else { removeMobile(); done(); return }
-            let mobileWidth: CGFloat = 390
-
-            CATransaction.begin(); CATransaction.setDisableActions(true)
-            webView.frame = CGRect(x: webView.frame.origin.x, y: webView.frame.origin.y,
-                                   width: mobileWidth, height: 30_000)
-            CATransaction.commit()
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                webView.evaluateJavaScript(
-                    "Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
-                ) { result, _ in
-                    DispatchQueue.main.async {
-                        let contentH = max(CGFloat((result as? NSNumber)?.doubleValue ?? 1000), 100)
-                        let paddedH  = contentH + 100
-
-                        CATransaction.begin(); CATransaction.setDisableActions(true)
-                        webView.frame = CGRect(x: webView.frame.origin.x, y: webView.frame.origin.y,
-                                               width: mobileWidth, height: paddedH)
-                        CATransaction.commit()
-
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            let pdfConfig = WKPDFConfiguration()
-                            pdfConfig.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: paddedH)
-                            webView.createPDF(configuration: pdfConfig) { pdfResult in
-                                DispatchQueue.main.async {
-                                    detach.restore()
-                                    removeMobile()
-                                    guard case .success(let pdfData) = pdfResult,
-                                          let provider = CGDataProvider(data: pdfData as CFData),
-                                          let pdfDoc   = CGPDFDocument(provider),
-                                          let page     = pdfDoc.page(at: 1) else { done(); return }
-
-                                    let box    = page.getBoxRect(.mediaBox)
-                                    let scale  = NSScreen.main?.backingScaleFactor ?? 2.0
-                                    let pixW   = Int(box.width  * scale)
-                                    let pixH   = Int(box.height * scale)
-
-                                    guard let cs  = CGColorSpace(name: CGColorSpace.sRGB),
-                                          let ctx = CGContext(data: nil, width: pixW, height: pixH,
-                                                              bitsPerComponent: 8, bytesPerRow: 0,
-                                                              space: cs,
-                                                              bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-                                    else { done(); return }
-
-                                    ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
-                                    ctx.fill(CGRect(x: 0, y: 0, width: pixW, height: pixH))
-                                    ctx.scaleBy(x: scale, y: scale)
-                                    ctx.drawPDFPage(page)
-
-                                    if let cgImg = ctx.makeImage() {
-                                        let rep = NSBitmapImageRep(cgImage: cgImg)
-                                        if let png = rep.representation(using: .png, properties: [:]) {
-                                            try? png.write(to: url)
-                                        }
-                                    }
-                                    done()
-                                }
-                            }
-                        }
-                    }
-                }
+        let css = StyleManager.shared.activeStyle.displayStyle.toCSS() + "\n" + mobileCSSOverrides()
+        let exporter = MobileImageExporter(
+            markdown: markdownContent,
+            combinedCSS: css,
+            outputURL: url,
+            done: { [weak self] in
+                self?.activeMobileImageExporter = nil
+                done()
             }
-        }
+        )
+        activeMobileImageExporter = exporter
+        exporter.start()
     }
 
     // MARK: Export — Public
@@ -629,6 +574,141 @@ class AppState: ObservableObject {
             }
         }
         return result
+    }
+}
+
+// MARK: - Mobile Image Exporter
+
+// Renders markdown in a fresh 390-pt-wide WKWebView and saves the result as a PNG.
+// Using a fresh view that was never wider than 390 pt avoids the CSS-reflow / constraint-
+// detach dance the live-view approach requires.  Height is measured iteratively to work
+// around WebKit's incremental layout for very long documents.
+private class MobileImageExporter: NSObject, WKNavigationDelegate {
+    private let webView: WKWebView
+    private let markdown: String
+    private let combinedCSS: String
+    private let mobileWidth: CGFloat = 390
+    private let outputURL: URL
+    private let doneCallback: () -> Void
+    private var expandIteration = 0
+    private static let maxExpandIterations = 10
+
+    init(markdown: String, combinedCSS: String, outputURL: URL, done: @escaping () -> Void) {
+        self.markdown     = markdown
+        self.combinedCSS  = combinedCSS
+        self.outputURL    = outputURL
+        self.doneCallback = done
+
+        let cfg = WKWebViewConfiguration()
+        cfg.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
+        self.webView = WKWebView(
+            frame: CGRect(x: 0, y: 0, width: 390, height: 900),
+            configuration: cfg
+        )
+        super.init()
+        webView.navigationDelegate = self
+    }
+
+    func start() {
+        guard let tpl = Bundle.main.url(forResource: "template", withExtension: "html") else {
+            doneCallback(); return
+        }
+        webView.loadFileURL(tpl, allowingReadAccessTo: tpl.deletingLastPathComponent())
+    }
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        let cssEsc = esc(combinedCSS)
+        let mdEsc  = esc(markdown)
+        webView.evaluateJavaScript("applyCustomStyle(`\(cssEsc)`)") { [weak self] _, _ in
+            guard let self else { return }
+            self.webView.evaluateJavaScript("renderMarkdownSync(`\(mdEsc)`)") { [weak self] _, _ in
+                guard let self else { return }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self.expandAndMeasure()
+                }
+            }
+        }
+    }
+
+    // Iteratively expand the webView frame until scrollHeight stabilises.
+    // WebKit uses incremental layout: content below the current frame may not be
+    // fully laid out yet, causing scrollHeight to be underestimated.  Each time
+    // the measured height fills >90 % of the frame we double the frame and re-measure.
+    private func expandAndMeasure() {
+        webView.evaluateJavaScript(
+            "Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
+        ) { [weak self] result, _ in
+            guard let self else { return }
+            DispatchQueue.main.async {
+                let measured = max(CGFloat((result as? NSNumber)?.doubleValue ?? 900), 100)
+                let frameH   = self.webView.frame.height
+
+                if measured > frameH * 0.9 && self.expandIteration < Self.maxExpandIterations {
+                    self.expandIteration += 1
+                    let nextH = measured * 2
+                    self.webView.frame = CGRect(x: 0, y: 0, width: self.mobileWidth, height: nextH)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        self.expandAndMeasure()
+                    }
+                } else {
+                    let finalH = measured + 64
+                    self.webView.frame = CGRect(x: 0, y: 0, width: self.mobileWidth, height: finalH)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        self.capturePDF(height: finalH)
+                    }
+                }
+            }
+        }
+    }
+
+    private func capturePDF(height: CGFloat) {
+        let cfg = WKPDFConfiguration()
+        cfg.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: height)
+        webView.createPDF(configuration: cfg) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                guard case .success(let pdfData) = result,
+                      let provider = CGDataProvider(data: pdfData as CFData),
+                      let pdfDoc   = CGPDFDocument(provider),
+                      let page     = pdfDoc.page(at: 1)
+                else { self.doneCallback(); return }
+                self.renderToImage(page: page)
+            }
+        }
+    }
+
+    private func renderToImage(page: CGPDFPage) {
+        let box   = page.getBoxRect(.mediaBox)
+        let scale = NSScreen.main?.backingScaleFactor ?? 2.0
+        let pixW  = Int(box.width  * scale)
+        let pixH  = Int(box.height * scale)
+
+        guard let cs  = CGColorSpace(name: CGColorSpace.sRGB),
+              let ctx = CGContext(
+                  data: nil, width: pixW, height: pixH,
+                  bitsPerComponent: 8, bytesPerRow: 0, space: cs,
+                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+              )
+        else { doneCallback(); return }
+
+        ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+        ctx.fill(CGRect(x: 0, y: 0, width: pixW, height: pixH))
+        ctx.scaleBy(x: scale, y: scale)
+        ctx.drawPDFPage(page)
+
+        if let cgImg = ctx.makeImage() {
+            let rep = NSBitmapImageRep(cgImage: cgImg)
+            if let png = rep.representation(using: .png, properties: [:]) {
+                try? png.write(to: outputURL)
+            }
+        }
+        doneCallback()
+    }
+
+    private func esc(_ s: String) -> String {
+        s.replacingOccurrences(of: "\\", with: "\\\\")
+         .replacingOccurrences(of: "`", with: "\\`")
+         .replacingOccurrences(of: "$", with: "\\$")
     }
 }
 

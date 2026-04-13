@@ -51,6 +51,20 @@
       _hljsRafId = requestAnimationFrame(step);
     }
 
+    // Synchronous variant used during export — parse + highlight in one shot,
+    // no requestAnimationFrame, works in a headless WKWebView.
+    function renderMarkdownSync(md) {
+      if (_hljsRafId !== null) {
+        cancelAnimationFrame(_hljsRafId);
+        _hljsRafId = null;
+      }
+      const html = marked.parse(md);
+      document.getElementById('content').innerHTML = html;
+      document.querySelectorAll('pre code').forEach(function(block) {
+        hljs.highlightElement(block);
+      });
+    }
+
     function resetScroll() {
       window.scrollTo(0, 0);
     }

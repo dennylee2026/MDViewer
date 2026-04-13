@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.12] - 2026-04-12
+
+### Fixed
+- 导出手机长图时长文档被截断：改用独立临时 WKWebView（初始宽度固定 390pt）替代对现有 webView 的 frame 操控；采用迭代高度扩展（每轮 2×）直到 scrollHeight 稳定，彻底解决 WebKit 增量布局导致长文档高度测量偏低的问题；同步执行 highlight.js（renderMarkdownSync）确保代码高亮完整呈现
+
 ## [2.4.11] - 2026-04-13
 
 ### Changed
