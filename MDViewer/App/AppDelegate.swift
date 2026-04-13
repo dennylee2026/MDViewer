@@ -475,40 +475,37 @@ class AppState: ObservableObject {
             else { removeMobile(); done(); return }
             let mobileWidth: CGFloat = 390
 
-            // Set a very tall frame so WebKit lays out the ENTIRE document now.
-            // Without this, incremental layout only processes the visible viewport height
-            // and scrollHeight returns a value that is far too small.
+            // Expand to force WebKit to lay out the entire document before measuring.
             CATransaction.begin(); CATransaction.setDisableActions(true)
             webView.frame = CGRect(x: webView.frame.origin.x, y: webView.frame.origin.y,
                                    width: mobileWidth, height: 30_000)
             CATransaction.commit()
 
-            // Wait for the full 390-px reflow to complete across the entire document.
+            // Allow the full 390-px reflow to settle.
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 webView.evaluateJavaScript(
                     "Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
                 ) { result, _ in
                     DispatchQueue.main.async {
                         let contentH = max(CGFloat((result as? NSNumber)?.doubleValue ?? 1000), 100)
-                        let paddedH  = contentH + 100   // generous bottom buffer
+                        let paddedH  = contentH + 100
 
-                        // Shrink frame to the exact content height before snapshot.
                         CATransaction.begin(); CATransaction.setDisableActions(true)
                         webView.frame = CGRect(x: webView.frame.origin.x, y: webView.frame.origin.y,
                                                width: mobileWidth, height: paddedH)
                         CATransaction.commit()
 
-                        // Short settle after final resize, then capture.
+                        // createPDF operates on DOM layout — not on screen rasterization —
+                        // so alphaValue=0 does not affect output quality or completeness.
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            let snapCfg = WKSnapshotConfiguration()
-                            snapCfg.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: paddedH)
-                            webView.takeSnapshot(with: snapCfg) { image, _ in
+                            let pdfConfig = WKPDFConfiguration()
+                            pdfConfig.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: paddedH)
+                            webView.createPDF(configuration: pdfConfig) { pdfResult in
                                 DispatchQueue.main.async {
                                     detach.restore()
                                     removeMobile()
-                                    if let image {
-                                        let pdfData = Self.pdfData(from: image)
-                                        try? pdfData?.write(to: url)
+                                    if case .success(let data) = pdfResult {
+                                        try? data.write(to: url)
                                     }
                                     done()
                                 }
@@ -547,14 +544,35 @@ class AppState: ObservableObject {
                         CATransaction.commit()
 
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            let snapCfg = WKSnapshotConfiguration()
-                            snapCfg.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: paddedH)
-                            webView.takeSnapshot(with: snapCfg) { image, _ in
+                            let pdfConfig = WKPDFConfiguration()
+                            pdfConfig.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: paddedH)
+                            webView.createPDF(configuration: pdfConfig) { pdfResult in
                                 DispatchQueue.main.async {
                                     detach.restore()
                                     removeMobile()
-                                    if let image,
-                                       let cgImg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                                    guard case .success(let pdfData) = pdfResult,
+                                          let provider = CGDataProvider(data: pdfData as CFData),
+                                          let pdfDoc   = CGPDFDocument(provider),
+                                          let page     = pdfDoc.page(at: 1) else { done(); return }
+
+                                    let box    = page.getBoxRect(.mediaBox)
+                                    let scale  = NSScreen.main?.backingScaleFactor ?? 2.0
+                                    let pixW   = Int(box.width  * scale)
+                                    let pixH   = Int(box.height * scale)
+
+                                    guard let cs  = CGColorSpace(name: CGColorSpace.sRGB),
+                                          let ctx = CGContext(data: nil, width: pixW, height: pixH,
+                                                              bitsPerComponent: 8, bytesPerRow: 0,
+                                                              space: cs,
+                                                              bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+                                    else { done(); return }
+
+                                    ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+                                    ctx.fill(CGRect(x: 0, y: 0, width: pixW, height: pixH))
+                                    ctx.scaleBy(x: scale, y: scale)
+                                    ctx.drawPDFPage(page)
+
+                                    if let cgImg = ctx.makeImage() {
                                         let rep = NSBitmapImageRep(cgImage: cgImg)
                                         if let png = rep.representation(using: .png, properties: [:]) {
                                             try? png.write(to: url)
@@ -568,24 +586,6 @@ class AppState: ObservableObject {
                 }
             }
         }
-    }
-
-    /// Converts an NSImage into a single-page PDF data blob using CGContext.
-    private static func pdfData(from image: NSImage) -> Data? {
-        let data = NSMutableData()
-        var mediaBox = CGRect(origin: .zero, size: image.size)
-        guard let consumer = CGDataConsumer(data: data as CFMutableData),
-              let ctx = CGContext(consumer: consumer, mediaBox: &mediaBox, nil)
-        else { return nil }
-        ctx.beginPDFPage(nil)
-        let gc = NSGraphicsContext(cgContext: ctx, flipped: false)
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.current = gc
-        image.draw(in: mediaBox)
-        NSGraphicsContext.restoreGraphicsState()
-        ctx.endPDFPage()
-        ctx.closePDF()
-        return data as Data
     }
 
     // MARK: Export — Public

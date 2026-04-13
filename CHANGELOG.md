@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - 手机 PDF / 手机长图底部截断：width:390px 强制重排后页面变高，原固定延时不足导致 scrollHeight 偏小；改用轮询方式等待 scrollHeight 连续 3 次相同后再截图，超时 4s 保底；底部缓冲从 32pt 增加至 80pt
 - 手机导出底部截断根本修复：WebKit 惰性布局只计算可见区域内的内容高度，scrollHeight 偏小；改为先将 webView frame 高度设为 30000pt 强制完整布局，再读取准确的 scrollHeight；底部缓冲增至 100pt
+- 手机导出底部截断终极修复：takeSnapshot 在隐藏 webView（alphaValue=0）上不触发光栅化，只返回隐藏前的缓存帧，高度永远受限于原窗口高度；改用 createPDF(configuration:) — 直接操作 DOM layout 引擎，与 visibility 无关；移动长图同步改为 createPDF → CGPDFDocument → PNG
 
 ## [2.4.9] - 2026-04-13
 
