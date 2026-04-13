@@ -37,9 +37,9 @@
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.productivity</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.4.5</string>
+	<string>2.4.6</string>
 	<key>CFBundleVersion</key>
-	<string>245</string>
+	<string>246</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSHighResolutionCapable</key>
