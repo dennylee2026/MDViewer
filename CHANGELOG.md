@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- 手机 PDF / 手机长图底部截断：width:390px 强制重排后页面变高，原固定延时不足导致 scrollHeight 偏小；改用轮询方式等待 scrollHeight 连续 3 次相同后再截图，超时 4s 保底；底部缓冲从 32pt 增加至 80pt
+
 ## [2.4.9] - 2026-04-13
 
 ### Fixed
