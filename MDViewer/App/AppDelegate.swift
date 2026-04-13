@@ -368,18 +368,38 @@ class AppState: ObservableObject {
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "`", with: "\\`")
         webView.evaluateJavaScript("applyMobileCSS(`\(escaped)`)") { _, _ in
-            // Force CSS viewport to exactly 390px so reflow matches the narrowed frame
-            let forceViewport = """
-            (function(){var m=document.querySelector('meta[name="viewport"]');if(m)m.setAttribute('content','width=390, initial-scale=1.0');})();
+            // Force html + body to exactly 390px wide using inline !important styles.
+            // On macOS, WKWebView's CSS viewport width follows the WINDOW width, not the
+            // view frame — so resizing the frame to 390pt does NOT change window.innerWidth.
+            // Inline !important overrides all external-stylesheet !important rules and forces
+            // layout to 390px regardless of what the CSS viewport reports.
+            let forceWidth = """
+            (function(){
+                var h = document.documentElement, b = document.body;
+                h.style.setProperty('width',       '390px',  'important');
+                h.style.setProperty('max-width',   '390px',  'important');
+                h.style.setProperty('overflow-x',  'hidden', 'important');
+                b.style.setProperty('width',       '390px',  'important');
+                b.style.setProperty('max-width',   '390px',  'important');
+                b.style.setProperty('overflow-x',  'hidden', 'important');
+            })();
             """
-            webView.evaluateJavaScript(forceViewport) { _, _ in
+            webView.evaluateJavaScript(forceWidth) { _, _ in
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     action {
-                        // Restore viewport to device-width before removing mobile CSS
-                        let restoreViewport = """
-                        (function(){var m=document.querySelector('meta[name="viewport"]');if(m)m.setAttribute('content','width=device-width, initial-scale=1.0');})();
+                        // Remove all inline overrides so the live preview is unaffected
+                        let cleanup = """
+                        (function(){
+                            var h = document.documentElement, b = document.body;
+                            h.style.removeProperty('width');
+                            h.style.removeProperty('max-width');
+                            h.style.removeProperty('overflow-x');
+                            b.style.removeProperty('width');
+                            b.style.removeProperty('max-width');
+                            b.style.removeProperty('overflow-x');
+                        })();
                         """
-                        webView.evaluateJavaScript(restoreViewport, completionHandler: nil)
+                        webView.evaluateJavaScript(cleanup, completionHandler: nil)
                         webView.evaluateJavaScript("removeMobileCSS()", completionHandler: nil)
                     }
                 }
