@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.9] - 2026-04-13
+
 ### Fixed
 - 手机 PDF / 手机长图中长标题（尤其 h4 inline-block）右侧被截断：h4 新增 `max-width: 100%` 限制 inline-block 宽度不超出页面；所有标题（h1–h6）新增 `overflow-wrap: break-word` + `word-break: break-word` 确保长 CJK 标题自动换行；html 和 body 新增 `overflow-x: hidden` 作为安全兜底防止任何元素撑宽页面
-- 手机 PDF / 手机长图依旧截断根本修复：放弃 WKPDFConfiguration.rect 方案（视口宽度不可靠），改用 JS 强制 viewport width=390 + WKWebView.takeSnapshot 截全页图，PDF 由 NSImage → CGContext 生成；移动端长图同步改用 takeSnapshot 直接输出 PNG
-- 手机导出截断根本原因修复：macOS WKWebView 的 CSS 视口宽度跟随窗口而非 frame，缩窄 frame 至 390pt 并不改变 window.innerWidth；改用 JS inline !important 直接强制 html/body width:390px，完全绕开 viewport 宽度问题
+- 手机导出截断根本原因修复：macOS WKWebView 的 CSS 视口宽度跟随窗口而非 frame，缩窄 frame 至 390pt 并不改变 window.innerWidth；改用 JS inline `!important` 直接强制 html/body `width:390px`，完全绕开 viewport 宽度问题；export 管线改为 `takeSnapshot` → NSImage → CGContext 生成 PDF / PNG
 
 ### Changed
 - 手机 PDF / 手机长图 CSS 全面升级为 Google 品牌色方案（按 MOBILE_STYLE_GUIDE.md）：
