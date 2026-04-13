@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- 手机 PDF / 手机长图中长标题（尤其 h4 inline-block）右侧被截断：h4 新增 `max-width: 100%` 限制 inline-block 宽度不超出页面；所有标题（h1–h6）新增 `overflow-wrap: break-word` + `word-break: break-word` 确保长 CJK 标题自动换行；html 和 body 新增 `overflow-x: hidden` 作为安全兜底防止任何元素撑宽页面
+
 ### Changed
 - 手机 PDF / 手机长图 CSS 全面升级为 Google 品牌色方案（按 MOBILE_STYLE_GUIDE.md）：
   - 字体栈优先 CJK 字体（PingFang SC → Hiragino Sans GB → Noto Sans CJK SC → Microsoft YaHei）

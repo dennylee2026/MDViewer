@@ -187,6 +187,9 @@ class AppState: ObservableObject {
     private func mobileCSSOverrides() -> String {
         """
         @page { margin: 0 !important; size: auto !important; }
+        html {
+            overflow-x: hidden !important;
+        }
         * {
             box-sizing: border-box !important;
             page-break-inside: avoid !important; break-inside: avoid !important;
@@ -205,6 +208,7 @@ class AppState: ObservableObject {
             word-break: break-word !important;
             margin: 0 !important;
             background: #fff !important;
+            overflow-x: hidden !important;
         }
         #content {
             max-width: 100% !important;
@@ -222,6 +226,8 @@ class AppState: ObservableObject {
             margin-top: 1.4em !important;
             margin-bottom: 0.4em !important;
             background: none !important;
+            overflow-wrap: break-word !important;
+            word-break: break-word !important;
         }
         h2 {
             font-size: 24px !important;
@@ -231,6 +237,8 @@ class AppState: ObservableObject {
             margin-top: 1.3em !important;
             margin-bottom: 0.4em !important;
             background: none !important;
+            overflow-wrap: break-word !important;
+            word-break: break-word !important;
         }
         h3 {
             font-size: 22px !important;
@@ -240,17 +248,22 @@ class AppState: ObservableObject {
             margin-top: 1.2em !important;
             margin-bottom: 0.3em !important;
             background: none !important;
+            overflow-wrap: break-word !important;
+            word-break: break-word !important;
         }
         h4 {
             font-size: 20px !important;
             background: #FBBC05 !important;
             color: #1a1a1a !important;
             display: inline-block !important;
+            max-width: 100% !important;
             padding: 0 6px 1px !important;
             border-radius: 3px !important;
             border-left: none !important;
             margin-top: 1.1em !important;
             margin-bottom: 0.3em !important;
+            overflow-wrap: break-word !important;
+            word-break: break-word !important;
         }
         h5 {
             font-size: 18px !important;
@@ -259,6 +272,8 @@ class AppState: ObservableObject {
             background: none !important;
             margin-top: 1em !important;
             margin-bottom: 0.3em !important;
+            overflow-wrap: break-word !important;
+            word-break: break-word !important;
         }
         h6 {
             font-size: 17px !important;
@@ -267,6 +282,8 @@ class AppState: ObservableObject {
             background: none !important;
             margin-top: 1em !important;
             margin-bottom: 0.3em !important;
+            overflow-wrap: break-word !important;
+            word-break: break-word !important;
         }
         strong, b {
             background: rgba(251, 188, 5, 0.28) !important;
