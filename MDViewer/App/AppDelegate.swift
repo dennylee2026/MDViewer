@@ -1,5 +1,4 @@
 import AppKit
-import PDFKit
 import SwiftUI
 import WebKit
 
@@ -369,9 +368,20 @@ class AppState: ObservableObject {
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "`", with: "\\`")
         webView.evaluateJavaScript("applyMobileCSS(`\(escaped)`)") { _, _ in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                action {
-                    webView.evaluateJavaScript("removeMobileCSS()", completionHandler: nil)
+            // Force CSS viewport to exactly 390px so reflow matches the narrowed frame
+            let forceViewport = """
+            (function(){var m=document.querySelector('meta[name="viewport"]');if(m)m.setAttribute('content','width=390, initial-scale=1.0');})();
+            """
+            webView.evaluateJavaScript(forceViewport) { _, _ in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    action {
+                        // Restore viewport to device-width before removing mobile CSS
+                        let restoreViewport = """
+                        (function(){var m=document.querySelector('meta[name="viewport"]');if(m)m.setAttribute('content','width=device-width, initial-scale=1.0');})();
+                        """
+                        webView.evaluateJavaScript(restoreViewport, completionHandler: nil)
+                        webView.evaluateJavaScript("removeMobileCSS()", completionHandler: nil)
+                    }
                 }
             }
         }
@@ -445,54 +455,46 @@ class AppState: ObservableObject {
             else { removeMobile(); done(); return }
             let mobileWidth: CGFloat = 390
 
-            // Wait for re-layout at the narrowed width before querying scroll height.
-            // 0.8s gives the 28px-font / 390pt-width reflow more time than the old 0.5s.
+            // Wait for reflow after frame narrowing + viewport override
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                 webView.evaluateJavaScript(
                     "Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
                 ) { result, _ in
                     DispatchQueue.main.async {
-                        let scrollHeight = max(CGFloat((result as? NSNumber)?.doubleValue ?? 800), 1)
+                        let h1 = max(CGFloat((result as? NSNumber)?.doubleValue ?? 800), 1)
 
-                        // Resize the webView to match the full content so
-                        // WKPDFConfiguration.rect is never clamped by bounds.
-                        CATransaction.begin()
-                        CATransaction.setDisableActions(true)
-                        var fullFrame = webView.frame
-                        fullFrame.size = CGSize(width: mobileWidth, height: scrollHeight)
-                        webView.frame = fullFrame
+                        // Resize webView to full content height
+                        CATransaction.begin(); CATransaction.setDisableActions(true)
+                        webView.frame = CGRect(x: webView.frame.origin.x, y: webView.frame.origin.y,
+                                               width: mobileWidth, height: h1)
                         CATransaction.commit()
 
-                        // Re-query after the frame resize — the height change itself
-                        // can trigger additional layout reflow.
+                        // Re-query height after resize (layout may shift)
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                             webView.evaluateJavaScript(
                                 "Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
                             ) { result2, _ in
                                 DispatchQueue.main.async {
-                                    let requeriedHeight = CGFloat((result2 as? NSNumber)?.doubleValue ?? Double(scrollHeight))
-                                    let finalHeight = max(requeriedHeight, scrollHeight)
-                                    // Add bottom buffer so trailing padding / margin is never cut
-                                    let paddedHeight = finalHeight + 64
+                                    let h2 = CGFloat((result2 as? NSNumber)?.doubleValue ?? Double(h1))
+                                    let finalH = max(h1, h2) + 32  // small bottom buffer
 
-                                    CATransaction.begin()
-                                    CATransaction.setDisableActions(true)
-                                    var paddedFrame = webView.frame
-                                    paddedFrame.size = CGSize(width: mobileWidth, height: paddedHeight)
-                                    webView.frame = paddedFrame
+                                    CATransaction.begin(); CATransaction.setDisableActions(true)
+                                    webView.frame = CGRect(x: webView.frame.origin.x, y: webView.frame.origin.y,
+                                                           width: mobileWidth, height: finalH)
                                     CATransaction.commit()
 
-                                    let config = WKPDFConfiguration()
-                                    config.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: paddedHeight)
-
-                                    // Short wait after final frame resize so WKWebView
-                                    // finishes any internal relayout before PDF capture.
+                                    // Short settle before snapshot
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                        webView.createPDF(configuration: config) { pdfResult in
+                                        let snapCfg = WKSnapshotConfiguration()
+                                        snapCfg.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: finalH)
+                                        webView.takeSnapshot(with: snapCfg) { image, _ in
                                             DispatchQueue.main.async {
                                                 detach.restore()
                                                 removeMobile()
-                                                if case .success(let data) = pdfResult { try? data.write(to: url) }
+                                                if let image {
+                                                    let pdfData = Self.pdfData(from: image)
+                                                    try? pdfData?.write(to: url)
+                                                }
                                                 done()
                                             }
                                         }
@@ -514,67 +516,78 @@ class AppState: ObservableObject {
             else { removeMobile(); done(); return }
             let mobileWidth: CGFloat = 390
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                webView.evaluateJavaScript("document.body.scrollHeight") { result, _ in
+            // Wait for reflow after frame narrowing + viewport override
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                webView.evaluateJavaScript(
+                    "Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
+                ) { result, _ in
                     DispatchQueue.main.async {
-                        let scrollHeight = max(CGFloat((result as? NSNumber)?.doubleValue ?? 800), 1)
+                        let h1 = max(CGFloat((result as? NSNumber)?.doubleValue ?? 800), 1)
 
-                        // Resize the webView to match the full content so
-                        // WKPDFConfiguration.rect is never clamped by bounds.
-                        CATransaction.begin()
-                        CATransaction.setDisableActions(true)
-                        var fullFrame = webView.frame
-                        fullFrame.size = CGSize(width: mobileWidth, height: scrollHeight)
-                        webView.frame = fullFrame
+                        // Resize webView to full content height
+                        CATransaction.begin(); CATransaction.setDisableActions(true)
+                        webView.frame = CGRect(x: webView.frame.origin.x, y: webView.frame.origin.y,
+                                               width: mobileWidth, height: h1)
                         CATransaction.commit()
 
-                        let config = WKPDFConfiguration()
-                        config.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: scrollHeight)
+                        // Re-query height after resize (layout may shift)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            webView.evaluateJavaScript(
+                                "Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
+                            ) { result2, _ in
+                                DispatchQueue.main.async {
+                                    let h2 = CGFloat((result2 as? NSNumber)?.doubleValue ?? Double(h1))
+                                    let finalH = max(h1, h2) + 32  // small bottom buffer
 
-                        webView.createPDF(configuration: config) { pdfResult in
-                            DispatchQueue.main.async {
-                                // Always restore webView before any early return
-                                detach.restore()
-                                removeMobile()
+                                    CATransaction.begin(); CATransaction.setDisableActions(true)
+                                    webView.frame = CGRect(x: webView.frame.origin.x, y: webView.frame.origin.y,
+                                                           width: mobileWidth, height: finalH)
+                                    CATransaction.commit()
 
-                                guard case .success(let pdfData) = pdfResult,
-                                      let pdfDoc = PDFDocument(data: pdfData),
-                                      let page = pdfDoc.page(at: 0) else { done(); return }
-
-                                let mediaBox = page.bounds(for: .mediaBox)
-                                let scale = NSScreen.main?.backingScaleFactor ?? 2.0
-                                let pixelW = Int(mediaBox.width * scale)
-                                let pixelH = Int(mediaBox.height * scale)
-
-                                guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
-                                      let ctx = CGContext(
-                                          data: nil,
-                                          width: pixelW,
-                                          height: pixelH,
-                                          bitsPerComponent: 8,
-                                          bytesPerRow: 0,
-                                          space: colorSpace,
-                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-                                      ) else { done(); return }
-
-                                // Fill white background then render PDF page at Retina scale
-                                ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
-                                ctx.fill(CGRect(x: 0, y: 0, width: pixelW, height: pixelH))
-                                ctx.scaleBy(x: scale, y: scale)
-                                page.draw(with: .mediaBox, to: ctx)
-
-                                guard let cgImage = ctx.makeImage() else { done(); return }
-                                let rep = NSBitmapImageRep(cgImage: cgImage)
-                                if let png = rep.representation(using: .png, properties: [:]) {
-                                    try? png.write(to: url)
+                                    // Short settle before snapshot
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                        let snapCfg = WKSnapshotConfiguration()
+                                        snapCfg.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: finalH)
+                                        webView.takeSnapshot(with: snapCfg) { image, _ in
+                                            DispatchQueue.main.async {
+                                                detach.restore()
+                                                removeMobile()
+                                                if let image,
+                                                   let cgImg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                                                    let rep = NSBitmapImageRep(cgImage: cgImg)
+                                                    if let png = rep.representation(using: .png, properties: [:]) {
+                                                        try? png.write(to: url)
+                                                    }
+                                                }
+                                                done()
+                                            }
+                                        }
+                                    }
                                 }
-                                done()
                             }
                         }
                     }
                 }
             }
         }
+    }
+
+    /// Converts an NSImage into a single-page PDF data blob using CGContext.
+    private static func pdfData(from image: NSImage) -> Data? {
+        let data = NSMutableData()
+        var mediaBox = CGRect(origin: .zero, size: image.size)
+        guard let consumer = CGDataConsumer(data: data as CFMutableData),
+              let ctx = CGContext(consumer: consumer, mediaBox: &mediaBox, nil)
+        else { return nil }
+        ctx.beginPDFPage(nil)
+        let gc = NSGraphicsContext(cgContext: ctx, flipped: false)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = gc
+        image.draw(in: mediaBox)
+        NSGraphicsContext.restoreGraphicsState()
+        ctx.endPDFPage()
+        ctx.closePDF()
+        return data as Data
     }
 
     // MARK: Export — Public
