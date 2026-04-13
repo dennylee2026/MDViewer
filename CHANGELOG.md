@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.7] - 2026-04-12
+
 ### Fixed
 - 打开文件后左上角出现两个目录图标（一个置灰、一个可点击）：`NavigationSplitView` 在 `.detailOnly` 状态下会额外注入 "Show Sidebar" 按钮，与自定义文件夹侧栏按钮叠加；修正策略改为：viewer 模式且未打开文件夹时隐藏自定义文件夹按钮，将 `.navigation` 区完全交给 `NavigationSplitView` 管理；已打开文件夹时两个按钮同时显示（分别控制不同侧栏）
 
