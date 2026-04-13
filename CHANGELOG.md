@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.11] - 2026-04-13
+
+### Changed
+- 手机 PDF / 手机长图导出样式改为跟随当前 App 主题配置：移动端 CSS 覆盖层仅保留布局约束（390px 宽度、padding、word-break、overflow），颜色、字体、标题样式全部沿用用户选择的活跃主题
+
 ## [2.4.10] - 2026-04-13
 
 ### Added

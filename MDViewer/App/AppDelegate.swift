@@ -205,14 +205,13 @@ class AppState: ObservableObject {
 
     // MARK: Export — Mobile CSS helpers
 
-    // MARK: Mobile CSS — Google brand color scheme (per MOBILE_STYLE_GUIDE.md)
-    // Blue:#4285F4  Red:#EA4335  Yellow:#FBBC05  Green:#34A853
+    // Mobile overrides: layout-only constraints so the active app style (colors,
+    // fonts, headings) is preserved. Only width, padding, word-wrap, overflow,
+    // and page-break properties are forced here.
     private func mobileCSSOverrides() -> String {
         """
         @page { margin: 0 !important; size: auto !important; }
-        html {
-            overflow-x: hidden !important;
-        }
+        html { overflow-x: hidden !important; }
         * {
             box-sizing: border-box !important;
             page-break-inside: avoid !important; break-inside: avoid !important;
@@ -220,17 +219,10 @@ class AppState: ObservableObject {
             page-break-after: avoid !important; break-after: avoid !important;
         }
         body {
-            font-family: 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC',
-                         'Microsoft YaHei', -apple-system, BlinkMacSystemFont,
-                         'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
-            font-size: 18px !important;
-            line-height: 1.25 !important;
-            color: #1a1a1a !important;
             max-width: 100% !important;
             padding: 20px 18px 32px !important;
             word-break: break-word !important;
             margin: 0 !important;
-            background: #fff !important;
             overflow-x: hidden !important;
         }
         #content {
@@ -241,145 +233,32 @@ class AppState: ObservableObject {
             padding-left: 0 !important;
             padding-right: 0 !important;
         }
-        h1 {
-            font-size: 28px !important;
-            color: #4285F4 !important;
-            border-left: 4px solid #4285F4 !important;
-            padding-left: 10px !important;
-            margin-top: 1.4em !important;
-            margin-bottom: 0.4em !important;
-            background: none !important;
+        h1, h2, h3, h4, h5, h6 {
             overflow-wrap: break-word !important;
             word-break: break-word !important;
-        }
-        h2 {
-            font-size: 24px !important;
-            color: #EA4335 !important;
-            border-left: 4px solid #EA4335 !important;
-            padding-left: 10px !important;
-            margin-top: 1.3em !important;
-            margin-bottom: 0.4em !important;
-            background: none !important;
-            overflow-wrap: break-word !important;
-            word-break: break-word !important;
-        }
-        h3 {
-            font-size: 22px !important;
-            color: #34A853 !important;
-            border-left: 4px solid #34A853 !important;
-            padding-left: 10px !important;
-            margin-top: 1.2em !important;
-            margin-bottom: 0.3em !important;
-            background: none !important;
-            overflow-wrap: break-word !important;
-            word-break: break-word !important;
-        }
-        h4 {
-            font-size: 20px !important;
-            background: #FBBC05 !important;
-            color: #1a1a1a !important;
-            display: inline-block !important;
-            max-width: 100% !important;
-            padding: 0 6px 1px !important;
-            border-radius: 3px !important;
-            border-left: none !important;
-            margin-top: 1.1em !important;
-            margin-bottom: 0.3em !important;
-            overflow-wrap: break-word !important;
-            word-break: break-word !important;
-        }
-        h5 {
-            font-size: 18px !important;
-            color: #4285F4 !important;
-            border-left: none !important;
-            background: none !important;
-            margin-top: 1em !important;
-            margin-bottom: 0.3em !important;
-            overflow-wrap: break-word !important;
-            word-break: break-word !important;
-        }
-        h6 {
-            font-size: 17px !important;
-            color: #EA4335 !important;
-            border-left: none !important;
-            background: none !important;
-            margin-top: 1em !important;
-            margin-bottom: 0.3em !important;
-            overflow-wrap: break-word !important;
-            word-break: break-word !important;
-        }
-        strong, b {
-            background: rgba(251, 188, 5, 0.28) !important;
-            padding: 0 2px !important;
-            border-radius: 2px !important;
-            font-weight: 700 !important;
-        }
-        p { margin: 0.75em 0 !important; }
-        a {
-            color: #4285F4 !important;
-            text-decoration: none !important;
-            border-bottom: 1px solid rgba(66, 133, 244, 0.3) !important;
-        }
-        blockquote {
-            border-left: 4px solid #FBBC05 !important;
-            margin: 1em 0 !important;
-            padding: 6px 12px !important;
-            background: rgba(251, 188, 5, 0.08) !important;
-            color: #444 !important;
         }
         code {
-            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace !important;
-            font-size: 14px !important;
-            background: #f1f3f4 !important;
-            padding: 1px 5px !important;
-            border-radius: 3px !important;
             white-space: normal !important;
             word-break: break-all !important;
         }
         pre {
-            background: #f1f3f4 !important;
-            padding: 12px 14px !important;
-            border-radius: 6px !important;
             overflow: visible !important;
-            font-size: 13px !important;
-            line-height: 1.55 !important;
-            margin: 1em 0 !important;
             white-space: pre-wrap !important;
             word-break: break-word !important;
         }
         pre code {
-            background: none !important;
-            padding: 0 !important;
-            font-size: inherit !important;
             white-space: pre-wrap !important;
             word-break: break-word !important;
         }
         table {
             width: 100% !important;
-            border-collapse: collapse !important;
-            font-size: 14px !important;
-            margin: 1em 0 !important;
             table-layout: fixed !important;
         }
-        th {
-            background: #4285F4 !important;
-            color: #fff !important;
-            padding: 6px 8px !important;
-            text-align: left !important;
+        th, td {
             word-break: break-word !important;
             overflow-wrap: break-word !important;
         }
-        td {
-            border-bottom: 1px solid #e0e0e0 !important;
-            padding: 5px 8px !important;
-            word-break: break-word !important;
-            overflow-wrap: break-word !important;
-        }
-        tr:nth-child(even) td { background: #f8f9fa !important; }
-        ul, ol { padding-left: 1.4em !important; margin: 0.6em 0 !important; }
-        li { margin: 0.3em 0 !important; }
-        img { max-width: 100% !important; height: auto !important; border-radius: 6px !important; }
-        hr { border: none !important; border-top: 2px solid #e0e0e0 !important; margin: 1.5em 0 !important; }
+        img { max-width: 100% !important; height: auto !important; }
         """
     }
 
