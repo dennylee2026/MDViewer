@@ -467,41 +467,6 @@ class AppState: ObservableObject {
         return (originalFrame, savedConstraints, restore)
     }
 
-    /// Polls document.scrollHeight every `interval` seconds until the value has
-    /// been identical for `stableRounds` consecutive reads, or `timeout` seconds
-    /// have elapsed.  Returns the stabilised (or best) height via `completion`.
-    private func stableScrollHeight(
-        webView: WKWebView,
-        interval: TimeInterval = 0.15,
-        stableRounds: Int = 3,
-        timeout: TimeInterval = 4.0,
-        completion: @escaping (CGFloat) -> Void
-    ) {
-        let deadline = Date().addingTimeInterval(timeout)
-        var previous: CGFloat = 0
-        var stable   = 0
-
-        func poll() {
-            webView.evaluateJavaScript(
-                "Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
-            ) { result, _ in
-                DispatchQueue.main.async {
-                    let h = CGFloat((result as? NSNumber)?.doubleValue ?? 0)
-                    if h > 0 && h == previous {
-                        stable += 1
-                        if stable >= stableRounds { completion(h); return }
-                    } else {
-                        stable   = 0
-                        previous = max(h, previous)   // never shrink our best measurement
-                    }
-                    guard Date() < deadline else { completion(previous); return }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + interval) { poll() }
-                }
-            }
-        }
-        poll()
-    }
-
     private func _writeMobilePDF(to url: URL, done: @escaping () -> Void) {
         guard webView != nil else { done(); return }
         withMobileCSS { [weak self] removeMobile in
@@ -510,31 +475,43 @@ class AppState: ObservableObject {
             else { removeMobile(); done(); return }
             let mobileWidth: CGFloat = 390
 
-            // Initial settle: give the 390-px reflow time to start
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                // Poll until scrollHeight stabilises
-                self.stableScrollHeight(webView: webView) { stableH in
-                    let paddedH = stableH + 80   // generous bottom buffer
+            // Set a very tall frame so WebKit lays out the ENTIRE document now.
+            // Without this, incremental layout only processes the visible viewport height
+            // and scrollHeight returns a value that is far too small.
+            CATransaction.begin(); CATransaction.setDisableActions(true)
+            webView.frame = CGRect(x: webView.frame.origin.x, y: webView.frame.origin.y,
+                                   width: mobileWidth, height: 30_000)
+            CATransaction.commit()
 
-                    CATransaction.begin(); CATransaction.setDisableActions(true)
-                    webView.frame = CGRect(
-                        x: webView.frame.origin.x, y: webView.frame.origin.y,
-                        width: mobileWidth, height: paddedH)
-                    CATransaction.commit()
+            // Wait for the full 390-px reflow to complete across the entire document.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                webView.evaluateJavaScript(
+                    "Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
+                ) { result, _ in
+                    DispatchQueue.main.async {
+                        let contentH = max(CGFloat((result as? NSNumber)?.doubleValue ?? 1000), 100)
+                        let paddedH  = contentH + 100   // generous bottom buffer
 
-                    // Short settle after final height resize, then snapshot
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        let snapCfg = WKSnapshotConfiguration()
-                        snapCfg.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: paddedH)
-                        webView.takeSnapshot(with: snapCfg) { image, _ in
-                            DispatchQueue.main.async {
-                                detach.restore()
-                                removeMobile()
-                                if let image {
-                                    let pdfData = Self.pdfData(from: image)
-                                    try? pdfData?.write(to: url)
+                        // Shrink frame to the exact content height before snapshot.
+                        CATransaction.begin(); CATransaction.setDisableActions(true)
+                        webView.frame = CGRect(x: webView.frame.origin.x, y: webView.frame.origin.y,
+                                               width: mobileWidth, height: paddedH)
+                        CATransaction.commit()
+
+                        // Short settle after final resize, then capture.
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            let snapCfg = WKSnapshotConfiguration()
+                            snapCfg.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: paddedH)
+                            webView.takeSnapshot(with: snapCfg) { image, _ in
+                                DispatchQueue.main.async {
+                                    detach.restore()
+                                    removeMobile()
+                                    if let image {
+                                        let pdfData = Self.pdfData(from: image)
+                                        try? pdfData?.write(to: url)
+                                    }
+                                    done()
                                 }
-                                done()
                             }
                         }
                     }
@@ -551,31 +528,40 @@ class AppState: ObservableObject {
             else { removeMobile(); done(); return }
             let mobileWidth: CGFloat = 390
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                self.stableScrollHeight(webView: webView) { stableH in
-                    let paddedH = stableH + 80
+            CATransaction.begin(); CATransaction.setDisableActions(true)
+            webView.frame = CGRect(x: webView.frame.origin.x, y: webView.frame.origin.y,
+                                   width: mobileWidth, height: 30_000)
+            CATransaction.commit()
 
-                    CATransaction.begin(); CATransaction.setDisableActions(true)
-                    webView.frame = CGRect(
-                        x: webView.frame.origin.x, y: webView.frame.origin.y,
-                        width: mobileWidth, height: paddedH)
-                    CATransaction.commit()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                webView.evaluateJavaScript(
+                    "Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
+                ) { result, _ in
+                    DispatchQueue.main.async {
+                        let contentH = max(CGFloat((result as? NSNumber)?.doubleValue ?? 1000), 100)
+                        let paddedH  = contentH + 100
 
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        let snapCfg = WKSnapshotConfiguration()
-                        snapCfg.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: paddedH)
-                        webView.takeSnapshot(with: snapCfg) { image, _ in
-                            DispatchQueue.main.async {
-                                detach.restore()
-                                removeMobile()
-                                if let image,
-                                   let cgImg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-                                    let rep = NSBitmapImageRep(cgImage: cgImg)
-                                    if let png = rep.representation(using: .png, properties: [:]) {
-                                        try? png.write(to: url)
+                        CATransaction.begin(); CATransaction.setDisableActions(true)
+                        webView.frame = CGRect(x: webView.frame.origin.x, y: webView.frame.origin.y,
+                                               width: mobileWidth, height: paddedH)
+                        CATransaction.commit()
+
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            let snapCfg = WKSnapshotConfiguration()
+                            snapCfg.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: paddedH)
+                            webView.takeSnapshot(with: snapCfg) { image, _ in
+                                DispatchQueue.main.async {
+                                    detach.restore()
+                                    removeMobile()
+                                    if let image,
+                                       let cgImg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                                        let rep = NSBitmapImageRep(cgImage: cgImg)
+                                        if let png = rep.representation(using: .png, properties: [:]) {
+                                            try? png.write(to: url)
+                                        }
                                     }
+                                    done()
                                 }
-                                done()
                             }
                         }
                     }
