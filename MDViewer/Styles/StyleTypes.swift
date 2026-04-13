@@ -6,6 +6,7 @@ import AppKit
 struct StylesFile: Codable, Equatable {
     var schemaVersion: Int
     var activeStyle: String
+    var darkActiveStyle: String?   // style to use when system is in dark mode (nil → "Dark")
     var styles: [MarkdownStyle]
 
     static var configURL: URL {
@@ -19,6 +20,18 @@ struct StylesFile: Codable, Equatable {
         styles.first(where: { $0.name == activeStyle })
             ?? styles.first
             ?? StylesFile.systemDefaults.styles[0]
+    }
+
+    /// Resolves the style to use, taking the current system appearance into account.
+    func resolvedEffectiveStyle() -> MarkdownStyle {
+        let isDark = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        if isDark {
+            let darkName = darkActiveStyle ?? "Dark"
+            if let dark = styles.first(where: { $0.name == darkName }) {
+                return dark
+            }
+        }
+        return resolvedActiveStyle()
     }
 
     static func load() -> StylesFile {

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- 系统深色模式下启动时预览区背景为白色：`StyleManager` 未感知系统 appearance，始终使用浅色的 "GDS-Style"；新增 `resolvedEffectiveStyle()` 方法根据 `NSApp.effectiveAppearance` 自动选择深色/浅色样式，并通过 KVO 监听外观切换实时更新；偏好设置中选择样式时也会分别存储深/浅模式的选择
+
 ## [2.4.7] - 2026-04-12
 
 ### Fixed

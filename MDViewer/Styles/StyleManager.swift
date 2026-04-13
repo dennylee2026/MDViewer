@@ -10,11 +10,12 @@ final class StyleManager: ObservableObject {
 
     private let fileWatcher = FileWatcher()
     private var isRestoring = false
+    private var appearanceObserver: NSKeyValueObservation?
 
     private init() {
         let file = StylesFile.load()
         stylesFile = file
-        activeStyle = file.resolvedActiveStyle()
+        activeStyle = file.resolvedEffectiveStyle()
     }
 
     func setup() {
@@ -26,13 +27,25 @@ final class StyleManager: ObservableObject {
         fileWatcher.watch(url: StylesFile.configURL) { [weak self] in
             self?.reload()
         }
+        // Follow system dark/light mode transitions
+        appearanceObserver = NSApp.observe(\.effectiveAppearance) { [weak self] _, _ in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.activeStyle = self.stylesFile.resolvedEffectiveStyle()
+            }
+        }
     }
 
     /// Activate a style by name and persist the choice.
     func activate(_ name: String) {
         guard stylesFile.styles.contains(where: { $0.name == name }) else { return }
-        stylesFile.activeStyle = name
-        activeStyle = stylesFile.resolvedActiveStyle()
+        let isDark = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        if isDark {
+            stylesFile.darkActiveStyle = name
+        } else {
+            stylesFile.activeStyle = name
+        }
+        activeStyle = stylesFile.resolvedEffectiveStyle()
         stylesFile.save()
     }
 
@@ -49,7 +62,7 @@ final class StyleManager: ObservableObject {
         }
         DispatchQueue.main.async {
             self.stylesFile = file
-            self.activeStyle = file.resolvedActiveStyle()
+            self.activeStyle = file.resolvedEffectiveStyle()
         }
     }
 
@@ -58,7 +71,7 @@ final class StyleManager: ObservableObject {
         StylesFile.systemDefaults.save()
         DispatchQueue.main.async {
             self.stylesFile = StylesFile.systemDefaults
-            self.activeStyle = StylesFile.systemDefaults.resolvedActiveStyle()
+            self.activeStyle = StylesFile.systemDefaults.resolvedEffectiveStyle()
             self.isRestoring = false
         }
     }
