@@ -75,7 +75,6 @@ struct ContentView: View {
             } detail: {
                 previewPane()
             }
-            .toolbar(removing: .sidebarToggle)
         }
     }
 
@@ -210,14 +209,20 @@ struct ContentView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .navigation) {
-            Button {
-                appState.showFolderSidebar.toggle()
-            } label: {
-                Image(systemName: "sidebar.leading")
+        // In viewer mode the NavigationSplitView injects its own outline-sidebar
+        // toggle into the .navigation slot. Only show our folder-tree button here
+        // when it is actually useful: either we are not in viewer mode (no conflict),
+        // or a folder has been opened (both toggles serve different sidebars).
+        if appState.viewMode != .viewer || appState.folderURL != nil {
+            ToolbarItem(placement: .navigation) {
+                Button {
+                    appState.showFolderSidebar.toggle()
+                } label: {
+                    Image(systemName: "sidebar.leading")
+                }
+                .help(String(localized: "toolbar.folderSidebar.help"))
+                .disabled(appState.folderURL == nil)
             }
-            .help(String(localized: "toolbar.folderSidebar.help"))
-            .disabled(appState.folderURL == nil)
         }
 
         ToolbarItem(placement: .principal) {
