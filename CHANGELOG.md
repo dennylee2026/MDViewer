@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- 手机 PDF / 手机长图 CSS 全面升级为 Google 品牌色方案（按 MOBILE_STYLE_GUIDE.md）：
+  - 字体栈优先 CJK 字体（PingFang SC → Hiragino Sans GB → Noto Sans CJK SC → Microsoft YaHei）
+  - Body 字号调整为 18px，行高 1.25，内边距 20px 18px 32px
+  - H1 蓝色左色条，H2 红色左色条，H3 绿色左色条，H4 黄色背景块，H5/H6 纯色无装饰
+  - Bold 黄色半透明高亮底色（rgba(251,188,5,0.28)）
+  - 链接蓝色 + 淡虚下划线，去掉 text-decoration
+  - Blockquote 黄色左边框 + 极淡黄底色
+  - 代码块灰底（#f1f3f4），表格蓝色表头 + 隔行斑马纹
+  - 分割线 2px solid #e0e0e0
+
 ## [2.4.8] - 2026-04-13
 
 ### Fixed
