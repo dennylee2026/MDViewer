@@ -591,6 +591,7 @@ private class MobileImageExporter: NSObject, WKNavigationDelegate {
     private let outputURL: URL
     private let doneCallback: () -> Void
     private var expandIteration = 0
+    private var offscreenWindow: NSWindow?
     private static let maxExpandIterations = 10
 
     init(markdown: String, combinedCSS: String, outputURL: URL, done: @escaping () -> Void) {
@@ -607,11 +608,24 @@ private class MobileImageExporter: NSObject, WKNavigationDelegate {
         )
         super.init()
         webView.navigationDelegate = self
+
+        // WKWebView on macOS requires a window for loadFileURL navigation to complete.
+        // Use an invisible offscreen window placed far outside any screen.
+        let win = NSWindow(
+            contentRect: NSRect(x: -10_000, y: -10_000, width: 390, height: 900),
+            styleMask: [],
+            backing: .buffered,
+            defer: false
+        )
+        win.isReleasedWhenClosed = false
+        win.contentView = webView
+        win.orderBack(nil)
+        offscreenWindow = win
     }
 
     func start() {
         guard let tpl = Bundle.main.url(forResource: "template", withExtension: "html") else {
-            doneCallback(); return
+            cleanup(); return
         }
         webView.loadFileURL(tpl, allowingReadAccessTo: tpl.deletingLastPathComponent())
     }
@@ -653,6 +667,7 @@ private class MobileImageExporter: NSObject, WKNavigationDelegate {
                 } else {
                     let finalH = measured + 64
                     self.webView.frame = CGRect(x: 0, y: 0, width: self.mobileWidth, height: finalH)
+                    self.offscreenWindow?.setContentSize(NSSize(width: self.mobileWidth, height: finalH))
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                         self.capturePDF(height: finalH)
                     }
@@ -671,7 +686,7 @@ private class MobileImageExporter: NSObject, WKNavigationDelegate {
                       let provider = CGDataProvider(data: pdfData as CFData),
                       let pdfDoc   = CGPDFDocument(provider),
                       let page     = pdfDoc.page(at: 1)
-                else { self.doneCallback(); return }
+                else { self.cleanup(); return }
                 self.renderToImage(page: page)
             }
         }
@@ -679,7 +694,14 @@ private class MobileImageExporter: NSObject, WKNavigationDelegate {
 
     private func renderToImage(page: CGPDFPage) {
         let box   = page.getBoxRect(.mediaBox)
-        let scale = NSScreen.main?.backingScaleFactor ?? 2.0
+        // Clamp pixel count to ~200 M px to avoid CGContext allocation failures
+        // on very long documents (~800 MB at 4 bytes/px).
+        let natural = NSScreen.main?.backingScaleFactor ?? 2.0
+        let maxPx: CGFloat = 200_000_000
+        let totalPx = box.width * natural * box.height * natural
+        let scale = totalPx > maxPx
+            ? max(1.0, sqrt(maxPx / (box.width * box.height)))
+            : natural
         let pixW  = Int(box.width  * scale)
         let pixH  = Int(box.height * scale)
 
@@ -689,7 +711,7 @@ private class MobileImageExporter: NSObject, WKNavigationDelegate {
                   bitsPerComponent: 8, bytesPerRow: 0, space: cs,
                   bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
               )
-        else { doneCallback(); return }
+        else { cleanup(); return }
 
         ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
         ctx.fill(CGRect(x: 0, y: 0, width: pixW, height: pixH))
@@ -702,6 +724,12 @@ private class MobileImageExporter: NSObject, WKNavigationDelegate {
                 try? png.write(to: outputURL)
             }
         }
+        cleanup()
+    }
+
+    private func cleanup() {
+        offscreenWindow?.close()
+        offscreenWindow = nil
         doneCallback()
     }
 

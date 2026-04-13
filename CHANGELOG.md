@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.13] - 2026-04-12
+
+### Fixed
+- 导出手机长图对长文档失败：修复两处根本缺陷：①新建临时 WKWebView 未加入 NSWindow，导致 loadFileURL navigation 永远不回调、导出永久挂住；②超大文档（>200 M 像素）的 CGContext 内存分配失败，导出静默丢弃；现改为自动降采样（最大 2 亿像素预算）并确保窗口创建与清理
+
 ## [2.4.12] - 2026-04-12
 
 ### Fixed
