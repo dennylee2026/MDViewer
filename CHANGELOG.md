@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.10] - 2026-04-13
+
+### Added
+- 打开面板和导出面板分别记忆上次使用的目录：打开文件/文件夹面板下次自动定位到上次打开的目录；导出面板（HTML/PDF/手机 PDF/手机长图/全量导出）单独记忆上次导出目录，两者互不干扰
+
 ### Fixed
 - 手机 PDF / 手机长图底部截断：width:390px 强制重排后页面变高，原固定延时不足导致 scrollHeight 偏小；改用轮询方式等待 scrollHeight 连续 3 次相同后再截图，超时 4s 保底；底部缓冲从 32pt 增加至 80pt
 - 手机导出底部截断根本修复：WebKit 惰性布局只计算可见区域内的内容高度，scrollHeight 偏小；改为先将 webView frame 高度设为 30000pt 强制完整布局，再读取准确的 scrollHeight；底部缓冲增至 100pt

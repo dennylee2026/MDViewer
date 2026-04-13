@@ -129,6 +129,28 @@ class AppState: ObservableObject {
         isDirty = true
     }
 
+    // MARK: Directory persistence helpers
+
+    private var lastOpenedDirectoryURL: URL? {
+        guard let path = UserDefaults.standard.string(forKey: "MDViewer.lastOpenedFilePath") else { return nil }
+        return URL(fileURLWithPath: path).deletingLastPathComponent()
+    }
+
+    private func saveLastOpenedDirectory(_ url: URL) {
+        // Persist as a file path so it's compatible with WindowCoordinator's key usage
+        let sentinel = url.appendingPathComponent("_dir_sentinel_")
+        UserDefaults.standard.set(sentinel.path, forKey: "MDViewer.lastOpenedFilePath")
+    }
+
+    private var lastExportDirectoryURL: URL? {
+        guard let path = UserDefaults.standard.string(forKey: "MDViewer.lastExportDirectoryPath") else { return nil }
+        return URL(fileURLWithPath: path)
+    }
+
+    private func saveLastExportDirectory(_ url: URL) {
+        UserDefaults.standard.set(url.path, forKey: "MDViewer.lastExportDirectoryPath")
+    }
+
     // MARK: Folder
 
     func openFolderPicker() {
@@ -137,7 +159,9 @@ class AppState: ObservableObject {
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
         panel.prompt = String(localized: "panel.openFolder.prompt")
+        panel.directoryURL = lastOpenedDirectoryURL
         if panel.runModal() == .OK, let url = panel.url {
+            saveLastOpenedDirectory(url)
             openFolder(url: url)
         }
     }
@@ -592,6 +616,7 @@ class AppState: ObservableObject {
 
     func exportHTML() {
         guard let webView else { return }
+        let exportDir = lastExportDirectoryURL
         webView.evaluateJavaScript("document.getElementById('content').innerHTML") { [weak self] result, _ in
             guard let self, let innerHtml = result as? String else { return }
             let styleCSS = StyleManager.shared.activeStyle.displayStyle.toCSS()
@@ -613,8 +638,10 @@ class AppState: ObservableObject {
                 let panel = NSSavePanel()
                 panel.allowedContentTypes = [.html]
                 panel.nameFieldStringValue = title + ".html"
+                panel.directoryURL = exportDir
                 if panel.runModal() == .OK, let url = panel.url {
                     try? html.write(to: url, atomically: true, encoding: .utf8)
+                    self.saveLastExportDirectory(url.deletingLastPathComponent())
                 }
             }
         }
@@ -627,7 +654,9 @@ class AppState: ObservableObject {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.pdf]
         panel.nameFieldStringValue = "\(stem)_\(ts).pdf"
+        panel.directoryURL = lastExportDirectoryURL
         guard panel.runModal() == .OK, let url = panel.url else { return }
+        saveLastExportDirectory(url.deletingLastPathComponent())
         webView.createPDF { result in
             DispatchQueue.main.async {
                 if case .success(let data) = result { try? data.write(to: url) }
@@ -642,7 +671,9 @@ class AppState: ObservableObject {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.pdf]
         panel.nameFieldStringValue = "\(stem)_\(ts)-mobile.pdf"
+        panel.directoryURL = lastExportDirectoryURL
         guard panel.runModal() == .OK, let url = panel.url else { return }
+        saveLastExportDirectory(url.deletingLastPathComponent())
         isExporting = true
         _writeMobilePDF(to: url) { [weak self] in
             DispatchQueue.main.async { self?.isExporting = false }
@@ -656,7 +687,9 @@ class AppState: ObservableObject {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.png]
         panel.nameFieldStringValue = "\(stem)_\(ts)-mobile.png"
+        panel.directoryURL = lastExportDirectoryURL
         guard panel.runModal() == .OK, let url = panel.url else { return }
+        saveLastExportDirectory(url.deletingLastPathComponent())
         isExporting = true
         _writeMobileImage(to: url) { [weak self] in
             DispatchQueue.main.async { self?.isExporting = false }
@@ -673,7 +706,9 @@ class AppState: ObservableObject {
         panel.canCreateDirectories = true
         panel.prompt = String(localized: "panel.exportAll.prompt")
         panel.message = String(localized: "panel.exportAll.message")
+        panel.directoryURL = lastExportDirectoryURL
         guard panel.runModal() == .OK, let dir = panel.url else { return }
+        saveLastExportDirectory(dir)
         isExporting = true
         let pdfURL       = dir.appendingPathComponent("\(stem)_\(ts).pdf")
         let mobilePDFURL = dir.appendingPathComponent("\(stem)_\(ts)-mobile.pdf")
