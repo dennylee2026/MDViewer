@@ -13,6 +13,15 @@ struct WindowView: View {
     /// Set `true` when `fileURL` changes; cleared after a successful resize.
     @State private var needsResize = false
 
+    // MARK: Window height persistence
+    private static let heightKey     = "MDViewer.windowHeight"
+    private static let defaultHeight: CGFloat = 900
+
+    private var savedWindowHeight: CGFloat {
+        let h = UserDefaults.standard.double(forKey: Self.heightKey)
+        return h > 0 ? CGFloat(h) : Self.defaultHeight
+    }
+
     var body: some View {
         ContentView()
             .environmentObject(appState)
@@ -42,6 +51,11 @@ struct WindowView: View {
                 guard win != nil, needsResize else { return }
                 scheduleResize()
             }
+            .onDisappear {
+                if let win = nsWindow {
+                    UserDefaults.standard.set(win.frame.height, forKey: Self.heightKey)
+                }
+            }
     }
 
     /// Schedules a resize attempt after a short delay.  If nsWindow is still
@@ -60,11 +74,10 @@ struct WindowView: View {
     // MARK: - Resize
 
     private func resizeWindow(_ window: NSWindow, for content: String) {
-        let lines   = content.components(separatedBy: "\n").count
         let screenH = window.screen?.visibleFrame.height
                       ?? NSScreen.main?.visibleFrame.height
-                      ?? 800
-        let target  = max(500, min(420 + CGFloat(lines) * 13, screenH * 0.88))
+                      ?? Self.defaultHeight
+        let target  = min(savedWindowHeight, screenH * 0.92)
 
         var frame = window.frame
         // Grow / shrink upward; keep bottom edge anchored

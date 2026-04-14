@@ -225,6 +225,8 @@ class AppState: ObservableObject {
             word-break: break-word !important;
             margin: 0 !important;
             overflow-x: hidden !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
         }
         #content {
             max-width: 100% !important;
@@ -713,7 +715,9 @@ private class MobileImageExporter: NSObject, WKNavigationDelegate {
               )
         else { cleanup(); return }
 
-        ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+        let bgHex  = StyleManager.shared.activeStyle.displayStyle.global.backgroundColor ?? "#FFFFFF"
+        let bgFill = Self.cgColor(fromHex: bgHex) ?? CGColor(red: 1, green: 1, blue: 1, alpha: 1)
+        ctx.setFillColor(bgFill)
         ctx.fill(CGRect(x: 0, y: 0, width: pixW, height: pixH))
         ctx.scaleBy(x: scale, y: scale)
         ctx.drawPDFPage(page)
@@ -737,6 +741,17 @@ private class MobileImageExporter: NSObject, WKNavigationDelegate {
         s.replacingOccurrences(of: "\\", with: "\\\\")
          .replacingOccurrences(of: "`", with: "\\`")
          .replacingOccurrences(of: "$", with: "\\$")
+    }
+
+    private static func cgColor(fromHex hex: String) -> CGColor? {
+        var s = hex.trimmingCharacters(in: .whitespaces)
+        if s.hasPrefix("#") { s = String(s.dropFirst()) }
+        if s.count == 3 { s = s.map { "\($0)\($0)" }.joined() }
+        guard s.count == 6, let v = UInt32(s, radix: 16) else { return nil }
+        return CGColor(red:   CGFloat((v >> 16) & 0xFF) / 255,
+                       green: CGFloat((v >> 8)  & 0xFF) / 255,
+                       blue:  CGFloat(v         & 0xFF) / 255,
+                       alpha: 1)
     }
 }
 

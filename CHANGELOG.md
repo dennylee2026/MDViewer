@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.14] - 2026-04-14
+
+### Added
+- 窗口高度跨 session 持久化：关闭窗口时自动保存高度，下次启动新窗口时恢复到上次高度；首次启动默认高度 900pt
+
+### Fixed
+- 手机长图导出 PNG 画布背景硬编码白色：改为读取活跃主题的 `backgroundColor`，深色主题下背景色正确匹配
+- 手机导出 CSS 背景色可能不进入 PDF：`body` 补加 `-webkit-print-color-adjust: exact`，确保 `createPDF` 输出包含 CSS 背景色
+
 ## [2.4.13] - 2026-04-12
 
 ### Fixed
