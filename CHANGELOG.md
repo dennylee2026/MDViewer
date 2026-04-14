@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.4.15] - 2026-04-14
+## [2.4.15] - 2026-04-13
 
 ### Fixed
 - 编辑区粘贴中文后内容不可见：`textContainer.containerSize.width = infinity` 禁用了换行，粘贴后光标跳到行尾导致 NSTextView 水平滚动，宽字符（CJK）更容易将内容滚出左侧视口；改为 `isHorizontallyResizable = false` + `widthTracksTextView = true` + 初始宽度 0，使编辑器正确换行
+- 编辑区标题和加粗文字中的中文不显示：`MarkdownHighlighter.makeBoldFont` 调用 `withSymbolicTraits(.bold)` 后未保留 cascade list（PingFangSC-Regular），导致 CJK 字形回落到无 CJK 字体；现显式将 baseFont 的 cascade list 重新挂载到 bold descriptor
 - 粘贴内容后导出按钮不可用：禁用条件从 `fileURL == nil` 改为 `markdownContent.isEmpty`，无需打开文件也可导出粘贴的内容；`exportAll` 同步去掉对 `fileURL` 的强制解包，无文件时文件名使用 "Untitled"
 
 ## [2.4.14] - 2026-04-14
