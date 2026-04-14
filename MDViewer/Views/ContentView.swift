@@ -278,7 +278,7 @@ struct ContentView: View {
                 Label("toolbar.export.label", systemImage: "square.and.arrow.up")
             }
             .help(String(localized: "toolbar.export.help"))
-            .disabled(appState.fileURL == nil || appState.isExporting)
+            .disabled(appState.markdownContent.isEmpty || appState.isExporting)
         }
     }
 

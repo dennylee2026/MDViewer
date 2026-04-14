@@ -523,8 +523,8 @@ class AppState: ObservableObject {
     }
 
     func exportAll() {
-        guard !isExporting, let fileURL else { return }
-        let stem = fileURL.deletingPathExtension().lastPathComponent
+        guard !isExporting else { return }
+        let stem = fileURL?.deletingPathExtension().lastPathComponent ?? "Untitled"
         let ts = exportTimestamp()
         let panel = NSOpenPanel()
         panel.canChooseFiles = false

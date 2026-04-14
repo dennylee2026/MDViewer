@@ -13,6 +13,12 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
     private func makeBoldFont(size: CGFloat? = nil) -> NSFont {
         let sz = size ?? baseFont.pointSize
         let descriptor = baseFont.fontDescriptor.withSymbolicTraits(.bold)
+        // withSymbolicTraits does not reliably carry over the cascade list;
+        // re-attach it explicitly so CJK characters remain visible in bold runs.
+        if let cascade = baseFont.fontDescriptor.fontAttributes[.cascadeList] {
+            return NSFont(descriptor: descriptor.addingAttributes([.cascadeList: cascade]), size: sz)
+                   ?? NSFont.boldSystemFont(ofSize: sz)
+        }
         return NSFont(descriptor: descriptor, size: sz) ?? NSFont.boldSystemFont(ofSize: sz)
     }
 

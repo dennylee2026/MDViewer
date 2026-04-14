@@ -79,10 +79,15 @@ struct EditorView: NSViewRepresentable {
         textView.isContinuousSpellCheckingEnabled     = false
         textView.isGrammarCheckingEnabled             = false
 
-        // Soft wrap
+        // Soft wrap: text must not extend beyond the viewport horizontally.
+        // Setting containerSize.width = infinity disables wrapping and causes
+        // NSTextView to scroll to the cursor after paste, pushing pasted text
+        // (especially wide CJK characters) off the left edge of the viewport.
+        // widthTracksTextView keeps the container width synced to the view width.
+        textView.isHorizontallyResizable = false
         textView.textContainer?.widthTracksTextView = true
         textView.textContainer?.containerSize = NSSize(
-            width: CGFloat.greatestFiniteMagnitude,
+            width: 0,  // updated to actual width by widthTracksTextView on first layout
             height: CGFloat.greatestFiniteMagnitude)
         scrollView.hasHorizontalScroller = false
         scrollView.autoresizingMask      = [.width, .height]
