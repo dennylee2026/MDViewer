@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.16] - 2026-04-29
+
+### Fixed
+- 导出 PDF 宽度变成 mobile 尺寸（390pt）：`_writeDesktopPDF` / `exportPDF` 在调用 `createPDF` 前先通过 JS 清除可能残留的 mobile CSS 覆盖（`@page { size: auto }` 和 `html/body` 内联宽度），确保桌面 PDF 始终以正确的 viewport 宽度导出；`exportPDF` 现在复用 `_writeDesktopPDF` 而不是重复逻辑
+
 ## [2.4.15] - 2026-04-13
 
 ### Fixed

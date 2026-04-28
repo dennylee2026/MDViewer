@@ -317,10 +317,28 @@ class AppState: ObservableObject {
 
     private func _writeDesktopPDF(to url: URL, done: @escaping () -> Void) {
         guard let webView else { done(); return }
-        webView.createPDF { result in
-            DispatchQueue.main.async {
-                if case .success(let data) = result { try? data.write(to: url) }
-                done()
+        // Remove any lingering mobile-CSS overrides (inline width + @page rule) before
+        // capturing. Without this, a previous mobile export that did not finish its async
+        // cleanup leaves html/body at 390 px width, causing createPDF to produce a
+        // mobile-sized page even though no mobile config was requested.
+        let mobileCleanup = """
+        (function(){
+            removeMobileCSS();
+            var h = document.documentElement, b = document.body;
+            h.style.removeProperty('width');
+            h.style.removeProperty('max-width');
+            h.style.removeProperty('overflow-x');
+            b.style.removeProperty('width');
+            b.style.removeProperty('max-width');
+            b.style.removeProperty('overflow-x');
+        })()
+        """
+        webView.evaluateJavaScript(mobileCleanup) { _, _ in
+            webView.createPDF { result in
+                DispatchQueue.main.async {
+                    if case .success(let data) = result { try? data.write(to: url) }
+                    done()
+                }
             }
         }
     }
@@ -474,7 +492,7 @@ class AppState: ObservableObject {
     }
 
     func exportPDF() {
-        guard let webView else { return }
+        guard webView != nil else { return }
         let stem = fileURL?.deletingPathExtension().lastPathComponent ?? "Untitled"
         let ts = exportTimestamp()
         let panel = NSSavePanel()
@@ -483,11 +501,7 @@ class AppState: ObservableObject {
         panel.directoryURL = lastExportDirectoryURL
         guard panel.runModal() == .OK, let url = panel.url else { return }
         saveLastExportDirectory(url.deletingLastPathComponent())
-        webView.createPDF { result in
-            DispatchQueue.main.async {
-                if case .success(let data) = result { try? data.write(to: url) }
-            }
-        }
+        _writeDesktopPDF(to: url) { }
     }
 
     func exportMobilePDF() {
