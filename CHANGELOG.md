@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.17] - 2026-05-01
+
 ### Fixed
 - 移动端 PDF 导出分页截断：`@page { size: auto }` 导致 WebKit 以约 14400pt 为单页高度分页，长文档会被切成数十页且在分页处截断内容；现在在测量完整内容高度后动态注入 `@page { size: 390px {fullHeight}px }`，强制生成单页 PDF，不再有分页截断
 
