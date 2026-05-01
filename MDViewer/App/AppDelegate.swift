@@ -419,19 +419,40 @@ class AppState: ObservableObject {
                                                width: mobileWidth, height: paddedH)
                         CATransaction.commit()
 
+                        // Force a single-page PDF by overriding @page size to the exact
+                        // content dimensions. Without this, @page { size: auto } causes
+                        // WebKit to paginate at its default max height (~14 400 pt), splitting
+                        // the output into dozens of pages with content cut at each break.
+                        let pageSizeJS = """
+                        (function(w,h){
+                            var el = document.getElementById('mobile-page-size');
+                            if (!el) {
+                                el = document.createElement('style');
+                                el.id = 'mobile-page-size';
+                                document.head.appendChild(el);
+                            }
+                            el.textContent = '@page { margin: 0 !important; size: ' + w + 'px ' + h + 'px !important; }';
+                        })(\(Int(mobileWidth)), \(Int(paddedH)))
+                        """
                         // createPDF operates on DOM layout — not on screen rasterization —
                         // so alphaValue=0 does not affect output quality or completeness.
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            let pdfConfig = WKPDFConfiguration()
-                            pdfConfig.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: paddedH)
-                            webView.createPDF(configuration: pdfConfig) { pdfResult in
-                                DispatchQueue.main.async {
-                                    detach.restore()
-                                    removeMobile()
-                                    if case .success(let data) = pdfResult {
-                                        try? data.write(to: url)
+                        webView.evaluateJavaScript(pageSizeJS) { _, _ in
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                let pdfConfig = WKPDFConfiguration()
+                                pdfConfig.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: paddedH)
+                                webView.createPDF(configuration: pdfConfig) { pdfResult in
+                                    DispatchQueue.main.async {
+                                        webView.evaluateJavaScript(
+                                            "var e=document.getElementById('mobile-page-size');if(e)e.parentNode.removeChild(e);",
+                                            completionHandler: nil
+                                        )
+                                        detach.restore()
+                                        removeMobile()
+                                        if case .success(let data) = pdfResult {
+                                            try? data.write(to: url)
+                                        }
+                                        done()
                                     }
-                                    done()
                                 }
                             }
                         }
