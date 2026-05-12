@@ -221,6 +221,7 @@ class AppState: ObservableObject {
         }
         body {
             max-width: 100% !important;
+            font-size: 22px !important;
             padding: 20px 18px 32px !important;
             word-break: break-word !important;
             margin: 0 !important;
