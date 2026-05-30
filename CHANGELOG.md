@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.18] - 2026-05-30
+
+### Fixed
+- 编辑区输入法确认中文后字符不显示：IME 候选词确认时 `textStorage(_:didProcessEditing:)` 在 `hasMarkedText()` 仍为 `true` 期间触发，高亮器和 `textDidChange` 均跳过处理，导致 `markdownContent` 未更新；下次任意 SwiftUI 重绘（如调整缩放、深色模式切换）时 `updateNSView` 用旧文本覆盖 textView，中文被抹除。修复：在 `textViewDidChangeSelection`（此时 `hasMarkedText()` 已为 `false`）检测 binding 与 textView 内容是否不同步，若是则补同步并重新应用高亮
+- 手机长图导出中 ASCII 图形/代码块因宽度不足而换行错位：渲染后对每个 `pre` 块强制 `white-space: pre; word-break: normal`，测量其真实宽度，若超出容器则用 CSS `zoom` 等比缩小，布局占位同步压缩，不再有截断或错行
+
 ## [2.4.17] - 2026-05-01
 
 ### Fixed

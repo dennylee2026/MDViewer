@@ -674,8 +674,31 @@ private class MobileImageExporter: NSObject, WKNavigationDelegate {
             guard let self else { return }
             self.webView.evaluateJavaScript("renderMarkdownSync(`\(mdEsc)`)") { [weak self] _, _ in
                 guard let self else { return }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    self.expandAndMeasure()
+                // Scale down pre blocks whose content is wider than their container.
+                // word-break inherited from body can wrap ASCII art; zoom shrinks the block
+                // proportionally and adjusts its layout footprint, preserving the diagram.
+                let scalePreJS = """
+                (function(){
+                    document.querySelectorAll('pre').forEach(function(pre){
+                        pre.style.setProperty('white-space','pre','important');
+                        pre.style.setProperty('overflow','visible','important');
+                        pre.style.setProperty('word-break','normal','important');
+                        var code=pre.querySelector('code');
+                        if(code){
+                            code.style.setProperty('white-space','pre','important');
+                            code.style.setProperty('word-break','normal','important');
+                        }
+                        var cw=(pre.parentElement||document.body).offsetWidth;
+                        var nw=pre.scrollWidth;
+                        if(nw>cw&&cw>0){ pre.style.zoom=String(cw/nw); }
+                    });
+                })();
+                """
+                self.webView.evaluateJavaScript(scalePreJS) { [weak self] _, _ in
+                    guard let self else { return }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self.expandAndMeasure()
+                    }
                 }
             }
         }

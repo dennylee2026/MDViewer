@@ -253,6 +253,21 @@ struct EditorView: NSViewRepresentable {
             guard let tv = notification.object as? NSTextView else { return }
             // Skip cursor-sync while IME is composing
             guard !tv.hasMarkedText() else { return }
+
+            // IME confirmation fires textStorage(_:didProcessEditing:) while
+            // hasMarkedText() is still true, so both textDidChange and the
+            // highlighter guard skip the update. By the time
+            // textViewDidChangeSelection fires, hasMarkedText() is false.
+            // If the text view content and the binding have drifted, sync them
+            // now and re-apply highlights so the confirmed characters display
+            // correctly instead of retaining composition underline attributes.
+            if tv.string != parent.text {
+                parent.text = tv.string
+                if let hl = highlighter, let storage = tv.textStorage {
+                    hl.applyHighlights(to: storage)
+                }
+            }
+
             let cursor = tv.selectedRange().location
             let nsStr  = tv.string as NSString
             let safePos = min(cursor, nsStr.length)
