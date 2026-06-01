@@ -42,6 +42,20 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
         isWorking = true
         applyHighlights(to: textStorage)
         isWorking = false
+
+        // On paste, NSTextView runs its own font fixup as the edit transaction
+        // completes — after this delegate callback — which can flatten the run
+        // back to a single font that lacks CJK glyphs, leaving Chinese text
+        // invisible. Re-run the highlight (with its fixFontAttribute pass) on the
+        // next runloop turn, once that fixup has settled, so the cascade font is
+        // restored for CJK characters.
+        DispatchQueue.main.async { [weak self, weak textStorage] in
+            guard let self, let textStorage, self.textView?.hasMarkedText() != true,
+                  !self.isWorking else { return }
+            self.isWorking = true
+            self.applyHighlights(to: textStorage)
+            self.isWorking = false
+        }
     }
 
     // MARK: - Full-document highlight
@@ -59,6 +73,14 @@ final class MarkdownHighlighter: NSObject, NSTextStorageDelegate {
             .strikethroughStyle: 0,
             .paragraphStyle:     paragraphStyle
         ], range: full)
+
+        // Force per-character font substitution to re-run against the cascade
+        // list. On Cmd+V paste, NSTextView assigns the pasted run a single font
+        // without re-resolving the cascade, so CJK characters keep a font that
+        // lacks their glyphs and render invisible (while still occupying width,
+        // which causes soft-wrap and the broken line-number ruler). fixFontAttribute
+        // splits the run so CJK falls back to the cascade font (e.g. PingFang SC).
+        storage.fixFontAttribute(in: full)
 
         applyFencedCodeBlocks(storage, str)
         applyHeadings(storage, str)
