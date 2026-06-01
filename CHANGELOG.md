@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.19] - 2026-06-01
+
 ### Fixed
 - 编辑区 Cmd+V 粘贴含中文文本后字符不可见（占位但不绘制，导致软换行、行号 ruler 跳号）：粘贴时 NSTextView 为整段粘贴文本赋予单一字体且不重新解析 cascade list，CJK 字符落在缺少其字形的字体上而无法绘制；修复：`MarkdownHighlighter.applyHighlights` 在重置属性后调用 `storage.fixFontAttribute(in:)` 强制按字符重新做字体回退（CJK 落回 PingFang SC），并在 `textStorage(_:didProcessEditing:)` 之后用 `DispatchQueue.main.async` 延后再跑一次高亮，避开 NSTextView 在编辑事务收尾时的字体 fixup 把 cascade 重新压平
 
