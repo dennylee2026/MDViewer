@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.20] - 2026-06-03
+
+### Fixed
+- 手机长图导出正文字号过小：为移动端 PDF 渲染的 `body` 补加 `font-size: 22px !important`，提升长图可读性
+
 ## [2.4.19] - 2026-06-01
 
 ### Fixed
