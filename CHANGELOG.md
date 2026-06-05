@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.21] - 2026-06-05
+
 ### Fixed
 - 桌面 PDF 导出内容块在分页处被截断（blockquote、代码块、表格等被页面边界切开）：`_writeDesktopPDF` 在调用 `createPDF` 前注入临时 `<style id="desktop-print-style">` 规则，对 `blockquote`、`pre`、`table`、`figure`、`img` 设置 `break-inside: avoid`，对标题设置 `break-after: avoid`，对正文段落设置 `orphans/widows: 3`；PDF 生成后立即移除该样式，不影响实时预览
 
