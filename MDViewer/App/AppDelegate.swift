@@ -213,12 +213,14 @@ class AppState: ObservableObject {
         """
         @page { margin: 0 !important; size: auto !important; }
         html { overflow-x: hidden !important; }
-        * {
-            box-sizing: border-box !important;
-            page-break-inside: avoid !important; break-inside: avoid !important;
-            page-break-before: avoid !important; break-before: avoid !important;
-            page-break-after: avoid !important; break-after: avoid !important;
+        * { box-sizing: border-box !important; }
+        blockquote, pre, table, figure, img {
+            break-inside: avoid !important; page-break-inside: avoid !important;
         }
+        h1, h2, h3, h4, h5, h6 {
+            break-after: avoid !important; page-break-after: avoid !important;
+        }
+        p { orphans: 3; widows: 3; }
         body {
             max-width: 100% !important;
             font-size: 22px !important;
