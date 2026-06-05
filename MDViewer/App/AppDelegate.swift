@@ -334,11 +334,45 @@ class AppState: ObservableObject {
             b.style.removeProperty('overflow-x');
         })()
         """
+        // Prevent page-break truncation of content blocks in the desktop PDF.
+        // WKWebView.createPDF() honours break-inside/page-break-inside in regular
+        // (non-print-media) CSS, so we inject a lightweight rule set here and
+        // remove it after the PDF is captured so the live view is unaffected.
+        let printBreakCSS = """
+        blockquote, pre, table, figure, img {
+            break-inside: avoid; page-break-inside: avoid;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            break-after: avoid; page-break-after: avoid;
+        }
+        p { orphans: 3; widows: 3; }
+        """
+        let injectPrintCSS = """
+        (function(){
+            var el = document.getElementById('desktop-print-style');
+            if (!el) {
+                el = document.createElement('style');
+                el.id = 'desktop-print-style';
+                document.head.appendChild(el);
+            }
+            el.textContent = \(printBreakCSS.debugDescription);
+        })()
+        """
+        let removePrintCSS = """
+        (function(){
+            var el = document.getElementById('desktop-print-style');
+            if (el) el.parentNode.removeChild(el);
+        })()
+        """
+
         webView.evaluateJavaScript(mobileCleanup) { _, _ in
-            webView.createPDF { result in
-                DispatchQueue.main.async {
-                    if case .success(let data) = result { try? data.write(to: url) }
-                    done()
+            webView.evaluateJavaScript(injectPrintCSS) { _, _ in
+                webView.createPDF { result in
+                    DispatchQueue.main.async {
+                        webView.evaluateJavaScript(removePrintCSS, completionHandler: nil)
+                        if case .success(let data) = result { try? data.write(to: url) }
+                        done()
+                    }
                 }
             }
         }
