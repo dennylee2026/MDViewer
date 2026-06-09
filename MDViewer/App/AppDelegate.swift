@@ -218,6 +218,7 @@ class AppState: ObservableObject {
             break-inside: avoid !important; page-break-inside: avoid !important;
         }
         h1, h2, h3, h4, h5, h6 {
+            break-inside: avoid !important; page-break-inside: avoid !important;
             break-after: avoid !important; page-break-after: avoid !important;
         }
         p { orphans: 3; widows: 3; }
@@ -345,6 +346,7 @@ class AppState: ObservableObject {
             break-inside: avoid; page-break-inside: avoid;
         }
         h1, h2, h3, h4, h5, h6 {
+            break-inside: avoid; page-break-inside: avoid;
             break-after: avoid; page-break-after: avoid;
         }
         p { orphans: 3; widows: 3; }
