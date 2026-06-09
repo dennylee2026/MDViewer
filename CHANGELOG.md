@@ -7,10 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- 移动端和桌面 PDF 导出标题（h1–h6）在分页处被从中间截断：之前只给标题加了 `break-after: avoid`（防止标题孤悬页尾），未加 `break-inside: avoid`，导致多行标题被页面边界劈开；现在同时补加 `break-inside: avoid !important`，确保标题整体保持在同一页
+## [2.4.22] - 2026-06-09
 
 ### Fixed
+- 移动端和桌面 PDF 导出标题（h1–h6）在分页处被从中间截断：之前只给标题加了 `break-after: avoid`（防止标题孤悬页尾），未加 `break-inside: avoid`，导致多行标题被页面边界劈开；现在同时补加 `break-inside: avoid !important`，确保标题整体保持在同一页
 - 移动端 PDF 导出内容块在分页处被截断：`mobileCSSOverrides()` 对 `*` 全量设置 `break-inside: avoid !important`，但 WebKit PDF 引擎在内容超过页高时会无视 `html/body` 等容器上的 `avoid` 规则并退回默认分页，导致更具体的子元素规则也失效；改为仅对 `blockquote`、`pre`、`table`、`figure`、`img` 设置 `break-inside: avoid !important`，对标题设置 `break-after: avoid !important`，对段落设置 `orphans/widows: 3`，与桌面 PDF 的修法保持一致
 
 ## [2.4.21] - 2026-06-05
