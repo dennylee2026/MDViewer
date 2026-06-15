@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- 移动端 PDF 导出右侧出现大面积空白：`createPDF()` 无配置时以 CSS 视口宽度（桌面窗口宽度）作为 PDF 页面宽度，内容虽限定在 390px 但页面本身更宽；恢复高度测量并注入 `@page { size: 390px × contentH }` 确定页面尺寸，再用无配置的 `createPDF()` 渲染为单张连续页，宽度和无分页两个目标同时满足
+
 ## [2.4.23] - 2026-06-15
 
 ### Changed

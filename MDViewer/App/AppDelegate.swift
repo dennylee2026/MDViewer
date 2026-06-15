@@ -446,19 +446,47 @@ class AppState: ObservableObject {
                                    width: mobileWidth, height: 30_000)
             CATransaction.commit()
 
-            // Allow the full 390-px reflow to settle, then capture.
-            // createPDF() without a WKPDFConfiguration rect renders the entire
-            // document as one continuous page — identical to the desktop PDF
-            // path — so no @page size override or pdfConfig.rect is needed.
+            // Allow the full 390-px reflow to settle, then measure content height.
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                webView.createPDF { pdfResult in
+                webView.evaluateJavaScript(
+                    "Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
+                ) { result, _ in
                     DispatchQueue.main.async {
-                        detach.restore()
-                        removeMobile()
-                        if case .success(let data) = pdfResult {
-                            try? data.write(to: url)
+                        let contentH = max(CGFloat((result as? NSNumber)?.doubleValue ?? 1000), 100)
+                        let paddedH  = contentH + 100
+
+                        // Set @page size to exactly 390 × paddedH so createPDF()
+                        // produces a single-page PDF at the correct mobile width.
+                        // No @page { size: auto } is present in mobileCSSOverrides()
+                        // so there is no conflicting rule. createPDF() without a
+                        // WKPDFConfiguration rect then renders the entire document
+                        // as one continuous page matching these dimensions.
+                        let pageSizeJS = """
+                        (function(w,h){
+                            var el = document.getElementById('mobile-page-size');
+                            if (!el) {
+                                el = document.createElement('style');
+                                el.id = 'mobile-page-size';
+                                document.head.appendChild(el);
+                            }
+                            el.textContent = '@page { margin: 0; size: ' + w + 'px ' + h + 'px; }';
+                        })(\(Int(mobileWidth)), \(Int(paddedH)))
+                        """
+                        webView.evaluateJavaScript(pageSizeJS) { _, _ in
+                            webView.createPDF { pdfResult in
+                                DispatchQueue.main.async {
+                                    webView.evaluateJavaScript(
+                                        "var e=document.getElementById('mobile-page-size');if(e)e.parentNode.removeChild(e);",
+                                        completionHandler: nil)
+                                    detach.restore()
+                                    removeMobile()
+                                    if case .success(let data) = pdfResult {
+                                        try? data.write(to: url)
+                                    }
+                                    done()
+                                }
+                            }
                         }
-                        done()
                     }
                 }
             }
