@@ -422,7 +422,8 @@ class AppState: ObservableObject {
     }
 
     func exportMobilePDF() {
-        guard !isExporting, webView != nil else { return }
+        guard !isExporting else { return }
+        guard !markdownContent.isEmpty else { return }
         let stem = fileURL?.deletingPathExtension().lastPathComponent ?? "Untitled"
         let ts = exportTimestamp()
         let panel = NSSavePanel()
