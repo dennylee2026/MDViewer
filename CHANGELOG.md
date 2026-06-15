@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.23] - 2026-06-15
+
 ### Changed
 - 移动端 PDF 导出改为与桌面 PDF 一致的无分页实现：移除 `@page { size: auto }` CSS、`pageSizeJS` 动态注入和 `WKPDFConfiguration.rect` 限制，改用无配置的 `createPDF()`；WebKit 将整个文档内容渲染为一张连续长页，不再产生分页截断
 
