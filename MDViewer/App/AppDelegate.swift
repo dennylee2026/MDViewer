@@ -211,7 +211,7 @@ class AppState: ObservableObject {
     // and page-break properties are forced here.
     private func mobileCSSOverrides() -> String {
         """
-        @page { margin: 0 !important; size: auto !important; }
+        @page { margin: 0 !important; }
         html { overflow-x: hidden !important; }
         * { box-sizing: border-box !important; }
         blockquote, pre, table, figure, img {
@@ -438,63 +438,27 @@ class AppState: ObservableObject {
             else { removeMobile(); done(); return }
             let mobileWidth: CGFloat = 390
 
-            // Expand to force WebKit to lay out the entire document before measuring.
+            // Expand to force WebKit to lay out the entire document at 390 px
+            // width before capturing. Without this, only the visible portion is
+            // laid out and createPDF may miss content below the fold.
             CATransaction.begin(); CATransaction.setDisableActions(true)
             webView.frame = CGRect(x: webView.frame.origin.x, y: webView.frame.origin.y,
                                    width: mobileWidth, height: 30_000)
             CATransaction.commit()
 
-            // Allow the full 390-px reflow to settle.
+            // Allow the full 390-px reflow to settle, then capture.
+            // createPDF() without a WKPDFConfiguration rect renders the entire
+            // document as one continuous page — identical to the desktop PDF
+            // path — so no @page size override or pdfConfig.rect is needed.
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                webView.evaluateJavaScript(
-                    "Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
-                ) { result, _ in
+                webView.createPDF { pdfResult in
                     DispatchQueue.main.async {
-                        let contentH = max(CGFloat((result as? NSNumber)?.doubleValue ?? 1000), 100)
-                        let paddedH  = contentH + 100
-
-                        CATransaction.begin(); CATransaction.setDisableActions(true)
-                        webView.frame = CGRect(x: webView.frame.origin.x, y: webView.frame.origin.y,
-                                               width: mobileWidth, height: paddedH)
-                        CATransaction.commit()
-
-                        // Force a single-page PDF by overriding @page size to the exact
-                        // content dimensions. Without this, @page { size: auto } causes
-                        // WebKit to paginate at its default max height (~14 400 pt), splitting
-                        // the output into dozens of pages with content cut at each break.
-                        let pageSizeJS = """
-                        (function(w,h){
-                            var el = document.getElementById('mobile-page-size');
-                            if (!el) {
-                                el = document.createElement('style');
-                                el.id = 'mobile-page-size';
-                                document.head.appendChild(el);
-                            }
-                            el.textContent = '@page { margin: 0 !important; size: ' + w + 'px ' + h + 'px !important; }';
-                        })(\(Int(mobileWidth)), \(Int(paddedH)))
-                        """
-                        // createPDF operates on DOM layout — not on screen rasterization —
-                        // so alphaValue=0 does not affect output quality or completeness.
-                        webView.evaluateJavaScript(pageSizeJS) { _, _ in
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                let pdfConfig = WKPDFConfiguration()
-                                pdfConfig.rect = CGRect(x: 0, y: 0, width: mobileWidth, height: paddedH)
-                                webView.createPDF(configuration: pdfConfig) { pdfResult in
-                                    DispatchQueue.main.async {
-                                        webView.evaluateJavaScript(
-                                            "var e=document.getElementById('mobile-page-size');if(e)e.parentNode.removeChild(e);",
-                                            completionHandler: nil
-                                        )
-                                        detach.restore()
-                                        removeMobile()
-                                        if case .success(let data) = pdfResult {
-                                            try? data.write(to: url)
-                                        }
-                                        done()
-                                    }
-                                }
-                            }
+                        detach.restore()
+                        removeMobile()
+                        if case .success(let data) = pdfResult {
+                            try? data.write(to: url)
                         }
+                        done()
                     }
                 }
             }
