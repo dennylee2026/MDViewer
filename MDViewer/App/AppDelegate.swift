@@ -269,54 +269,6 @@ class AppState: ObservableObject {
         """
     }
 
-    /// Injects mobile CSS overrides, waits for layout, calls action(done).
-    /// Caller must invoke the `done` closure to remove the overrides.
-    private func withMobileCSS(action: @escaping (@escaping () -> Void) -> Void) {
-        guard let webView else { return }
-        let css = mobileCSSOverrides()
-        let escaped = css
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "`", with: "\\`")
-        webView.evaluateJavaScript("applyMobileCSS(`\(escaped)`)") { _, _ in
-            // Force html + body to exactly 390px wide using inline !important styles.
-            // On macOS, WKWebView's CSS viewport width follows the WINDOW width, not the
-            // view frame — so resizing the frame to 390pt does NOT change window.innerWidth.
-            // Inline !important overrides all external-stylesheet !important rules and forces
-            // layout to 390px regardless of what the CSS viewport reports.
-            let forceWidth = """
-            (function(){
-                var h = document.documentElement, b = document.body;
-                h.style.setProperty('width',       '390px',  'important');
-                h.style.setProperty('max-width',   '390px',  'important');
-                h.style.setProperty('overflow-x',  'hidden', 'important');
-                b.style.setProperty('width',       '390px',  'important');
-                b.style.setProperty('max-width',   '390px',  'important');
-                b.style.setProperty('overflow-x',  'hidden', 'important');
-            })();
-            """
-            webView.evaluateJavaScript(forceWidth) { _, _ in
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    action {
-                        // Remove all inline overrides so the live preview is unaffected
-                        let cleanup = """
-                        (function(){
-                            var h = document.documentElement, b = document.body;
-                            h.style.removeProperty('width');
-                            h.style.removeProperty('max-width');
-                            h.style.removeProperty('overflow-x');
-                            b.style.removeProperty('width');
-                            b.style.removeProperty('max-width');
-                            b.style.removeProperty('overflow-x');
-                        })();
-                        """
-                        webView.evaluateJavaScript(cleanup, completionHandler: nil)
-                        webView.evaluateJavaScript("removeMobileCSS()", completionHandler: nil)
-                    }
-                }
-            }
-        }
-    }
-
     // MARK: Export — Private write helpers (used by exportAll for chaining)
 
     private func _writeDesktopPDF(to url: URL, done: @escaping () -> Void) {
@@ -382,115 +334,27 @@ class AppState: ObservableObject {
         }
     }
 
-    /// Temporarily detach the webView from SwiftUI's AutoLayout so that manual
-    /// frame changes are not reverted by the layout engine. Returns a restore
-    /// closure that re-enables AutoLayout and restores the original frame/alpha/zoom.
-    private func detachWebViewForExport(mobileWidth: CGFloat)
-        -> (originalFrame: CGRect, savedConstraints: [NSLayoutConstraint], restore: () -> Void)?
-    {
-        guard let webView else { return nil }
-        let originalFrame = webView.frame
-        let originalAlpha = webView.alphaValue
-        let originalZoom  = webView.pageZoom
-        let originalTAMIC = webView.translatesAutoresizingMaskIntoConstraints
-
-        // Gather all constraints in the superview that reference this webView.
-        let savedConstraints: [NSLayoutConstraint] = webView.superview?
-            .constraints.filter { $0.firstItem === webView || $0.secondItem === webView } ?? []
-        NSLayoutConstraint.deactivate(savedConstraints)
-
-        // Also deactivate constraints owned by the webView itself (width/height).
-        let ownConstraints = webView.constraints.filter { $0.firstItem === webView || $0.secondItem === webView }
-        NSLayoutConstraint.deactivate(ownConstraints)
-
-        webView.translatesAutoresizingMaskIntoConstraints = true
-
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        webView.alphaValue = 0
-        webView.pageZoom = 1.0
-        var narrowFrame = originalFrame
-        narrowFrame.size.width = mobileWidth
-        webView.frame = narrowFrame
-        CATransaction.commit()
-
-        let restore: () -> Void = {
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
-            webView.translatesAutoresizingMaskIntoConstraints = originalTAMIC
-            NSLayoutConstraint.activate(savedConstraints)
-            NSLayoutConstraint.activate(ownConstraints)
-            webView.frame = originalFrame
-            webView.alphaValue = originalAlpha
-            webView.pageZoom = originalZoom
-            CATransaction.commit()
-            // Force layout pass so SwiftUI reclaims correct geometry immediately.
-            webView.superview?.needsLayout = true
-        }
-        return (originalFrame, savedConstraints, restore)
-    }
-
     private func _writeMobilePDF(to url: URL, done: @escaping () -> Void) {
-        guard webView != nil else { done(); return }
-        withMobileCSS { [weak self] removeMobile in
-            guard let self, let webView = self.webView,
-                  let detach = self.detachWebViewForExport(mobileWidth: 390)
-            else { removeMobile(); done(); return }
-            let mobileWidth: CGFloat = 390
-
-            // Expand to force WebKit to lay out the entire document at 390 px
-            // width before capturing. Without this, only the visible portion is
-            // laid out and createPDF may miss content below the fold.
-            CATransaction.begin(); CATransaction.setDisableActions(true)
-            webView.frame = CGRect(x: webView.frame.origin.x, y: webView.frame.origin.y,
-                                   width: mobileWidth, height: 30_000)
-            CATransaction.commit()
-
-            // Allow the full 390-px reflow to settle, then measure content height.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                webView.evaluateJavaScript(
-                    "Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
-                ) { result, _ in
-                    DispatchQueue.main.async {
-                        let contentH = max(CGFloat((result as? NSNumber)?.doubleValue ?? 1000), 100)
-                        let paddedH  = contentH + 100
-
-                        // Set @page size to exactly 390 × paddedH so createPDF()
-                        // produces a single-page PDF at the correct mobile width.
-                        // No @page { size: auto } is present in mobileCSSOverrides()
-                        // so there is no conflicting rule. createPDF() without a
-                        // WKPDFConfiguration rect then renders the entire document
-                        // as one continuous page matching these dimensions.
-                        let pageSizeJS = """
-                        (function(w,h){
-                            var el = document.getElementById('mobile-page-size');
-                            if (!el) {
-                                el = document.createElement('style');
-                                el.id = 'mobile-page-size';
-                                document.head.appendChild(el);
-                            }
-                            el.textContent = '@page { margin: 0; size: ' + w + 'px ' + h + 'px; }';
-                        })(\(Int(mobileWidth)), \(Int(paddedH)))
-                        """
-                        webView.evaluateJavaScript(pageSizeJS) { _, _ in
-                            webView.createPDF { pdfResult in
-                                DispatchQueue.main.async {
-                                    webView.evaluateJavaScript(
-                                        "var e=document.getElementById('mobile-page-size');if(e)e.parentNode.removeChild(e);",
-                                        completionHandler: nil)
-                                    detach.restore()
-                                    removeMobile()
-                                    if case .success(let data) = pdfResult {
-                                        try? data.write(to: url)
-                                    }
-                                    done()
-                                }
-                            }
-                        }
-                    }
-                }
+        // Use the same offscreen 390-pt-wide WKWebView approach as the image
+        // exporter. The live webView shares the (full-width) window, so its CSS
+        // viewport is always the window width — createPDF() therefore produces a
+        // page as wide as the window with the 390-px content pinned to the left
+        // and white space on the right. A fresh web view inside a 390-pt-wide
+        // window has a 390-pt CSS viewport, so the PDF page is exactly 390 pt
+        // wide with no whitespace, on a single continuous page.
+        let css = StyleManager.shared.activeStyle.displayStyle.toCSS() + "\n" + mobileCSSOverrides()
+        let exporter = MobileImageExporter(
+            markdown: markdownContent,
+            combinedCSS: css,
+            outputURL: url,
+            output: .pdf,
+            done: { [weak self] in
+                self?.activeMobileImageExporter = nil
+                done()
             }
-        }
+        )
+        activeMobileImageExporter = exporter
+        exporter.start()
     }
 
     private func _writeMobileImage(to url: URL, done: @escaping () -> Void) {
@@ -499,6 +363,7 @@ class AppState: ObservableObject {
             markdown: markdownContent,
             combinedCSS: css,
             outputURL: url,
+            output: .png,
             done: { [weak self] in
                 self?.activeMobileImageExporter = nil
                 done()
@@ -645,27 +510,36 @@ class AppState: ObservableObject {
     }
 }
 
-// MARK: - Mobile Image Exporter
+// MARK: - Mobile Image / PDF Exporter
 
-// Renders markdown in a fresh 390-pt-wide WKWebView and saves the result as a PNG.
+// Renders markdown in a fresh 390-pt-wide WKWebView and saves the result as a PNG
+// or a single-page PDF.
 // Using a fresh view that was never wider than 390 pt avoids the CSS-reflow / constraint-
-// detach dance the live-view approach requires.  Height is measured iteratively to work
-// around WebKit's incremental layout for very long documents.
+// detach dance the live-view approach requires. Because the offscreen window is exactly
+// 390 pt wide, WebKit's CSS viewport is also 390 pt, so the captured page is exactly
+// 390 pt wide (no right-hand whitespace). createPDF(configuration:) with a single rect
+// spanning the full content height yields one continuous page (no pagination).
+// Height is measured iteratively to work around WebKit's incremental layout for very
+// long documents.
 private class MobileImageExporter: NSObject, WKNavigationDelegate {
+    enum Output { case png, pdf }
+
     private let webView: WKWebView
     private let markdown: String
     private let combinedCSS: String
     private let mobileWidth: CGFloat = 390
     private let outputURL: URL
+    private let output: Output
     private let doneCallback: () -> Void
     private var expandIteration = 0
     private var offscreenWindow: NSWindow?
     private static let maxExpandIterations = 10
 
-    init(markdown: String, combinedCSS: String, outputURL: URL, done: @escaping () -> Void) {
+    init(markdown: String, combinedCSS: String, outputURL: URL, output: Output = .png, done: @escaping () -> Void) {
         self.markdown     = markdown
         self.combinedCSS  = combinedCSS
         self.outputURL    = outputURL
+        self.output       = output
         self.doneCallback = done
 
         let cfg = WKWebViewConfiguration()
@@ -773,8 +647,18 @@ private class MobileImageExporter: NSObject, WKNavigationDelegate {
         webView.createPDF(configuration: cfg) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self else { return }
-                guard case .success(let pdfData) = result,
-                      let provider = CGDataProvider(data: pdfData as CFData),
+                guard case .success(let pdfData) = result else { self.cleanup(); return }
+
+                // PDF mode: the rect spans the whole content at 390 pt width, so
+                // createPDF(configuration:) yields a single continuous page that is
+                // exactly 390 pt wide. Write it straight to disk.
+                if self.output == .pdf {
+                    try? pdfData.write(to: self.outputURL)
+                    self.cleanup()
+                    return
+                }
+
+                guard let provider = CGDataProvider(data: pdfData as CFData),
                       let pdfDoc   = CGPDFDocument(provider),
                       let page     = pdfDoc.page(at: 1)
                 else { self.cleanup(); return }

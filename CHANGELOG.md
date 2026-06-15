@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- 移动端 PDF 导出右侧空白 + 多页分页：根因是导出复用了实时 WKWebView，其 CSS 视口宽度始终跟随窗口宽度（桌面全宽），即便把内容限定在 390px，`createPDF()` 仍以视口宽度为页面宽度，于是右侧留白；长文档还会被分成多页。改为复用图片导出已验证的离屏方案——在一个宽度恰为 390pt 的离屏窗口中新建 WKWebView，使 CSS 视口本身即为 390pt，再用 `createPDF(configuration:)` 以覆盖整段内容高度的单一 rect 渲染，得到宽度精确 390pt、无右侧空白、单张连续无分页的 PDF。同时移除不再使用的 `withMobileCSS`、`detachWebViewForExport` 及 `applyMobileCSS` 注入逻辑
+
 ## [2.4.24] - 2026-06-15
 
 ### Fixed
