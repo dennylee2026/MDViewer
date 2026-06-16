@@ -335,26 +335,88 @@ class AppState: ObservableObject {
     }
 
     private func _writeMobilePDF(to url: URL, done: @escaping () -> Void) {
-        // Use the same offscreen 390-pt-wide WKWebView approach as the image
-        // exporter. The live webView shares the (full-width) window, so its CSS
-        // viewport is always the window width — createPDF() therefore produces a
-        // page as wide as the window with the 390-px content pinned to the left
-        // and white space on the right. A fresh web view inside a 390-pt-wide
-        // window has a 390-pt CSS viewport, so the PDF page is exactly 390 pt
-        // wide with no whitespace, on a single continuous page.
-        let css = StyleManager.shared.activeStyle.displayStyle.toCSS() + "\n" + mobileCSSOverrides()
-        let exporter = MobileImageExporter(
-            markdown: markdownContent,
-            combinedCSS: css,
-            outputURL: url,
-            output: .pdf,
-            done: { [weak self] in
-                self?.activeMobileImageExporter = nil
-                done()
+        guard let webView else { done(); return }
+
+        // Mirrors _writeDesktopPDF: uses the live WKWebView + createPDF() (no config).
+        // Extra steps vs. desktop:
+        //   1. Apply mobile CSS so content reflows to 390 px wide.
+        //   2. Measure the resulting scroll height.
+        //   3. Inject @page { size: 390px × paddedH } — because the live webView
+        //      frame is ~window-height (~900 pt) which is LESS than paddedH, createPDF()
+        //      creates exactly 1 page at those dimensions (no extra blank pages).
+        //      Setting the width here also fixes the page width: createPDF() uses the
+        //      @page size, not the viewport width, so no right-side whitespace.
+
+        let mobileCSS = mobileCSSOverrides()
+        let cssEsc = mobileCSS
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "`", with: "\\`")
+
+        let setupJS = """
+        (function(){
+            applyMobileCSS(`\(cssEsc)`);
+            var h = document.documentElement, b = document.body;
+            h.style.setProperty('width','390px','important');
+            h.style.setProperty('max-width','390px','important');
+            h.style.setProperty('overflow-x','hidden','important');
+            b.style.setProperty('width','390px','important');
+            b.style.setProperty('max-width','390px','important');
+            b.style.setProperty('overflow-x','hidden','important');
+        })()
+        """
+
+        let cleanupJS = """
+        (function(){
+            removeMobileCSS();
+            var el = document.getElementById('mobile-page-size');
+            if (el) el.parentNode.removeChild(el);
+            var h = document.documentElement, b = document.body;
+            h.style.removeProperty('width');
+            h.style.removeProperty('max-width');
+            h.style.removeProperty('overflow-x');
+            b.style.removeProperty('width');
+            b.style.removeProperty('max-width');
+            b.style.removeProperty('overflow-x');
+        })()
+        """
+
+        webView.evaluateJavaScript(setupJS) { _, _ in
+            // Allow the 390-px reflow to settle before measuring.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                webView.evaluateJavaScript(
+                    "Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)"
+                ) { result, _ in
+                    DispatchQueue.main.async {
+                        let contentH = max(CGFloat((result as? NSNumber)?.doubleValue ?? 1000), 100)
+                        let paddedH  = contentH + 200
+
+                        let pageSizeJS = """
+                        (function(){
+                            var el = document.getElementById('mobile-page-size');
+                            if (!el) {
+                                el = document.createElement('style');
+                                el.id = 'mobile-page-size';
+                                document.head.appendChild(el);
+                            }
+                            el.textContent = '@page { margin: 0; size: 390px \(Int(paddedH))px; }';
+                        })()
+                        """
+
+                        webView.evaluateJavaScript(pageSizeJS) { _, _ in
+                            webView.createPDF { pdfResult in
+                                DispatchQueue.main.async {
+                                    webView.evaluateJavaScript(cleanupJS, completionHandler: nil)
+                                    if case .success(let data) = pdfResult {
+                                        try? data.write(to: url)
+                                    }
+                                    done()
+                                }
+                            }
+                        }
+                    }
+                }
             }
-        )
-        activeMobileImageExporter = exporter
-        exporter.start()
+        }
     }
 
     private func _writeMobileImage(to url: URL, done: @escaping () -> Void) {
@@ -422,8 +484,7 @@ class AppState: ObservableObject {
     }
 
     func exportMobilePDF() {
-        guard !isExporting else { return }
-        guard !markdownContent.isEmpty else { return }
+        guard !isExporting, webView != nil, !markdownContent.isEmpty else { return }
         let stem = fileURL?.deletingPathExtension().lastPathComponent ?? "Untitled"
         let ts = exportTimestamp()
         let panel = NSSavePanel()
